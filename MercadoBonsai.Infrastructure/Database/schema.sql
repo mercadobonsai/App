@@ -11,6 +11,7 @@ CREATE TABLE Usuarios (
     Email VARCHAR(150) NOT NULL UNIQUE,
     SenhaHash VARCHAR(255) NOT NULL,
     Telefone VARCHAR(20) NULL,
+    Perfil INT NOT NULL DEFAULT 1, -- 1=Comprador, 2=Vendedor, 3=Administrador
     DataCadastro TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -61,3 +62,7 @@ INSERT INTO Planos (Nome, Valor, LimiteAnuncios) VALUES
 ('Bronze', 19.90, 10),
 ('Prata', 49.90, 30),
 ('Ouro', 99.90, 100);
+
+-- Seed: Usuário Administrador padrão (senha: Admin123!)
+INSERT INTO Usuarios (Id, Nome, Email, SenhaHash, Telefone, Perfil, DataCadastro) VALUES
+(gen_random_uuid(), 'Administrador', 'admin@mercadobonsai.com.br', '$2a$11$YLAl2IVYFQjhyhqOGsaPBe3mst9.LiFr1sc1UX47sV.ChAH585ogm', NULL, 3, NOW());

@@ -1,50 +1,254 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="pt-BR"
+      class="layout-navbar-fixed layout-menu-fixed layout-compact"
+      dir="ltr"
+      data-skin="default"
+      data-assets-path="~/starter-kit/assets/"
+      data-template="horizontal-menu-template-no-customizer-starter"
+      data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MercadoBonsai.Web</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/MercadoBonsai.Web.styles.css" asp-append-version="true" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>@ViewData["Title"] - MercadoBonsai</title>
+
+    <link rel="icon" type="image/x-icon" href="~/starter-kit/assets/img/favicon/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/starter-kit/assets/vendor/fonts/iconify-icons.css" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="~/starter-kit/assets/vendor/libs/node-waves/node-waves.css" />
+    <link rel="stylesheet" href="~/starter-kit/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="~/starter-kit/assets/css/demo.css" />
+    <link rel="stylesheet" href="~/starter-kit/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+
+    <!-- Page CSS -->
+    @await RenderSectionAsync("Styles", required: false)
+
+    <!-- Helpers -->
+    <script src="~/starter-kit/assets/vendor/js/helpers.js"></script>
+    <script src="~/starter-kit/assets/js/config.js"></script>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MercadoBonsai.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
+        <div class="layout-container">
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - MercadoBonsai.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <!-- Navbar -->
+            <nav class="layout-navbar navbar navbar-expand-xl align-items-center" id="layout-navbar">
+                <div class="container-xxl">
+                    <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-6">
+                        <a asp-controller="Home" asp-action="Index" class="app-brand-link gap-2">
+                            <span class="app-brand-logo demo">
+                                <span class="text-primary">
+                                    <svg width="30" height="24" viewBox="0 0 250 196" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.3002 1.25469L56.655 28.6432C59.0349 30.1128 60.4839 32.711 60.4839 35.5089V160.63C60.4839 163.468 58.9941 166.097 56.5603 167.553L12.2055 194.107C8.3836 196.395 3.43136 195.15 1.14435 191.327C0.395485 190.075 0 188.643 0 187.184V8.12039C0 3.66447 3.61061 0.0522461 8.06452 0.0522461C9.56056 0.0522461 11.0271 0.468577 12.3002 1.25469Z" fill="currentColor" />
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M237.71 1.22393L193.355 28.5207C190.97 29.9889 189.516 32.5905 189.516 35.3927V160.631C189.516 163.469 191.006 166.098 193.44 167.555L237.794 194.108C241.616 196.396 246.569 195.151 248.856 191.328C249.605 190.076 250 188.644 250 187.185V8.09597C250 3.64006 246.389 0.027832 241.935 0.027832C240.444 0.027832 238.981 0.441882 237.71 1.22393Z" fill="currentColor" />
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.2787 1.18923L125 70.3075V136.87L0 65.2465V8.06814C0 3.61223 3.61061 0 8.06452 0C9.552 0 11.0105 0.411583 12.2787 1.18923Z" fill="currentColor" />
+                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M237.721 1.18923L125 70.3075V136.87L250 65.2465V8.06814C250 3.61223 246.389 0 241.935 0C240.448 0 238.99 0.411583 237.721 1.18923Z" fill="currentColor" />
+                                    </svg>
+                                </span>
+                            </span>
+                            <span class="app-brand-text demo menu-text fw-semibold ms-1">MercadoBonsai</span>
+                        </a>
+                        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
+                            <i class="icon-base ri ri-close-line icon-sm"></i>
+                        </a>
+                    </div>
+
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                            <i class="icon-base ri ri-menu-line icon-md"></i>
+                        </a>
+                    </div>
+
+                    <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+                        <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+
+                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <!-- Notificações -->
+                                <li class="nav-item me-2">
+                                    <a class="nav-link" href="#">
+                                        <i class="icon-base ri ri-notification-3-line icon-md"></i>
+                                    </a>
+                                </li>
+
+                                <!-- User dropdown -->
+                                <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                                    <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
+                                        <div class="avatar avatar-online">
+                                            <span class="avatar-initial rounded-circle bg-primary">
+                                                @User.Identity.Name?.Substring(0, 1).ToUpper()
+                                            </span>
+                                        </div>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="#">
+                                                <div class="d-flex">
+                                                    <div class="flex-shrink-0 me-3">
+                                                        <div class="avatar avatar-online">
+                                                            <span class="avatar-initial rounded-circle bg-primary">
+                                                                @User.Identity.Name?.Substring(0, 1).ToUpper()
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="mb-0">@User.Identity.Name</h6>
+                                                        <small class="text-body-secondary">
+                                                            @if (User.IsInRole("Administrador")) { <span class="badge bg-danger">Administrador</span> }
+                                                            else if (User.IsInRole("Vendedor")) { <span class="badge bg-warning">Vendedor</span> }
+                                                            else { <span class="badge bg-info">Comprador</span> }
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li><div class="dropdown-divider my-1"></div></li>
+                                        <li>
+                                            <a class="dropdown-item" href="#">
+                                                <i class="icon-base ri ri-user-line icon-md me-3"></i>
+                                                <span>Meu Perfil</span>
+                                            </a>
+                                        </li>
+                                        @if (User.IsInRole("Administrador"))
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="icon-base ri ri-shield-keyhole-line icon-md me-3"></i>
+                                                    <span>Painel Admin</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        @if (User.IsInRole("Vendedor") || User.IsInRole("Administrador"))
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="icon-base ri ri-store-line icon-md me-3"></i>
+                                                    <span>Meus Anúncios</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        <li><div class="dropdown-divider my-1"></div></li>
+                                        <li>
+                                            <div class="d-grid px-4 pt-2 pb-1">
+                                                <a asp-controller="Conta" asp-action="Logout" class="btn btn-danger d-flex">
+                                                    <small class="align-middle">Sair</small>
+                                                    <i class="ri ri-logout-box-r-line ms-2 ri-xs"></i>
+                                                </a>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item me-2">
+                                    <a asp-controller="Conta" asp-action="Cadastro" class="btn btn-outline-primary btn-sm">
+                                        Cadastrar
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Conta" asp-action="Login" class="btn btn-primary btn-sm">
+                                        <i class="ri ri-login-box-line me-1"></i>Entrar
+                                    </a>
+                                </li>
+                            }
+
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <!-- / Navbar -->
+
+            <!-- Layout container -->
+            <div class="layout-page">
+                <!-- Content wrapper -->
+                <div class="content-wrapper">
+
+                    <!-- Menu horizontal -->
+                    <aside id="layout-menu" class="layout-menu-horizontal menu-horizontal menu flex-grow-0">
+                        <div class="container-xxl d-flex h-100">
+                            <ul class="menu-inner py-1">
+                                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                                    <a asp-controller="Home" asp-action="Index" class="menu-link">
+                                        <i class="menu-icon icon-base ri ri-home-smile-line"></i>
+                                        <div>Vitrine</div>
+                                    </a>
+                                </li>
+                                @if (User.IsInRole("Administrador"))
+                                {
+                                    <li class="menu-item">
+                                        <a href="#" class="menu-link">
+                                            <i class="menu-icon icon-base ri ri-shield-keyhole-line"></i>
+                                            <div>Administração</div>
+                                        </a>
+                                    </li>
+                                }
+                                @if (User.IsInRole("Vendedor") || User.IsInRole("Administrador"))
+                                {
+                                    <li class="menu-item">
+                                        <a href="#" class="menu-link">
+                                            <i class="menu-icon icon-base ri ri-add-circle-line"></i>
+                                            <div>Anunciar</div>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </aside>
+                    <!-- / Menu -->
+
+                    <!-- Content -->
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        @RenderBody()
+                    </div>
+                    <!-- / Content -->
+
+                    <!-- Footer -->
+                    <footer class="content-footer footer bg-footer-theme">
+                        <div class="container-xxl">
+                            <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
+                                <div class="mb-2 mb-md-0">
+                                    &copy; <script>document.write(new Date().getFullYear());</script> MercadoBonsai — Todos os direitos reservados.
+                                </div>
+                                <div class="d-none d-lg-inline-block">
+                                    <a asp-controller="Home" asp-action="Privacy" class="footer-link me-4">Privacidade</a>
+                                    <a href="mailto:contato@mercadobonsai.com.br" class="footer-link">Contato</a>
+                                </div>
+                            </div>
+                        </div>
+                    </footer>
+                    <!-- / Footer -->
+
+                    <div class="content-backdrop fade"></div>
+                </div>
+                <!-- / Content wrapper -->
+            </div>
+            <!-- / Layout container -->
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    </div>
+    <!-- / Layout wrapper -->
+
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
+    <div class="drag-target"></div>
+
+    <!-- Core JS -->
+    <script src="~/starter-kit/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="~/starter-kit/assets/vendor/libs/popper/popper.js"></script>
+    <script src="~/starter-kit/assets/vendor/js/bootstrap.js"></script>
+    <script src="~/starter-kit/assets/vendor/libs/node-waves/node-waves.js"></script>
+    <script src="~/starter-kit/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="~/starter-kit/assets/vendor/libs/hammer/hammer.js"></script>
+    <script src="~/starter-kit/assets/vendor/js/menu.js"></script>
+    <script src="~/starter-kit/assets/js/main.js"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
