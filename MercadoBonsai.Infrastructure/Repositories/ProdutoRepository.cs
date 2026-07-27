@@ -12,9 +12,9 @@ namespace MercadoBonsai.Infrastructure.Repositories;
 
 public class ProdutoRepository : IProdutoRepository
 {
-    private readonly SqlServerConnectionFactory _connectionFactory;
+    private readonly PostgresConnectionFactory _connectionFactory;
 
-    public ProdutoRepository(SqlServerConnectionFactory connectionFactory)
+    public ProdutoRepository(PostgresConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }
@@ -23,8 +23,8 @@ public class ProdutoRepository : IProdutoRepository
     {
         const string sql = @"
             INSERT INTO Produtos (Id, VendedorId, Nome, Descricao, Preco, Especie, IdadeAnos, Status, TipoModalidade, DataCadastro)
-            OUTPUT INSERTED.Id
-            VALUES (@Id, @VendedorId, @Nome, @Descricao, @Preco, @Especie, @IdadeAnos, @Status, @TipoModalidade, @DataCadastro);";
+            VALUES (@Id, @VendedorId, @Nome, @Descricao, @Preco, @Especie, @IdadeAnos, @Status, @TipoModalidade, @DataCadastro)
+            RETURNING Id;";
 
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleAsync<Guid>(sql, produto);
@@ -58,7 +58,7 @@ public class ProdutoRepository : IProdutoRepository
                 p.Especie,
                 f.Url AS FotoCapaUrl
             FROM Produtos p
-            LEFT JOIN FotosProduto f ON p.Id = f.ProdutoId AND f.IsPrincipal = 1
+            LEFT JOIN FotosProduto f ON p.Id = f.ProdutoId AND f.IsPrincipal = true
             WHERE p.Status = @Status
             ORDER BY p.DataCadastro DESC;";
 

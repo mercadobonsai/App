@@ -1,14 +1,14 @@
 using System.Data;
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 
 namespace MercadoBonsai.Infrastructure.Data;
 
-public class SqlServerConnectionFactory
+public class PostgresConnectionFactory
 {
     private readonly IConfiguration _configuration;
 
-    public SqlServerConnectionFactory(IConfiguration configuration)
+    public PostgresConnectionFactory(IConfiguration configuration)
     {
         _configuration = configuration;
     }
@@ -16,6 +16,6 @@ public class SqlServerConnectionFactory
     public IDbConnection CreateConnection()
     {
         var connectionString = _configuration.GetConnectionString("DefaultConnection");
-        return new SqlConnection(connectionString);
+        return new NpgsqlConnection(connectionString);
     }
 }
