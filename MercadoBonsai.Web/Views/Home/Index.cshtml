@@ -1,8 +1,47 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model IEnumerable<MercadoBonsai.Domain.DTOs.ProdutoHomeDto>
+@{
+    ViewData["Title"] = "Vitrine de Bonsais";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center mb-4">
+    <h1 class="display-4 text-success fw-bold">Mercado Bonsai</h1>
+    <p class="lead">Encontre a arte viva perfeita para o seu ambiente.</p>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var produto in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0">
+                    @if (!string.IsNullOrEmpty(produto.FotoCapaUrl))
+                    {
+                        <img src="@produto.FotoCapaUrl" class="card-img-top" alt="@produto.Titulo" style="height: 200px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted" style="height: 200px;">
+                            <span>Sem Foto</span>
+                        </div>
+                    }
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">@produto.Titulo</h5>
+                        <p class="card-text text-success fs-5 fw-bold">@produto.ValorVenda.ToString("C")</p>
+                        <p class="card-text mb-1"><small class="text-muted">Espécie: @produto.Especie</small></p>
+                        <p class="card-text"><small class="text-muted">Entrega: @produto.TipoModalidade.ToString()</small></p>
+                    </div>
+                    <div class="card-footer bg-white border-0 text-center">
+                        <a href="#" class="btn btn-outline-success w-100">Ver Detalhes</a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12 text-center">
+            <p class="text-muted">Nenhum bonsai disponível no momento.</p>
+        </div>
+    }
 </div>

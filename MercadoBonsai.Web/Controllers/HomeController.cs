@@ -1,14 +1,24 @@
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MercadoBonsai.Web.Models;
+using MercadoBonsai.Domain.Interfaces;
 
 namespace MercadoBonsai.Web.Controllers;
 
 public class HomeController : Controller
 {
-    public IActionResult Index()
+    private readonly IProdutoRepository _produtoRepository;
+
+    public HomeController(IProdutoRepository produtoRepository)
     {
-        return View();
+        _produtoRepository = produtoRepository;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        var produtos = await _produtoRepository.ListarParaHomeAsync();
+        return View(produtos);
     }
 
     public IActionResult Privacy()

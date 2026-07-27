@@ -1,7 +1,14 @@
+using MercadoBonsai.Domain.Interfaces;
+using MercadoBonsai.Infrastructure.Data;
+using MercadoBonsai.Infrastructure.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddSingleton<SqlServerConnectionFactory>();
+builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 
 var app = builder.Build();
 
