@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="MercadoBonsai.Domain/MercadoBonsai.Domain.csproj" />
+  <Project Path="MercadoBonsai.Infrastructure/MercadoBonsai.Infrastructure.csproj" />
+  <Project Path="MercadoBonsai.Web/MercadoBonsai.Web.csproj" />
+</Solution>
