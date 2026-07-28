@@ -1,0 +1,127 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Propaganda>
+@{
+    ViewData["Title"] = "Gestão de Espaços de Propaganda";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1" style="color: #1E3A2B;"><i class="icon-base ri ri-advertisement-line me-2 text-success"></i>Gestão de Espaços de Propaganda</h4>
+        <p class="text-muted mb-0 small">Audite solicitações de publicidade, confirme pagamentos e ative a exibição pública de anúncios.</p>
+    </div>
+</div>
+
+@if (TempData["Sucesso"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="icon-base ri ri-checkbox-circle-line me-2"></i>@TempData["Sucesso"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">ID / Anunciante</th>
+                        <th>Tipo de Espaço</th>
+                        <th>Arte Enviada</th>
+                        <th>Valor Mensal</th>
+                        <th>Status</th>
+                        <th>Data Expiração</th>
+                        <th class="text-end pe-3">Ações de Aprovação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-3">
+                                    <strong class="text-dark">#@item.Id</strong>
+                                    <div class="text-muted small">@item.UsuarioNome</div>
+                                    <small class="text-muted d-block">Solicitado em: @item.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small>
+                                </td>
+                                <td>
+                                    <span class="badge @(item.TipoEspaco.ToLower() switch {
+                                        "avancado" => "bg-primary",
+                                        "intermediario" => "bg-info text-dark",
+                                        "basico" => "bg-success",
+                                        _ => "bg-secondary"
+                                    }) px-2 py-1">
+                                        @item.TipoEspaco
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.ImagemUrl))
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="@item.ImagemUrl" alt="Arte" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;" />
+                                            <a href="@item.ImagemUrl" target="_blank" class="btn btn-xs btn-outline-secondary">Ver Arte</a>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Sem imagem enviada</span>
+                                    }
+                                </td>
+                                <td class="fw-bold text-success">
+                                    R$ @item.PrecoMensal.ToString("N2")
+                                </td>
+                                <td>
+                                    @if (item.Status == "Ativo")
+                                    {
+                                        <span class="badge bg-success">Ativo / Exibindo</span>
+                                    }
+                                    else if (item.Status == "Pendente")
+                                    {
+                                        <span class="badge bg-warning text-dark">Pendente de Aprovação</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">@item.Status</span>
+                                    }
+                                </td>
+                                <td>
+                                    @(item.DataExpiracao.HasValue ? item.DataExpiracao.Value.ToString("dd/MM/yyyy") : "Não ativado")
+                                </td>
+                                <td class="text-end pe-3">
+                                    @if (item.Status == "Pendente")
+                                    {
+                                        <form asp-action="AprovarPropaganda" method="post" class="d-inline-flex gap-2 align-items-center">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="date" name="dataExpiracao" class="form-control form-control-sm" value="@DateTime.UtcNow.AddDays(30).ToString("yyyy-MM-dd")" style="width: 140px;" />
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="icon-base ri ri-check-line me-1"></i> Aprovar & Ativar
+                                            </button>
+                                        </form>
+                                        <form asp-action="RejeitarPropaganda" method="post" class="d-inline ms-1">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Deseja rejeitar este anúncio?')">
+                                                Rejeitar
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Processado</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                Nenhum espaço de propaganda solicitado até o momento.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

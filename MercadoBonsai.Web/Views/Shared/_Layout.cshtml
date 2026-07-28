@@ -107,6 +107,12 @@
                                                 <span>Minha Assinatura / Planos</span>
                                             </a>
                                         </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Propaganda" asp-action="MinhasPropagandas">
+                                                <i class="icon-base ri ri-advertisement-line icon-md me-3"></i>
+                                                <span>Minhas Propagandas</span>
+                                            </a>
+                                        </li>
                                         @if (User.IsInRole("Administrador"))
                                         {
                                             <li>
@@ -200,7 +206,7 @@
                                 <!-- Dropdown Cadastros (Visível para Vendedor e Admin) -->
                                 @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Vendedor") || User.IsInRole("Administrador")))
                                 {
-                                    <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Produto" && (ViewContext.RouteData.Values["action"]?.ToString() == "MeusProdutos" || ViewContext.RouteData.Values["action"]?.ToString() == "Criar") || ViewContext.RouteData.Values["controller"]?.ToString() == "Leilao" && ViewContext.RouteData.Values["action"]?.ToString() == "MeusLeiloes" || ViewContext.RouteData.Values["controller"]?.ToString() == "Rifa" ? "active" : "")">
+                                    <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Produto" && (ViewContext.RouteData.Values["action"]?.ToString() == "MeusProdutos" || ViewContext.RouteData.Values["action"]?.ToString() == "Criar") || ViewContext.RouteData.Values["controller"]?.ToString() == "Leilao" && ViewContext.RouteData.Values["action"]?.ToString() == "MeusLeiloes" || ViewContext.RouteData.Values["controller"]?.ToString() == "Rifa" || ViewContext.RouteData.Values["controller"]?.ToString() == "Propaganda" ? "active" : "")">
                                         <a href="javascript:void(0)" class="menu-link menu-toggle">
                                             <i class="menu-icon icon-base ri ri-folder-add-line"></i>
                                             <div>Cadastros</div>
@@ -222,6 +228,12 @@
                                                 <a asp-controller="Rifa" asp-action="MinhasRifas" class="menu-link">
                                                     <i class="menu-icon icon-base ri ri-ticket-line me-2"></i>
                                                     <div>Minhas Ações entre Amigos</div>
+                                                </a>
+                                            </li>
+                                            <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Propaganda" ? "active" : "")">
+                                                <a asp-controller="Propaganda" asp-action="MinhasPropagandas" class="menu-link">
+                                                    <i class="menu-icon icon-base ri ri-advertisement-line me-2"></i>
+                                                    <div>Minhas Propagandas</div>
                                                 </a>
                                             </li>
                                         </ul>
@@ -247,6 +259,12 @@
                                                 <a asp-controller="Admin" asp-action="Planos" class="menu-link">
                                                     <i class="menu-icon icon-base ri ri-vip-crown-line me-2"></i>
                                                     <div>Gestão de Planos</div>
+                                                </a>
+                                            </li>
+                                            <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Propagandas" ? "active" : "")">
+                                                <a asp-controller="Admin" asp-action="Propagandas" class="menu-link">
+                                                    <i class="menu-icon icon-base ri ri-advertisement-line me-2"></i>
+                                                    <div>Gestão de Propagandas</div>
                                                 </a>
                                             </li>
                                         </ul>

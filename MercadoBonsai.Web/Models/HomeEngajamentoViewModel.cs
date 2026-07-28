@@ -12,4 +12,10 @@ public class HomeEngajamentoViewModel
     public Rifa? RifaAtiva { get; set; }
     public Patrocinio? PatrocinioDestaque { get; set; }
     public DicaCultivo? DicaCultivoSemana { get; set; }
+
+    // Listas de Propagandas Ativas por Modalidade Visual
+    public IEnumerable<Propaganda> PropagandasEconomico { get; set; } = new List<Propaganda>();
+    public IEnumerable<Propaganda> PropagandasBasico { get; set; } = new List<Propaganda>();
+    public IEnumerable<Propaganda> PropagandasIntermediario { get; set; } = new List<Propaganda>();
+    public IEnumerable<Propaganda> PropagandasAvancado { get; set; } = new List<Propaganda>();
 }

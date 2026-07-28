@@ -22,6 +22,7 @@ public class HomeController : Controller
     private readonly IPatrocinioRepository _patrocinioRepository;
     private readonly IDicaCultivoRepository _dicaCultivoRepository;
     private readonly IPlanoRepository _planoRepository;
+    private readonly IPropagandaRepository _propagandaRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
     public HomeController(
@@ -32,6 +33,7 @@ public class HomeController : Controller
         IPatrocinioRepository patrocinioRepository,
         IDicaCultivoRepository dicaCultivoRepository,
         IPlanoRepository planoRepository,
+        IPropagandaRepository propagandaRepository,
         IWebHostEnvironment webHostEnvironment)
     {
         _produtoRepository = produtoRepository;
@@ -41,6 +43,7 @@ public class HomeController : Controller
         _patrocinioRepository = patrocinioRepository;
         _dicaCultivoRepository = dicaCultivoRepository;
         _planoRepository = planoRepository;
+        _propagandaRepository = propagandaRepository;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -74,6 +77,12 @@ public class HomeController : Controller
         var rifaAtiva = await _rifaRepository.ObterRifaAtivaRecenteAsync();
         var patrocinioDestaque = await _patrocinioRepository.ObterPatrocinioDestaqueAsync();
 
+        // Propagandas Ativas por Categoria Visuall
+        var propagandasEconomico = await _propagandaRepository.ListarAtivasPorTipoAsync("Economico");
+        var propagandasBasico = await _propagandaRepository.ListarAtivasPorTipoAsync("Basico");
+        var propagandasIntermediario = await _propagandaRepository.ListarAtivasPorTipoAsync("Intermediario");
+        var propagandasAvancado = await _propagandaRepository.ListarAtivasPorTipoAsync("Avancado");
+
         DicaCultivo? dicaJson = null;
         try
         {
@@ -98,7 +107,11 @@ public class HomeController : Controller
             LeiloesAtivos = leiloesAtivos,
             RifaAtiva = rifaAtiva,
             PatrocinioDestaque = patrocinioDestaque,
-            DicaCultivoSemana = dicaJson ?? await _dicaCultivoRepository.ObterDicaRecenteAsync()
+            DicaCultivoSemana = dicaJson ?? await _dicaCultivoRepository.ObterDicaRecenteAsync(),
+            PropagandasEconomico = propagandasEconomico,
+            PropagandasBasico = propagandasBasico,
+            PropagandasIntermediario = propagandasIntermediario,
+            PropagandasAvancado = propagandasAvancado
         };
 
         return View(viewModel);

@@ -1,0 +1,113 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Propaganda>
+@{
+    ViewData["Title"] = "Minhas Propagandas e Anúncios";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1" style="color: #1E3A2B;"><i class="icon-base ri ri-advertisement-line me-2 text-success"></i>Minhas Propagandas & Anúncios</h4>
+        <p class="text-muted mb-0 small">Acompanhe suas solicitações de espaço publicitário no portal Mercado Bonsai.</p>
+    </div>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-success shadow-sm">
+        <i class="icon-base ri ri-add-line me-1"></i> Solicitar Novo Anúncio
+    </a>
+</div>
+
+@if (TempData["Sucesso"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="icon-base ri ri-checkbox-circle-line me-2"></i>@TempData["Sucesso"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">ID / Data</th>
+                        <th>Tipo de Espaço</th>
+                        <th>Arte Anexada</th>
+                        <th>Valor Mensal</th>
+                        <th>Status</th>
+                        <th>Período de Exibição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-3">
+                                    <strong class="text-dark">#@item.Id</strong>
+                                    <div class="text-muted small">@item.DataCriacao.ToString("dd/MM/yyyy HH:mm")</div>
+                                </td>
+                                <td>
+                                    <span class="badge @(item.TipoEspaco.ToLower() switch {
+                                        "avancado" => "bg-primary",
+                                        "intermediario" => "bg-info text-dark",
+                                        "basico" => "bg-success",
+                                        _ => "bg-secondary"
+                                    }) px-2 py-1">
+                                        Espaço @item.TipoEspaco
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.ImagemUrl))
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="@item.ImagemUrl" alt="Arte" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;" />
+                                            <a href="@item.ImagemUrl" target="_blank" class="btn btn-xs btn-outline-secondary">Visualizar</a>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Pendente de upload</span>
+                                    }
+                                </td>
+                                <td class="fw-bold text-success">
+                                    R$ @item.PrecoMensal.ToString("N2")
+                                </td>
+                                <td>
+                                    @if (item.Status == "Ativo")
+                                    {
+                                        <span class="badge bg-success"><i class="icon-base ri ri-checkbox-circle-line me-1"></i>Ativo / Publicado</span>
+                                    }
+                                    else if (item.Status == "Pendente")
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="icon-base ri ri-time-line me-1"></i>Aguardando Pagamento/Aprovação</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">@item.Status</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.DataInicio.HasValue && item.DataExpiracao.HasValue)
+                                    {
+                                        <small class="text-dark fw-semibold">@item.DataInicio.Value.ToString("dd/MM/yyyy") até @item.DataExpiracao.Value.ToString("dd/MM/yyyy")</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">Aguardando ativação pelo Admin</small>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                Você ainda não possui nenhum espaço publicitário solicitado. <a asp-controller="Home" asp-action="Index">Clique aqui para anunciar na Home!</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

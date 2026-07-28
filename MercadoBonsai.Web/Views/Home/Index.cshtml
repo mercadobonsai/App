@@ -49,6 +49,21 @@
             </div>
         </div>
 
+        <!-- ESPAÇO DE PROPAGANDA AVANÇADO: Full Banner (1 por linha - col-12) -->
+        @if (Model.PropagandasAvancado != null && Model.PropagandasAvancado.Any())
+        {
+            <div class="mb-5">
+                @foreach (var ad in Model.PropagandasAvancado)
+                {
+                    <div class="card border-0 shadow-sm overflow-hidden mb-3">
+                        <a href="@ad.LinkDestino" target="_blank" title="Anúncio Patrocinado">
+                            <img src="@ad.ImagemUrl" class="w-100 rounded" style="max-height: 140px; object-fit: cover;" alt="Banner Patrocinado Avançado" />
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+
         <!-- Destaques da Semana Section (Fotos com Proporção Padronizada 4/3 sem Cortes) -->
         <div class="mb-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -180,7 +195,7 @@
         </div>
 
         <!-- Cards Realocados (Clube VIP & Dica de Cultivo via JSON) -->
-        <div class="row g-4">
+        <div class="row g-4 mb-5">
             <!-- Card: Clube de Vantagens VIP -->
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm position-relative overflow-hidden h-100" style="background: linear-gradient(135deg, #1E3A2B 0%, #4A7C59 100%); color: #fff;">
@@ -228,9 +243,61 @@
             </div>
         </div>
 
+        <!-- ESPAÇO DE PROPAGANDA INTERMEDIÁRIO: Mesmo tamanho do Clube VIP (2 por linha - col-md-6) -->
+        @if (Model.PropagandasIntermediario != null && Model.PropagandasIntermediario.Any())
+        {
+            <div class="row g-4 mb-5">
+                @foreach (var ad in Model.PropagandasIntermediario)
+                {
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm overflow-hidden h-100">
+                            <a href="@ad.LinkDestino" target="_blank">
+                                <img src="@ad.ImagemUrl" class="card-img-top w-100" style="height: 220px; object-fit: cover;" alt="Propaganda Intermediário" />
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- ESPAÇO DE PROPAGANDA BÁSICO: Exibido a partir do final das informações da tela inicial (Até 4 por linha - col-md-3) -->
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0" style="color: #1E3A2B;"><i class="icon-base ri ri-advertisement-line text-success me-2"></i>Anúncios de Parceiros & Viveiros</h5>
+                <button class="btn btn-xs btn-outline-success" onclick="abrirModalSolicitarPropaganda()">
+                    <i class="icon-base ri ri-add-line me-1"></i> Anunciar Minha Marca
+                </button>
+            </div>
+
+            @if (Model.PropagandasBasico != null && Model.PropagandasBasico.Any())
+            {
+                <div class="row g-3">
+                    @foreach (var ad in Model.PropagandasBasico)
+                    {
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card border-0 shadow-sm overflow-hidden h-100 hover-top transition">
+                                <a href="@ad.LinkDestino" target="_blank">
+                                    <img src="@ad.ImagemUrl" class="card-img-top w-100" style="height: 160px; object-fit: cover;" alt="Anúncio Básico" />
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="card border-0 p-4 text-center bg-light">
+                    <p class="text-muted small mb-2">Espaço para até 4 Anúncios Básicos de parceiros.</p>
+                    <button class="btn btn-sm btn-success mx-auto" style="max-width: 220px;" onclick="abrirModalSolicitarPropaganda()">
+                        <i class="icon-base ri ri-megaphone-line me-1"></i> Adquirir Espaço Básico
+                    </button>
+                </div>
+            }
+        </div>
+
     </div>
 
-    <!-- Coluna Lateral EXCLUSIVA para Viveiros em Destaque, Leilões e Ações (Múltiplos Registros com Navegação Manual) -->
+    <!-- Coluna Lateral EXCLUSIVA para Viveiros em Destaque, Leilões, Ações e Espaço Econômico -->
     <div class="col-lg-3 col-12 mb-4">
 
         <!-- Card 1: Carrossel Dinâmico de 'Viveiros em Destaque' -->
@@ -403,18 +470,135 @@
             </div>
         }
 
-        <!-- Card 4: Banner Comercial "Anuncie seu viveiro aqui" (Venda de Mídia) -->
+        <!-- Card 4: ESPAÇO DE PROPAGANDA ECONÔMICO (Card Lateral Compacto) -->
+        @if (Model.PropagandasEconomico != null && Model.PropagandasEconomico.Any())
+        {
+            @foreach (var ad in Model.PropagandasEconomico)
+            {
+                <div class="card mb-4 border-0 shadow-sm overflow-hidden hover-top transition">
+                    <div class="card-header bg-label-secondary py-1 px-3 d-flex justify-content-between align-items-center">
+                        <span class="badge bg-secondary" style="font-size: 0.7rem;">Patrocinado</span>
+                        <small class="text-muted" style="font-size: 0.7rem;">Espaço Econômico</small>
+                    </div>
+                    <a href="@ad.LinkDestino" target="_blank">
+                        <img src="@ad.ImagemUrl" class="card-img-top w-100" style="height: 140px; object-fit: cover;" alt="Anúncio Econômico Lateral" />
+                    </a>
+                </div>
+            }
+        }
+        
         <div class="card border-0 shadow-sm text-center p-3" style="border: 2px dashed #4A7C59 !important; background-color: #F4F8F5;">
             <div class="card-body p-0">
                 <i class="icon-base ri ri-advertisement-line text-success mb-2" style="font-size: 2rem;"></i>
                 <h6 class="fw-bold mb-1" style="color: #1E3A2B;">Anuncie seu Viveiro Aqui</h6>
-                <p class="text-muted small mb-3">Destaque sua loja ou marca para milhares de bonsaístas em todo o país.</p>
-                <a href="mailto:comercial@mercadobonsai.com.br" class="btn btn-sm btn-success w-100">
-                    <i class="icon-base ri ri-mail-send-line me-1"></i> Anunciar Conosco
-                </a>
+                <p class="text-muted small mb-3">Destaque sua marca para milhares de bonsaístas em todo o Brasil.</p>
+                <button class="btn btn-sm btn-success w-100" onclick="abrirModalSolicitarPropaganda()">
+                    <i class="icon-base ri ri-megaphone-line me-1"></i> Solicitar Espaço Publicitário
+                </button>
             </div>
         </div>
 
+    </div>
+</div>
+
+<!-- MODAL INTERATIVO UNIFICADO (XL): Seleção de Espaço + Upload + Live Preview nas Proporções Exatas -->
+<div class="modal fade" id="modalSolicitarPropaganda" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title fw-bold text-white mb-0">
+                    <i class="icon-base ri ri-megaphone-line me-2"></i>Espaços de Propaganda & Publicidade - Mercado Bonsai
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4">Escolha a categoria visual desejada para divulgar seu viveiro, produtos ou serviços no maior portal de bonsais do país:</p>
+
+                <!-- Seleção Interativa dos 4 Tipos de Espaços Visuais -->
+                <div class="row g-3 mb-4">
+                    <!-- Espaço 1: Econômico -->
+                    <div class="col-md-3">
+                        <div class="card h-100 border-2 card-opcao-ad cursor-pointer p-3 text-center" id="cardOpt_Economico" onclick="selecionarTipoAd('Economico', 49.90, 'cardOpt_Economico')">
+                            <span class="badge bg-secondary mb-2 mx-auto" style="width: max-content;">Barra Lateral</span>
+                            <h6 class="fw-bold mb-1 text-dark">Econômico</h6>
+                            <h5 class="fw-bold text-success mb-2">R$ 49,90<small class="text-muted fs-6">/mês</small></h5>
+                            <p class="text-muted small mb-0" style="font-size: 0.75rem;">Card compacto exibido na barra lateral direita do site.</p>
+                        </div>
+                    </div>
+                    <!-- Espaço 2: Básico -->
+                    <div class="col-md-3">
+                        <div class="card h-100 border-2 card-opcao-ad cursor-pointer p-3 text-center active-ad-card" id="cardOpt_Basico" onclick="selecionarTipoAd('Basico', 79.90, 'cardOpt_Basico')">
+                            <span class="badge bg-success mb-2 mx-auto" style="width: max-content;">Base da Home (Grid 4)</span>
+                            <h6 class="fw-bold mb-1 text-dark">Básico</h6>
+                            <h5 class="fw-bold text-success mb-2">R$ 79,90<small class="text-muted fs-6">/mês</small></h5>
+                            <p class="text-muted small mb-0" style="font-size: 0.75rem;">Card padrão na base da tela inicial em linha de até 4 anúncios.</p>
+                        </div>
+                    </div>
+                    <!-- Espaço 3: Intermediário -->
+                    <div class="col-md-3">
+                        <div class="card h-100 border-2 card-opcao-ad cursor-pointer p-3 text-center" id="cardOpt_Intermediario" onclick="selecionarTipoAd('Intermediario', 149.90, 'cardOpt_Intermediario')">
+                            <span class="badge bg-info text-dark mb-2 mx-auto" style="width: max-content;">Grid 2 (Tam. Clube VIP)</span>
+                            <h6 class="fw-bold mb-1 text-dark">Intermediário</h6>
+                            <h5 class="fw-bold text-success mb-2">R$ 149,90<small class="text-muted fs-6">/mês</small></h5>
+                            <p class="text-muted small mb-0" style="font-size: 0.75rem;">Card de destaque do tamanho do Clube VIP em linha de 2 anúncios.</p>
+                        </div>
+                    </div>
+                    <!-- Espaço 4: Avançado -->
+                    <div class="col-md-3">
+                        <div class="card h-100 border-2 card-opcao-ad cursor-pointer p-3 text-center" id="cardOpt_Avancado" onclick="selecionarTipoAd('Avancado', 299.90, 'cardOpt_Avancado')">
+                            <span class="badge bg-primary mb-2 mx-auto" style="width: max-content;">Banner Full Topo</span>
+                            <h6 class="fw-bold mb-1 text-dark">Avançado</h6>
+                            <h5 class="fw-bold text-success mb-2">R$ 299,90<small class="text-muted fs-6">/mês</small></h5>
+                            <p class="text-muted small mb-0" style="font-size: 0.75rem;">Banner Full de largura total (1 por linha) com máxima visibilidade.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário de Upload e Live Preview em Tempo Real -->
+                <div class="row g-4 pt-3 border-top">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3"><i class="icon-base ri ri-upload-cloud-line me-1 text-success"></i>Dados do Anúncio & Arte</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Espaço Selecionado:</label>
+                            <input type="text" id="adTipoSelecionadoDisplay" class="form-control form-control-sm bg-light fw-bold text-success" value="Básico - R$ 79,90 / mês" readonly />
+                            <input type="hidden" id="adTipoInput" value="Basico" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Link de Destino ao Clicar (Site / WhatsApp / Instagram):</label>
+                            <input type="url" id="adLinkDestinoInput" class="form-control form-control-sm" placeholder="https://seu-site.com.br ou https://wa.me/55..." />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Anexar Arte / Imagem do Anúncio:</label>
+                            <input type="file" id="adArteFileInput" class="form-control form-control-sm" accept="image/*" onchange="atualizarLivePreview(this)" />
+                            <small class="text-muted d-block mt-1">Formatos suportados: PNG, JPG, WEBP.</small>
+                        </div>
+                    </div>
+
+                    <!-- Coluna de Live Preview em Tempo Real nas Proporções Exatas -->
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3"><i class="icon-base ri ri-eye-line me-1 text-success"></i>Pré-visualização ao Vivo (Proporções Exatas)</h6>
+                        <div class="p-3 bg-light rounded border text-center d-flex flex-column align-items-center justify-content-center" style="min-height: 240px;" id="containerLivePreviewAd">
+                            
+                            <!-- Box de Preview Dinâmico Ajustado via JS -->
+                            <div id="boxPreviewProporcional" class="border rounded overflow-hidden bg-white shadow-sm w-100" style="height: 160px; transition: all 0.3s ease;">
+                                <img id="imgLivePreview" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Arte" />
+                            </div>
+                            <small class="text-muted mt-2 fw-semibold" id="legendaPreviewDimensao">Exibição no Formato da Categoria: Básico (Grid 4)</small>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success px-4 shadow-sm" onclick="enviarSolicitarPropagandaReal()">
+                    <i class="icon-base ri ri-send-plane-fill me-1"></i> Confirmar & Solicitar Espaço (Status Pendente)
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -444,11 +628,102 @@
         .position-relative:hover .img-zoom { transform: scale(1.03); }
         .thumb-gallery { cursor: pointer; opacity: 0.7; transition: opacity 0.2s, border-color 0.2s; }
         .thumb-gallery.active, .thumb-gallery:hover { opacity: 1; border: 2px solid #4A7C59 !important; }
+        .card-opcao-ad { transition: all 0.2s ease-in-out; border-color: #e0e0e0; }
+        .card-opcao-ad:hover { transform: translateY(-4px); border-color: #4A7C59; }
+        .active-ad-card { border-color: #4A7C59 !important; background-color: #F4F8F5; }
     </style>
 }
 
 @section Scripts {
     <script>
+        function abrirModalSolicitarPropaganda() {
+            const modalEl = document.getElementById('modalSolicitarPropaganda');
+            const bsModal = new bootstrap.Modal(modalEl);
+            bsModal.show();
+        }
+
+        function selecionarTipoAd(tipo, preco, cardId) {
+            document.querySelectorAll('.card-opcao-ad').forEach(c => c.classList.remove('active-ad-card'));
+            const cardEl = document.getElementById(cardId);
+            if (cardEl) cardEl.classList.add('active-ad-card');
+
+            document.getElementById('adTipoInput').value = tipo;
+            document.getElementById('adTipoSelecionadoDisplay').value = `${tipo} - R$ ${preco.toFixed(2).replace('.', ',')} / mês`;
+
+            const boxPreview = document.getElementById('boxPreviewProporcional');
+            const legenda = document.getElementById('legendaPreviewDimensao');
+
+            if (tipo === 'Economico') {
+                boxPreview.style.height = '140px';
+                boxPreview.style.width = '70%';
+                legenda.innerText = 'Exibição no Formato da Categoria: Econômico (Barra Lateral 70%)';
+            } else if (tipo === 'Basico') {
+                boxPreview.style.height = '160px';
+                boxPreview.style.width = '100%';
+                legenda.innerText = 'Exibição no Formato da Categoria: Básico (Grid 4 - 100%)';
+            } else if (tipo === 'Intermediario') {
+                boxPreview.style.height = '220px';
+                boxPreview.style.width = '100%';
+                legenda.innerText = 'Exibição no Formato da Categoria: Intermediario (Grid 2 - Tam. Clube VIP)';
+            } else if (tipo === 'Avancado') {
+                boxPreview.style.height = '120px';
+                boxPreview.style.width = '100%';
+                legenda.innerText = 'Exibição no Formato da Categoria: Avançado (Banner Full 100%)';
+            }
+        }
+
+        function atualizarLivePreview(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('imgLivePreview').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function enviarSolicitarPropagandaReal() {
+            const tipoEspaco = document.getElementById('adTipoInput').value;
+            const linkDestino = document.getElementById('adLinkDestinoInput').value;
+            const fileInput = document.getElementById('adArteFileInput');
+
+            try {
+                const formData = new FormData();
+                formData.append('tipoEspaco', tipoEspaco);
+                formData.append('linkDestino', linkDestino);
+                if (fileInput.files && fileInput.files[0]) {
+                    formData.append('arteImagem', fileInput.files[0]);
+                }
+
+                const response = await fetch('/Propaganda/SolicitarComArte', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.status === 401) {
+                    alert('Você precisa estar logado no portal para solicitar espaços publicitários.');
+                    window.location.href = '/Conta/Login';
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.sucesso) {
+                    alert('🎉 ' + data.mensagem);
+                    const modalEl = bootstrap.Modal.getInstance(document.getElementById('modalSolicitarPropaganda'));
+                    if (modalEl) modalEl.hide();
+                    window.location.href = '/Propaganda/MinhasPropagandas';
+                } else {
+                    alert('⚠️ ' + data.mensagem);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao enviar a solicitação. Verifique sua conexão e tente novamente.');
+            }
+        }
+
         // Mapeamento dinâmico de leilões e ações ativas alimentados pelo PostgreSQL/Supabase
         const listaLeiloesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.LeiloesAtivos ?? new List<MercadoBonsai.Domain.Entities.Leilao>()).Select(l => new {
             tipo = "leilao",
@@ -731,7 +1006,6 @@
                     const modalEngajamento = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesEngajamento'));
                     if (modalEngajamento) modalEngajamento.hide();
 
-                    // Atualizar contadores em tempo real na interface da Home
                     const elemCotasVendidas = document.getElementById(`rifaCotasVendidas_${rifaId}`);
                     if (elemCotasVendidas) elemCotasVendidas.innerText = `${data.cotasVendidas}/${data.totalCotas} Cotas`;
 
@@ -744,7 +1018,6 @@
                     const elemPorcentagemTexto = document.getElementById(`rifaPorcentagemTexto_${rifaId}`);
                     if (elemPorcentagemTexto) elemPorcentagemTexto.innerText = `${data.porcentagemVendida}% vendidas`;
 
-                    // Exibir Modal de Pagamento Pix Simulado com QR Code e Chave Copia e Cola
                     exibirModalPixSimulado(data);
                 } else {
                     alert('⚠️ ' + data.mensagem);
@@ -771,7 +1044,6 @@
                                 </div>
                                 <p class="text-muted small mb-3">Realize o pagamento do Pix fictício abaixo para confirmar suas cotas:</p>
 
-                                <!-- QR Code Simulado -->
                                 <div class="p-3 bg-light rounded d-inline-block shadow-sm mb-3 border border-success">
                                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(data.chavePix)}" alt="QR Code Pix Simulado" class="img-fluid rounded" style="width: 180px; height: 180px;" />
                                 </div>

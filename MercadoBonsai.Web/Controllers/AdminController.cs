@@ -16,15 +16,18 @@ public class AdminController : Controller
 {
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPlanoRepository _planoRepository;
+    private readonly IPropagandaRepository _propagandaRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
     public AdminController(
         IUsuarioRepository usuarioRepository, 
         IPlanoRepository planoRepository, 
+        IPropagandaRepository propagandaRepository,
         IWebHostEnvironment webHostEnvironment)
     {
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
+        _propagandaRepository = propagandaRepository;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -166,5 +169,46 @@ public class AdminController : Controller
 
         TempData["Sucesso"] = $"Configurações do Plano '{existente.Nome}' salvas com sucesso!";
         return RedirectToAction("Planos");
+    }
+
+    // GET: /Admin/Propagandas (Auditoria, Validade e Ativação de Anúncios)
+    [HttpGet]
+    public async Task<IActionResult> Propagandas()
+    {
+        var propagandas = await _propagandaRepository.ListarTodasAsync();
+        return View(propagandas);
+    }
+
+    // POST: /Admin/AprovarPropaganda
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AprovarPropaganda(int id, DateTime dataExpiracao)
+    {
+        var ad = await _propagandaRepository.ObterPorIdAsync(id);
+        if (ad == null) return NotFound();
+
+        ad.DataInicio = DateTime.UtcNow;
+        ad.DataExpiracao = dataExpiracao > DateTime.UtcNow ? dataExpiracao : DateTime.UtcNow.AddDays(30);
+        ad.Status = "Ativo";
+
+        await _propagandaRepository.AtualizarAsync(ad);
+
+        TempData["Sucesso"] = $"Propaganda #{ad.Id} ({ad.TipoEspaco}) de {ad.UsuarioNome} aprovada com sucesso! Válida até {ad.DataExpiracao:dd/MM/yyyy}.";
+        return RedirectToAction("Propagandas");
+    }
+
+    // POST: /Admin/RejeitarPropaganda
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RejeitarPropaganda(int id)
+    {
+        var ad = await _propagandaRepository.ObterPorIdAsync(id);
+        if (ad == null) return NotFound();
+
+        ad.Status = "Rejeitado";
+        await _propagandaRepository.AtualizarAsync(ad);
+
+        TempData["Sucesso"] = $"Propaganda #{ad.Id} foi rejeitada.";
+        return RedirectToAction("Propagandas");
     }
 }
