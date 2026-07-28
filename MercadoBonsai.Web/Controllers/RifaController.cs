@@ -29,6 +29,75 @@ public class RifaController : Controller
         _webHostEnvironment = webHostEnvironment;
     }
 
+    // POST: /Rifa/AdquirirCotas (Fluxo de Participação e Pagamento Pix Fictício com Persistência)
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> AdquirirCotas(int rifaId, int quantidadeCotas)
+    {
+        var rifa = await _rifaRepository.ObterPorIdAsync(rifaId);
+        if (rifa == null)
+        {
+            return Json(new { sucesso = false, mensagem = "Ação entre Amigos não encontrada." });
+        }
+
+        if (rifa.Status != 1)
+        {
+            return Json(new { sucesso = false, mensagem = "Esta Ação entre Amigos não está ativa para aquisição de cotas." });
+        }
+
+        var cotasDisponiveis = rifa.TotalCotas - rifa.CotasVendidas;
+        if (quantidadeCotas <= 0 || quantidadeCotas > cotasDisponiveis)
+        {
+            return Json(new { 
+                sucesso = false, 
+                mensagem = $"Quantidade de cotas inválida. Cotas disponíveis no momento: {cotasDisponiveis}." 
+            });
+        }
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(userIdClaim, out int compradorId);
+        var compradorNome = User.Identity?.Name ?? "Comprador Mercado Bonsai";
+
+        var valorTotal = quantidadeCotas * rifa.ValorCota;
+        var pixGuid = Guid.NewGuid().ToString("N").Substring(0, 16);
+        var chavePixFormatada = $"00020126580014BR.GOV.BCB.PIX0136{pixGuid}52040000530398654{valorTotal:F2}5802BR5915MERCADOBONSAI6009SAO_PAULO62070503***6304";
+
+        var pedido = new PedidoRifa
+        {
+            RifaId = rifa.Id,
+            UsuarioId = compradorId,
+            UsuarioNome = compradorNome,
+            QuantidadeCotas = quantidadeCotas,
+            ValorTotal = valorTotal,
+            ChavePix = chavePixFormatada,
+            Status = "Pendente",
+            DataReserva = DateTime.UtcNow
+        };
+
+        // 1. Gravar pedido/reserva de cotas com status Pendente no Supabase
+        await _rifaRepository.InserirPedidoAsync(pedido);
+
+        // 2. Atualizar cotas vendidas da rifa
+        rifa.CotasVendidas += quantidadeCotas;
+        await _rifaRepository.AtualizarAsync(rifa);
+
+        // Obter estado atualizado da rifa
+        var rifaAtualizada = await _rifaRepository.ObterPorIdAsync(rifa.Id);
+
+        return Json(new {
+            sucesso = true,
+            mensagem = $"Reserva efetuada! {quantidadeCotas} cota(s) reservada(s) para {compradorNome}.",
+            rifaId = rifa.Id,
+            quantidadeCotas = quantidadeCotas,
+            valorTotal = $"R$ {valorTotal:N2}",
+            chavePix = chavePixFormatada,
+            cotasVendidas = rifaAtualizada?.CotasVendidas ?? rifa.CotasVendidas,
+            totalCotas = rifaAtualizada?.TotalCotas ?? rifa.TotalCotas,
+            porcentagemVendida = rifaAtualizada?.PorcentagemVendida ?? rifa.PorcentagemVendida,
+            statusPedido = "Pendente"
+        });
+    }
+
     // GET: /Rifa/MinhasRifas (Gestão do Vendedor)
     [HttpGet]
     [Authorize(Roles = "Vendedor, Administrador")]

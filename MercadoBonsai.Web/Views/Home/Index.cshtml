@@ -369,13 +369,13 @@
             }
         </div>
 
-        <!-- Card 3: Ação entre Amigos (Banco de Dados + Modal JS) -->
+        <!-- Card 3: Ação entre Amigos (Banco de Dados + Modal JS Dinâmico) -->
         @if (Model.RifaAtiva != null)
         {
             <div class="card mb-4 border-0 shadow-sm overflow-hidden hover-top transition">
                 <div class="card-header bg-success py-2 px-3 d-flex justify-content-between align-items-center text-white">
                     <span class="badge bg-white text-success fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-ticket-2-fill me-1"></i>Ação entre Amigos</span>
-                    <small class="fw-medium text-white-50">@Model.RifaAtiva.CotasVendidas/@Model.RifaAtiva.TotalCotas Cotas</small>
+                    <small class="fw-medium text-white-50" id="rifaCotasVendidas_@Model.RifaAtiva.Id">@Model.RifaAtiva.CotasVendidas/@Model.RifaAtiva.TotalCotas Cotas</small>
                 </div>
                 <div class="position-relative cursor-pointer" onclick="abrirModalEngajamentoItem('rifa', @Model.RifaAtiva.Id)" title="Clique para abrir galeria e cotas">
                     <img src="@Model.RifaAtiva.FotoPrincipalUrl" class="card-img-top img-zoom" alt="@Model.RifaAtiva.Titulo" style="height: 160px; object-fit: cover;" />
@@ -389,10 +389,10 @@
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <small class="text-muted" style="font-size: 0.75rem;">Progresso das cotas:</small>
-                            <small class="fw-bold text-success" style="font-size: 0.75rem;">@Model.RifaAtiva.PorcentagemVendida% vendidas</small>
+                            <small class="fw-bold text-success" id="rifaPorcentagemTexto_@Model.RifaAtiva.Id" style="font-size: 0.75rem;">@Model.RifaAtiva.PorcentagemVendida% vendidas</small>
                         </div>
                         <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: @Model.RifaAtiva.PorcentagemVendida%;" aria-valuenow="@Model.RifaAtiva.PorcentagemVendida" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" id="rifaProgressoBar_@Model.RifaAtiva.Id" role="progressbar" style="width: @Model.RifaAtiva.PorcentagemVendida%;" aria-valuenow="@Model.RifaAtiva.PorcentagemVendida" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
 
@@ -625,8 +625,8 @@
 
                 rodapeEl.innerHTML = `
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-success px-4" onclick="confirmarRifaSimulada()">
-                        <i class="icon-base ri ri-ticket-line me-1"></i> Comprar Cotas (PIX / Cartão)
+                    <button type="button" class="btn btn-success px-4" onclick="confirmarRifaReal(${item.id})">
+                        <i class="icon-base ri ri-ticket-line me-1"></i> Comprar Cotas (Gerar Pix Simulado)
                     </button>
                 `;
             }
@@ -669,7 +669,6 @@
                 if (data.sucesso) {
                     alert(data.mensagem);
                     
-                    // Atualizar elementos visuais no modal em tempo real
                     const lanceAtualEl = document.getElementById('modalLanceAtualDisplay');
                     if (lanceAtualEl) lanceAtualEl.innerText = data.novoLanceAtual;
                     
@@ -678,7 +677,6 @@
                         inputVal.min = data.novoProximoMinimo;
                     }
 
-                    // Atualizar tabela de histórico de lances em tempo real
                     const tabelaLancesBody = document.getElementById('modalTabelaLancesBody');
                     if (tabelaLancesBody && data.historicoLances) {
                         tabelaLancesBody.innerHTML = data.historicoLances.map(l => `
@@ -690,7 +688,6 @@
                         `).join('');
                     }
 
-                    // Atualizar valores do card na tela principal
                     const cardLanceEl = document.querySelector(`#cardLanceLeilao_${leilaoId}`);
                     if (cardLanceEl) cardLanceEl.innerText = data.novoLanceAtual;
 
@@ -705,11 +702,130 @@
             }
         }
 
-        function confirmarRifaSimulada() {
-            const total = document.getElementById('totalCalculadoRifa').innerText;
-            alert(`✅ Reserva de cotas efetuada no valor de ${total}! Redirecionando para pagamento via PIX...`);
-            const modalEl = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesEngajamento'));
-            if(modalEl) modalEl.hide();
+        async function confirmarRifaReal(rifaId) {
+            const selectEl = document.getElementById('qtdCotasRifa');
+            if (!selectEl) return;
+            const qtd = parseInt(selectEl.value) || 1;
+
+            try {
+                const formData = new FormData();
+                formData.append('rifaId', rifaId);
+                formData.append('quantidadeCotas', qtd);
+
+                const response = await fetch('/Rifa/AdquirirCotas', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.status === 401) {
+                    alert('Você precisa estar logado no sistema para adquirir cotas.');
+                    window.location.href = '/Conta/Login';
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.sucesso) {
+                    const modalEngajamento = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesEngajamento'));
+                    if (modalEngajamento) modalEngajamento.hide();
+
+                    // Atualizar contadores em tempo real na interface da Home
+                    const elemCotasVendidas = document.getElementById(`rifaCotasVendidas_${rifaId}`);
+                    if (elemCotasVendidas) elemCotasVendidas.innerText = `${data.cotasVendidas}/${data.totalCotas} Cotas`;
+
+                    const elemProgressoBar = document.getElementById(`rifaProgressoBar_${rifaId}`);
+                    if (elemProgressoBar) {
+                        elemProgressoBar.style.width = `${data.porcentagemVendida}%`;
+                        elemProgressoBar.setAttribute('aria-valuenow', data.porcentagemVendida);
+                    }
+
+                    const elemPorcentagemTexto = document.getElementById(`rifaPorcentagemTexto_${rifaId}`);
+                    if (elemPorcentagemTexto) elemPorcentagemTexto.innerText = `${data.porcentagemVendida}% vendidas`;
+
+                    // Exibir Modal de Pagamento Pix Simulado com QR Code e Chave Copia e Cola
+                    exibirModalPixSimulado(data);
+                } else {
+                    alert('⚠️ ' + data.mensagem);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao registrar a reserva de cotas. Tente novamente.');
+            }
+        }
+
+        function exibirModalPixSimulado(data) {
+            const modalPixHtml = `
+                <div class="modal fade" id="modalPixSimulado" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header bg-success text-white py-3">
+                                <h5 class="modal-title fw-bold text-white mb-0"><i class="icon-base ri ri-qr-code-line me-2"></i>Pagamento Pix - Ação entre Amigos</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4 text-center">
+                                <div class="alert alert-success border-0 py-2 mb-3">
+                                    <i class="icon-base ri ri-checkbox-circle-line me-1 fs-5 align-middle"></i>
+                                    <strong>Reserva com Status Pendente gravada no banco!</strong>
+                                </div>
+                                <p class="text-muted small mb-3">Realize o pagamento do Pix fictício abaixo para confirmar suas cotas:</p>
+
+                                <!-- QR Code Simulado -->
+                                <div class="p-3 bg-light rounded d-inline-block shadow-sm mb-3 border border-success">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(data.chavePix)}" alt="QR Code Pix Simulado" class="img-fluid rounded" style="width: 180px; height: 180px;" />
+                                </div>
+
+                                <div class="bg-light p-3 rounded mb-3 text-start border">
+                                    <div class="d-flex justify-content-between mb-1 small">
+                                        <span class="text-muted">Quantidade de Cotas:</span>
+                                        <strong class="text-dark">${data.quantidadeCotas} Cota(s)</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1 small">
+                                        <span class="text-muted">Valor Total do Pix:</span>
+                                        <strong class="text-success fs-5">${data.valorTotal}</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between small">
+                                        <span class="text-muted">Status da Reserva:</span>
+                                        <span class="badge bg-warning text-dark">${data.statusPedido}</span>
+                                    </div>
+                                </div>
+
+                                <div class="text-start mb-3">
+                                    <label class="form-label fw-semibold small text-muted">Chave Pix Copia e Cola (Simulada):</label>
+                                    <div class="input-group">
+                                        <input type="text" id="inputPixCopiaCola" class="form-control form-control-sm text-truncate bg-white" value="${data.chavePix}" readonly />
+                                        <button class="btn btn-sm btn-success" onclick="copiarChavePix()">
+                                            <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal" onclick="alert('Simulação de pagamento via Pix concluída!')">
+                                    Concluir Simulação de Pagamento
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const antigo = document.getElementById('modalPixSimulado');
+            if (antigo) antigo.remove();
+
+            document.body.insertAdjacentHTML('beforeend', modalPixHtml);
+            const bsModalPix = new bootstrap.Modal(document.getElementById('modalPixSimulado'));
+            bsModalPix.show();
+        }
+
+        function copiarChavePix() {
+            const input = document.getElementById('inputPixCopiaCola');
+            if (input) {
+                input.select();
+                navigator.clipboard.writeText(input.value);
+                alert('📋 Chave Pix Copia e Cola copiada para a área de transferência!');
+            }
         }
     </script>
 }

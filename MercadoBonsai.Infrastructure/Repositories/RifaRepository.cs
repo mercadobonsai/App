@@ -108,6 +108,16 @@ public class RifaRepository : IRifaRepository
         await connection.ExecuteAsync(sql, rifa);
     }
 
+    public async Task InserirPedidoAsync(PedidoRifa pedido)
+    {
+        const string sql = @"
+            INSERT INTO pedidosrifa (rifaid, usuarioid, usuarionome, quantidadecotas, valortotal, chavepix, status, datareserva)
+            VALUES (@RifaId, @UsuarioId, @UsuarioNome, @QuantidadeCotas, @ValorTotal, @ChavePix, @Status, @DataReserva);";
+
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, pedido);
+    }
+
     public async Task<int> ContarPorVendedorNosUltimos30DiasAsync(int vendedorId)
     {
         const string sql = @"

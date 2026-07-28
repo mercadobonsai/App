@@ -11,5 +11,6 @@ public interface IRifaRepository
     Task<IEnumerable<Rifa>> ListarPorVendedorAsync(int vendedorId);
     Task<int> InserirAsync(Rifa rifa);
     Task AtualizarAsync(Rifa rifa);
+    Task InserirPedidoAsync(PedidoRifa pedido);
     Task<int> ContarPorVendedorNosUltimos30DiasAsync(int vendedorId);
 }
