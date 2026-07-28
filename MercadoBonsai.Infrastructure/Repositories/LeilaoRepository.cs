@@ -109,7 +109,29 @@ public class LeilaoRepository : ILeilaoRepository
             ORDER BY datacriacao DESC;";
 
         using var connection = _connectionFactory.CreateConnection();
-        return await connection.QueryAsync<Leilao>(sql);
+        var leiloes = (await connection.QueryAsync<Leilao>(sql)).ToList();
+
+        // Carregar os 5 últimos lances para cada leilão ativo
+        var sqlLances = @"
+            SELECT 
+                id AS Id,
+                leilaoid AS LeilaoId,
+                usuarioid AS UsuarioId,
+                usuarionome AS UsuarioNome,
+                valor AS Valor,
+                datalance AS DataLance
+            FROM lancesleilao
+            WHERE leilaoid = @Id
+            ORDER BY datalance DESC
+            LIMIT 5;";
+
+        foreach (var l in leiloes)
+        {
+            var lances = await connection.QueryAsync<LanceLeilao>(sqlLances, new { Id = l.Id });
+            l.Lances = lances.ToList();
+        }
+
+        return leiloes;
     }
 
     public async Task<IEnumerable<Leilao>> ListarPorVendedorAsync(int vendedorId)
@@ -175,6 +197,16 @@ public class LeilaoRepository : ILeilaoRepository
 
         using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(sql, leilao);
+    }
+
+    public async Task InserirLanceAsync(LanceLeilao lance)
+    {
+        const string sql = @"
+            INSERT INTO lancesleilao (leilaoid, usuarioid, usuarionome, valor, datalance)
+            VALUES (@LeilaoId, @UsuarioId, @UsuarioNome, @Valor, @DataLance);";
+
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, lance);
     }
 
     public async Task<int> ContarPorVendedorNosUltimos30DiasAsync(int vendedorId)

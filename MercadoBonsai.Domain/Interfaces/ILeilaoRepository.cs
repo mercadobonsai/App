@@ -13,5 +13,6 @@ public interface ILeilaoRepository
     Task<IEnumerable<Leilao>> ListarEncerradosAsync();
     Task<int> InserirAsync(Leilao leilao);
     Task AtualizarAsync(Leilao leilao);
+    Task InserirLanceAsync(LanceLeilao lance);
     Task<int> ContarPorVendedorNosUltimos30DiasAsync(int vendedorId);
 }

@@ -48,6 +48,78 @@ public class LeilaoController : Controller
         return View(leiloes);
     }
 
+    // POST: /Leilao/RegistrarLance (Fluxo Completo de Registro e Persistência no Banco)
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> RegistrarLance(int leilaoId, decimal valorLance)
+    {
+        var leilao = await _leilaoRepository.ObterPorIdAsync(leilaoId);
+        if (leilao == null)
+        {
+            return Json(new { sucesso = false, mensagem = "Leilão não encontrado." });
+        }
+
+        // Validação Crítica 1: Garantir que o leilão esteja com o status Iniciado (StatusLeilao.Iniciado = 2)
+        if (leilao.Status != StatusLeilao.Iniciado)
+        {
+            return Json(new { sucesso = false, mensagem = "Lances bloqueados: Este leilão não está atualmente com o status 'Iniciado / Ao Vivo'." });
+        }
+
+        // Validação de Término do Leilão
+        if (leilao.DataFinalizacao < DateTime.UtcNow)
+        {
+            return Json(new { sucesso = false, mensagem = "Leilão encerrado! O prazo limite para recebimento de lances foi atingido." });
+        }
+
+        // Validação Crítica 2: Validar se o novo lance é estritamente superior ao lance atual
+        var lanceMinimoExigido = leilao.LanceAtual + leilao.IncrementoMinimo;
+        if (valorLance <= leilao.LanceAtual || valorLance < lanceMinimoExigido)
+        {
+            return Json(new { 
+                sucesso = false, 
+                mensagem = $"O valor ofertado (R$ {valorLance:N2}) deve ser estritamente superior ao lance atual. Mínimo exigido: R$ {lanceMinimoExigido:N2}." 
+            });
+        }
+
+        // Obter comprador logado e timestamp exato
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(userIdClaim, out int compradorId);
+        var compradorNome = User.Identity?.Name ?? "Comprador Mercado Bonsai";
+
+        var novoLance = new LanceLeilao
+        {
+            LeilaoId = leilao.Id,
+            UsuarioId = compradorId,
+            UsuarioNome = compradorNome,
+            Valor = valorLance,
+            DataLance = DateTime.UtcNow
+        };
+
+        // 1. Gravar novo lance na tabela lancesleilao
+        await _leilaoRepository.InserirLanceAsync(novoLance);
+
+        // 2. Atualizar valores do leilão no banco de dados
+        leilao.LanceAtual = valorLance;
+        leilao.ProximoLanceMinimo = valorLance + leilao.IncrementoMinimo;
+        await _leilaoRepository.AtualizarAsync(leilao);
+
+        // Obter leilão atualizado com a lista de lances persistidos
+        var leilaoAtualizado = await _leilaoRepository.ObterPorIdAsync(leilao.Id);
+
+        return Json(new {
+            sucesso = true,
+            mensagem = $"🎉 Parabéns {compradorNome}! Seu lance de R$ {valorLance:N2} foi registrado com sucesso!",
+            novoLanceAtual = $"R$ {leilaoAtualizado?.LanceAtual.ToString("N2")}",
+            novoProximoMinimo = leilaoAtualizado?.ProximoLanceMinimo,
+            vendedorNome = leilaoAtualizado?.VendedorNome,
+            historicoLances = leilaoAtualizado?.Lances.Select(l => new {
+                usuario = l.UsuarioNome,
+                valor = $"R$ {l.Valor:N2}",
+                hora = l.DataLance.ToString("dd/MM HH:mm")
+            })
+        });
+    }
+
     // GET: /Leilao/MeusLeiloes (Gestão do Vendedor)
     [HttpGet]
     [Authorize(Roles = "Vendedor, Administrador")]
@@ -197,7 +269,6 @@ public class LeilaoController : Controller
             return Forbid();
         }
 
-        // Regra de Negócio: Se o leilão já foi iniciado e possui lances registrados, bloqueia alteração de informações gerais
         if (!leilao.PodeEditarDadosGerais)
         {
             if (model.DataFinalizacao < leilao.DataFinalizacao)

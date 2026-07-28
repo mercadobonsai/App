@@ -330,7 +330,7 @@
                                     
                                     <div class="p-2 bg-light rounded d-flex justify-content-between align-items-center mb-3">
                                         <small class="text-muted">Lance Atual:</small>
-                                        <strong class="text-primary fs-6">R$ @l.LanceAtual.ToString("N2")</strong>
+                                        <strong class="text-primary fs-6" id="cardLanceLeilao_@l.Id">R$ @l.LanceAtual.ToString("N2")</strong>
                                     </div>
                                     
                                     <button class="btn btn-sm btn-primary w-100 shadow-sm" onclick="abrirModalEngajamentoItem('leilao', @l.Id)">
@@ -550,13 +550,13 @@
                             <div class="p-3 bg-label-primary rounded mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="text-muted small">Lance Mais Alto Atual:</span>
-                                    <strong class="text-primary fs-4">${item.lanceAtual}</strong>
+                                    <strong class="text-primary fs-4" id="modalLanceAtualDisplay">${item.lanceAtual}</strong>
                                 </div>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">R$</span>
                                     <input type="number" id="valorLanceInput" class="form-control" value="${item.proximoLanceMin}" step="50" min="${item.proximoLanceMin}" />
                                 </div>
-                                <small class="text-muted d-block mt-1">Incremento mínimo: R$ 50,00</small>
+                                <small class="text-muted d-block mt-1">Incremento mínimo exigido pelo vendedor</small>
                             </div>
                         </div>
                     </div>
@@ -574,7 +574,7 @@
                                     <th>Momento</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="modalTabelaLancesBody">
                                 ${(item.historicoLances && item.historicoLances.length > 0) ? item.historicoLances.map(l => `
                                     <tr>
                                         <td>${l.usuario}</td>
@@ -590,8 +590,8 @@
 
                 rodapeEl.innerHTML = `
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-primary px-4" onclick="confirmarLanceSimulado()">
-                        <i class="icon-base ri ri-auction-line me-1"></i> Confirmar Lance
+                    <button type="button" class="btn btn-primary px-4" onclick="confirmarLanceReal(${item.id})">
+                        <i class="icon-base ri ri-auction-line me-1"></i> Confirmar Lance no Banco
                     </button>
                 `;
             } else {
@@ -637,11 +637,72 @@
             bsModal.show();
         }
 
-        function confirmarLanceSimulado() {
-            const val = document.getElementById('valorLanceInput').value;
-            alert(`✅ Lance de R$ ${val},00 registrado com sucesso no banco de dados! You are currently the highest bidder.`);
-            const modalEl = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesEngajamento'));
-            if(modalEl) modalEl.hide();
+        async function confirmarLanceReal(leilaoId) {
+            const inputVal = document.getElementById('valorLanceInput');
+            if (!inputVal) return;
+            const valorLance = parseFloat(inputVal.value);
+            if (!valorLance || isNaN(valorLance)) {
+                alert('Por favor, informe um valor de lance válido.');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('leilaoId', leilaoId);
+                formData.append('valorLance', valorLance);
+
+                const response = await fetch('/Leilao/RegistrarLance', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.status === 401) {
+                    alert('Você precisa estar logado no sistema para efetuar um lance.');
+                    window.location.href = '/Conta/Login';
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.sucesso) {
+                    alert(data.mensagem);
+                    
+                    // Atualizar elementos visuais no modal em tempo real
+                    const lanceAtualEl = document.getElementById('modalLanceAtualDisplay');
+                    if (lanceAtualEl) lanceAtualEl.innerText = data.novoLanceAtual;
+                    
+                    if (inputVal && data.novoProximoMinimo) {
+                        inputVal.value = data.novoProximoMinimo;
+                        inputVal.min = data.novoProximoMinimo;
+                    }
+
+                    // Atualizar tabela de histórico de lances em tempo real
+                    const tabelaLancesBody = document.getElementById('modalTabelaLancesBody');
+                    if (tabelaLancesBody && data.historicoLances) {
+                        tabelaLancesBody.innerHTML = data.historicoLances.map(l => `
+                            <tr>
+                                <td>${l.usuario}</td>
+                                <td class="fw-bold text-primary">${l.valor}</td>
+                                <td class="text-muted">${l.hora}</td>
+                            </tr>
+                        `).join('');
+                    }
+
+                    // Atualizar valores do card na tela principal
+                    const cardLanceEl = document.querySelector(`#cardLanceLeilao_${leilaoId}`);
+                    if (cardLanceEl) cardLanceEl.innerText = data.novoLanceAtual;
+
+                    const modalEl = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesEngajamento'));
+                    if (modalEl) modalEl.hide();
+                } else {
+                    alert('⚠️ ' + data.mensagem);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao registrar o lance. Verifique sua conexão e tente novamente.');
+            }
         }
 
         function confirmarRifaSimulada() {
