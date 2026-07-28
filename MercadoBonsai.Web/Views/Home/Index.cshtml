@@ -501,7 +501,7 @@
     </div>
 </div>
 
-<!-- MODAL INTERATIVO UNIFICADO (XL): Grid Proporcional Perfeito com Cards Clicáveis, Preço d'Água e Indicadores de Seleção -->
+<!-- MODAL INTERATIVO UNIFICADO (XL): 4 Espaços Visuais com Alturas Fixas em CSS, Cards 100% Clicáveis e Sem URL -->
 <div class="modal fade" id="modalSolicitarPropaganda" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -511,148 +511,123 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4" style="max-height: 80vh; overflow-y: auto;">
+            <div class="modal-body p-4" style="max-height: 82vh; overflow-y: auto;">
                 <div class="alert alert-success border-0 py-2 mb-4 d-flex align-items-center">
                     <i class="icon-base ri ri-information-line me-2 fs-5"></i>
-                    <span><strong>Clique diretamente sobre a área visual de qualquer card abaixo</strong> para carregar sua arte. O preview será exibido na proporção real e o indicador visual de seleção será ativado!</span>
+                    <span>Clique sobre o corpo da imagem para anexar sua arte. O preview será exibido na proporção real do espaço escolhido!</span>
                 </div>
 
-                <!-- LINHA 1: Card Avançado em Largura Total (col-12) -->
+                <!-- LINHA 1: Card Avançado em Largura Total (col-12) — Altura +50% Maior (card-ad-avancado) -->
                 <div class="row mb-4">
                     <div class="col-12">
-                        <div class="card border-2 border-primary shadow-sm" id="containerAd_Avancado">
-                            <div class="card-header bg-primary text-white py-2 px-3 d-flex justify-content-between align-items-center">
-                                <span class="fw-bold"><i class="icon-base ri ri-layout-top-line me-1"></i>Espaço Avançado — Banner Full (1 por Linha - 100% Largura Total)</span>
-                                <span class="badge bg-white text-primary fw-bold fs-6">R$ 299,90 / mês</span>
-                            </div>
-                            <div class="card-body p-3">
-                                <!-- Área Clicável de Upload -->
-                                <div class="position-relative overflow-hidden bg-light rounded border border-primary cursor-pointer mb-3 dropzone-ad-box" 
-                                     style="height: 120px; width: 100%; transition: all 0.3s ease;" 
+                        <div class="card border-2 border-primary shadow-sm overflow-hidden" id="containerAd_Avancado">
+                            <div class="card-body p-0 position-relative">
+                                <!-- Corpo do Card (Espaço da Imagem) - Gatilho Independente de Upload com Altura Fixa em CSS -->
+                                <div class="position-relative overflow-hidden bg-light cursor-pointer dropzone-ad-box card-ad-avancado w-100" 
                                      onclick="document.getElementById('fileAd_Avancado').click()"
-                                     title="Clique no card para carregar a arte do Banner Full Avançado">
+                                     title="Clique para anexar a arte do Banner Full Avançado">
                                     
                                     <img id="previewImg_Avancado" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Avançado" />
                                     
-                                    <!-- Marca d'Água Elegante de Preço -->
-                                    <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-2 fw-semibold">
-                                        R$ 299,90 / mês — Banner Full Topo
+                                    <!-- Zona Dedicada do Seletor da Área e Preço (Limpo, Sem Ícones) -->
+                                    <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-3 fw-bold shadow-sm fs-6 px-3 py-2">
+                                        Avançado - R$ 299,90 / mês
                                     </span>
                                     
-                                    <!-- Indicador Visual de Seleção (Badge + Checkbox) -->
-                                    <span id="checkAd_Avancado" class="badge bg-success position-absolute top-0 start-0 m-2 d-none shadow">
-                                        <i class="icon-base ri ri-checkbox-circle-fill me-1"></i> Arte Anexada / Selecionado
+                                    <!-- Indicador Visual de Seleção -->
+                                    <span id="checkAd_Avancado" class="badge bg-success position-absolute top-0 start-0 m-3 d-none shadow fs-6 px-3 py-2">
+                                        Arte Anexada
                                     </span>
 
-                                    <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-50 text-white text-center py-1 small fw-medium">
-                                        <i class="icon-base ri ri-upload-cloud-line me-1"></i> Clique sobre este Card para Selecionar Imagem
+                                    <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-60 text-white text-center py-2 small fw-medium">
+                                        Clique para Selecionar Imagem (Banner Full 100%)
                                     </div>
                                 </div>
 
                                 <input type="file" id="fileAd_Avancado" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Avancado', 'checkAd_Avancado', 'containerAd_Avancado')" />
 
-                                <div class="row align-items-center g-2">
-                                    <div class="col-md-8">
-                                        <input type="url" id="linkAd_Avancado" class="form-control form-control-sm" placeholder="Link de Destino: https://seu-site.com.br" />
-                                    </div>
-                                    <div class="col-md-4">
-                                        <button type="button" class="btn btn-primary btn-sm w-100 shadow-sm" onclick="solicitarAdPorEspaco('Avancado', 'fileAd_Avancado', 'linkAd_Avancado')">
-                                            <i class="icon-base ri ri-send-plane-fill me-1"></i> Solicitar Avançado (R$ 299,90)
-                                        </button>
-                                    </div>
+                                <div class="p-3 bg-light text-end border-top">
+                                    <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" onclick="solicitarAdPorEspaco('Avancado', 'fileAd_Avancado')">
+                                        Solicitar Avançado (R$ 299,90)
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- LINHA 2: Card Intermediário (col-md-6) ao lado de Básico + Econômico (col-md-6) sem quebras -->
+                <!-- LINHA 2: Card Intermediário (col-md-6) ao lado de Básico (col-6) + Econômico (col-6) -->
                 <div class="row g-4">
-                    <!-- Esquerda (col-md-6): Card Intermediário -->
+                    <!-- Esquerda (col-md-6): Card Intermediário com Altura Fixa em CSS (card-ad-intermediario) -->
                     <div class="col-md-6">
-                        <div class="card h-100 border-2 border-info shadow-sm" id="containerAd_Intermediario">
-                            <div class="card-header bg-info text-dark py-2 px-3 d-flex justify-content-between align-items-center">
-                                <span class="fw-bold"><i class="icon-base ri ri-layout-grid-line me-1"></i>Espaço Intermediário (Grid 2 / Tam. Clube VIP)</span>
-                                <span class="badge bg-dark text-white fw-bold">R$ 149,90 / mês</span>
-                            </div>
-                            <div class="card-body p-3 d-flex flex-column justify-content-between">
-                                <div>
-                                    <!-- Área Clicável -->
-                                    <div class="position-relative overflow-hidden bg-light rounded border border-info cursor-pointer mb-3 dropzone-ad-box" 
-                                         style="height: 180px; width: 100%; transition: all 0.3s ease;" 
-                                         onclick="document.getElementById('fileAd_Intermediario').click()"
-                                         title="Clique no card para carregar a arte do Espaço Intermediário">
-                                        
-                                        <img id="previewImg_Intermediario" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Intermediário" />
-                                        
-                                        <!-- Marca d'Água Elegante de Preço -->
-                                        <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-2 fw-semibold">
-                                            R$ 149,90 / mês — Grid 2 (50% Largura)
-                                        </span>
-                                        
-                                        <!-- Indicador Visual de Seleção -->
-                                        <span id="checkAd_Intermediario" class="badge bg-success position-absolute top-0 start-0 m-2 d-none shadow">
-                                            <i class="icon-base ri ri-checkbox-circle-fill me-1"></i> Arte Anexada / Selecionado
-                                        </span>
+                        <div class="card h-100 border-2 border-info shadow-sm overflow-hidden" id="containerAd_Intermediario">
+                            <div class="card-body p-0 d-flex flex-column justify-content-between position-relative">
+                                <!-- Corpo do Card (Espaço da Imagem) - Gatilho Independente -->
+                                <div class="position-relative overflow-hidden bg-light cursor-pointer dropzone-ad-box card-ad-intermediario w-100" 
+                                     onclick="document.getElementById('fileAd_Intermediario').click()"
+                                     title="Clique para anexar a arte Intermediário">
+                                    
+                                    <img id="previewImg_Intermediario" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Intermediário" />
+                                    
+                                    <!-- Zona Dedicada do Seletor de Área e Preço (Limpo, Sem Ícones) -->
+                                    <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-3 fw-bold shadow-sm px-3 py-2">
+                                        Intermediário - R$ 149,90 / mês
+                                    </span>
+                                    
+                                    <!-- Indicador Visual de Seleção -->
+                                    <span id="checkAd_Intermediario" class="badge bg-success position-absolute top-0 start-0 m-3 d-none shadow px-3 py-2">
+                                        Arte Anexada
+                                    </span>
 
-                                        <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-50 text-white text-center py-1 small fw-medium">
-                                            <i class="icon-base ri ri-upload-cloud-line me-1"></i> Clique sobre este Card para Selecionar Imagem
-                                        </div>
+                                    <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-60 text-white text-center py-2 small fw-medium">
+                                        Clique para Selecionar Imagem (Grid 2 / Clube VIP)
                                     </div>
-
-                                    <input type="file" id="fileAd_Intermediario" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Intermediario', 'checkAd_Intermediario', 'containerAd_Intermediario')" />
                                 </div>
 
-                                <div>
-                                    <input type="url" id="linkAd_Intermediario" class="form-control form-control-sm mb-2" placeholder="Link de Destino: https://seu-site.com.br" />
-                                    <button type="button" class="btn btn-info text-dark fw-bold btn-sm w-100 shadow-sm" onclick="solicitarAdPorEspaco('Intermediario', 'fileAd_Intermediario', 'linkAd_Intermediario')">
-                                        <i class="icon-base ri ri-send-plane-fill me-1"></i> Solicitar Intermediário (R$ 149,90)
+                                <input type="file" id="fileAd_Intermediario" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Intermediario', 'checkAd_Intermediario', 'containerAd_Intermediario')" />
+
+                                <div class="p-3 bg-light text-end border-top">
+                                    <button type="button" class="btn btn-info text-dark fw-bold btn-sm px-4 shadow-sm" onclick="solicitarAdPorEspaco('Intermediario', 'fileAd_Intermediario')">
+                                        Solicitar Intermediário (R$ 149,90)
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Direita (col-md-6): Dividida perfeitamente em Básico (col-6) e Econômico (col-6) -->
+                    <!-- Direita (col-md-6): Dividida em Básico (col-6) e Econômico (col-6) -->
                     <div class="col-md-6">
                         <div class="row g-3 h-100">
-                            <!-- Card Básico (col-6) -->
+                            <!-- Card Básico (col-6) com Altura Fixa em CSS (card-ad-basico) -->
                             <div class="col-6">
-                                <div class="card h-100 border-2 border-success shadow-sm" id="containerAd_Basico">
-                                    <div class="card-header bg-success text-white py-1 px-2 text-center">
-                                        <small class="fw-bold">Espaço Básico (Grid 4)</small>
-                                    </div>
-                                    <div class="card-body p-2 d-flex flex-column justify-content-between">
-                                        <div>
-                                            <!-- Área Clicável -->
-                                            <div class="position-relative overflow-hidden bg-light rounded border border-success cursor-pointer mb-2 dropzone-ad-box" 
-                                                 style="height: 130px; width: 100%; transition: all 0.3s ease;" 
-                                                 onclick="document.getElementById('fileAd_Basico').click()"
-                                                 title="Clique para carregar arte Básico">
-                                                
-                                                <img id="previewImg_Basico" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Básico" />
-                                                
-                                                <!-- Marca d'Água de Preço -->
-                                                <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-1" style="font-size: 0.65rem;">
-                                                    R$ 79,90/mês
-                                                </span>
-                                                
-                                                <!-- Indicador Visual -->
-                                                <span id="checkAd_Basico" class="badge bg-success position-absolute top-0 start-0 m-1 d-none shadow" style="font-size: 0.65rem;">
-                                                    <i class="icon-base ri ri-checkbox-circle-fill"></i> Selecionado
-                                                </span>
+                                <div class="card h-100 border-2 border-success shadow-sm overflow-hidden" id="containerAd_Basico">
+                                    <div class="card-body p-0 d-flex flex-column justify-content-between position-relative">
+                                        <!-- Corpo do Card (Espaço da Imagem) - Gatilho Independente -->
+                                        <div class="position-relative overflow-hidden bg-light cursor-pointer dropzone-ad-box card-ad-basico w-100" 
+                                             onclick="document.getElementById('fileAd_Basico').click()"
+                                             title="Clique para anexar a arte Básico">
+                                            
+                                            <img id="previewImg_Basico" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Básico" />
+                                            
+                                            <!-- Zona Dedicada de Preço (Limpo, Sem Ícones) -->
+                                            <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-2 shadow-sm" style="font-size: 0.7rem;">
+                                                Básico - R$ 79,90 / mês
+                                            </span>
+                                            
+                                            <!-- Indicador Visual -->
+                                            <span id="checkAd_Basico" class="badge bg-success position-absolute top-0 start-0 m-2 d-none shadow" style="font-size: 0.7rem;">
+                                                Arte Anexada
+                                            </span>
 
-                                                <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-50 text-white text-center py-1" style="font-size: 0.65rem;">
-                                                    <i class="icon-base ri ri-upload-cloud-line"></i> Clique p/ Imagem
-                                                </div>
+                                            <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-60 text-white text-center py-1" style="font-size: 0.7rem;">
+                                                Clique p/ Imagem
                                             </div>
-
-                                            <input type="file" id="fileAd_Basico" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Basico', 'checkAd_Basico', 'containerAd_Basico')" />
                                         </div>
 
-                                        <div>
-                                            <input type="url" id="linkAd_Basico" class="form-control form-control-sm mb-2 px-2" placeholder="Link de Destino" style="font-size: 0.75rem;" />
-                                            <button type="button" class="btn btn-success btn-xs w-100 py-1 shadow-sm" onclick="solicitarAdPorEspaco('Basico', 'fileAd_Basico', 'linkAd_Basico')">
+                                        <input type="file" id="fileAd_Basico" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Basico', 'checkAd_Basico', 'containerAd_Basico')" />
+
+                                        <div class="p-2 bg-light text-center border-top">
+                                            <button type="button" class="btn btn-success btn-xs w-100 py-1 shadow-sm" onclick="solicitarAdPorEspaco('Basico', 'fileAd_Basico')">
                                                 Solicitar Básico (R$ 79,90)
                                             </button>
                                         </div>
@@ -660,43 +635,36 @@
                                 </div>
                             </div>
 
-                            <!-- Card Econômico (col-6) -->
+                            <!-- Card Econômico (col-6) com Altura Fixa em CSS (card-ad-economico) -->
                             <div class="col-6">
-                                <div class="card h-100 border-2 border-secondary shadow-sm" id="containerAd_Economico">
-                                    <div class="card-header bg-secondary text-white py-1 px-2 text-center">
-                                        <small class="fw-bold">Espaço Econômico (Lateral)</small>
-                                    </div>
-                                    <div class="card-body p-2 d-flex flex-column justify-content-between">
-                                        <div>
-                                            <!-- Área Clicável -->
-                                            <div class="position-relative overflow-hidden bg-light rounded border border-secondary cursor-pointer mb-2 dropzone-ad-box" 
-                                                 style="height: 130px; width: 100%; transition: all 0.3s ease;" 
-                                                 onclick="document.getElementById('fileAd_Economico').click()"
-                                                 title="Clique para carregar arte Econômico">
-                                                
-                                                <img id="previewImg_Economico" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Econômico" />
-                                                
-                                                <!-- Marca d'Água de Preço -->
-                                                <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-1" style="font-size: 0.65rem;">
-                                                    R$ 49,90/mês
-                                                </span>
-                                                
-                                                <!-- Indicador Visual -->
-                                                <span id="checkAd_Economico" class="badge bg-success position-absolute top-0 start-0 m-1 d-none shadow" style="font-size: 0.65rem;">
-                                                    <i class="icon-base ri ri-checkbox-circle-fill"></i> Selecionado
-                                                </span>
+                                <div class="card h-100 border-2 border-secondary shadow-sm overflow-hidden" id="containerAd_Economico">
+                                    <div class="card-body p-0 d-flex flex-column justify-content-between position-relative">
+                                        <!-- Corpo do Card (Espaço da Imagem) - Gatilho Independente -->
+                                        <div class="position-relative overflow-hidden bg-light cursor-pointer dropzone-ad-box card-ad-economico w-100" 
+                                             onclick="document.getElementById('fileAd_Economico').click()"
+                                             title="Clique para anexar a arte Econômico">
+                                            
+                                            <img id="previewImg_Economico" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Econômico" />
+                                            
+                                            <!-- Zona Dedicada de Preço (Limpo, Sem Ícones) -->
+                                            <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-2 shadow-sm" style="font-size: 0.7rem;">
+                                                Econômico - R$ 49,90 / mês
+                                            </span>
+                                            
+                                            <!-- Indicador Visual -->
+                                            <span id="checkAd_Economico" class="badge bg-success position-absolute top-0 start-0 m-2 d-none shadow" style="font-size: 0.7rem;">
+                                                Arte Anexada
+                                            </span>
 
-                                                <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-50 text-white text-center py-1" style="font-size: 0.65rem;">
-                                                    <i class="icon-base ri ri-upload-cloud-line"></i> Clique p/ Imagem
-                                                </div>
+                                            <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-60 text-white text-center py-1" style="font-size: 0.7rem;">
+                                                Clique p/ Imagem
                                             </div>
-
-                                            <input type="file" id="fileAd_Economico" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Economico', 'checkAd_Economico', 'containerAd_Economico')" />
                                         </div>
 
-                                        <div>
-                                            <input type="url" id="linkAd_Economico" class="form-control form-control-sm mb-2 px-2" placeholder="Link de Destino" style="font-size: 0.75rem;" />
-                                            <button type="button" class="btn btn-secondary btn-xs w-100 py-1 shadow-sm" onclick="solicitarAdPorEspaco('Economico', 'fileAd_Economico', 'linkAd_Economico')">
+                                        <input type="file" id="fileAd_Economico" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Economico', 'checkAd_Economico', 'containerAd_Economico')" />
+
+                                        <div class="p-2 bg-light text-center border-top">
+                                            <button type="button" class="btn btn-secondary btn-xs w-100 py-1 shadow-sm" onclick="solicitarAdPorEspaco('Economico', 'fileAd_Economico')">
                                                 Solicitar Econômico (R$ 49,90)
                                             </button>
                                         </div>
@@ -741,7 +709,21 @@
         .position-relative:hover .img-zoom { transform: scale(1.03); }
         .thumb-gallery { cursor: pointer; opacity: 0.7; transition: opacity 0.2s, border-color 0.2s; }
         .thumb-gallery.active, .thumb-gallery:hover { opacity: 1; border: 2px solid #4A7C59 !important; }
-        .dropzone-ad-box:hover { opacity: 0.9; transform: scale(1.005); }
+        .dropzone-ad-box:hover { opacity: 0.95; transform: scale(1.003); }
+
+        /* Alturas Fixas dos Cards de Propaganda (Ajustável manualmente via CSS) */
+        .card-ad-avancado {
+            height: 300px !important; /* Aumentado em +50% em relação aos demais */
+        }
+        .card-ad-intermediario {
+            height: 200px !important;
+        }
+        .card-ad-basico {
+            height: 180px !important;
+        }
+        .card-ad-economico {
+            height: 180px !important;
+        }
     </style>
 }
 
@@ -773,16 +755,12 @@
             }
         }
 
-        async function solicitarAdPorEspaco(tipoEspaco, fileInputId, linkInputId) {
+        async function solicitarAdPorEspaco(tipoEspaco, fileInputId) {
             const fileInput = document.getElementById(fileInputId);
-            const linkInput = document.getElementById(linkInputId);
-
-            const linkDestino = linkInput ? linkInput.value : '';
 
             try {
                 const formData = new FormData();
                 formData.append('tipoEspaco', tipoEspaco);
-                formData.append('linkDestino', linkDestino);
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     formData.append('arteImagem', fileInput.files[0]);
                 }
@@ -803,12 +781,34 @@
 
                 const data = await response.json();
                 if (data.sucesso) {
-                    alert('🎉 ' + data.mensagem);
-                    const modalEl = bootstrap.Modal.getInstance(document.getElementById('modalSolicitarPropaganda'));
-                    if (modalEl) modalEl.hide();
-                    window.location.href = '/Propaganda/MinhasPropagandas';
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Solicitação Enviada!',
+                            text: data.mensagem,
+                            confirmButtonColor: '#4A7C59'
+                        }).then(() => {
+                            const modalEl = bootstrap.Modal.getInstance(document.getElementById('modalSolicitarPropaganda'));
+                            if (modalEl) modalEl.hide();
+                            window.location.href = '/Propaganda/MinhasPropagandas';
+                        });
+                    } else {
+                        alert('🎉 ' + data.mensagem);
+                        const modalEl = bootstrap.Modal.getInstance(document.getElementById('modalSolicitarPropaganda'));
+                        if (modalEl) modalEl.hide();
+                        window.location.href = '/Propaganda/MinhasPropagandas';
+                    }
                 } else {
-                    alert('⚠️ ' + data.mensagem);
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Atenção',
+                            text: data.mensagem,
+                            confirmButtonColor: '#4A7C59'
+                        });
+                    } else {
+                        alert('⚠️ ' + data.mensagem);
+                    }
                 }
             } catch (err) {
                 console.error(err);
