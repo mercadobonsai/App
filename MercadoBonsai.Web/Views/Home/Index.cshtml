@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <!-- Destaques da Semana Section -->
+        <!-- Destaques da Semana Section (Fotos com Proporção Ajustada e Encaixe Perfeito) -->
         <div class="mb-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
@@ -69,14 +69,14 @@
                         var isIndisponivel = p.Status == StatusProduto.Indisponivel;
                         <div class="col-sm-6 col-md-4">
                             <div class="card h-100 shadow-sm border-0 hover-top transition overflow-hidden" style="@(isIndisponivel ? "opacity: 0.65; filter: grayscale(30%);" : "")">
-                                <div class="position-relative">
+                                <div class="position-relative overflow-hidden bg-light" style="aspect-ratio: 4/3; width: 100%;">
                                     @if (!string.IsNullOrEmpty(p.ImagemUrl))
                                     {
-                                        <img src="@p.ImagemUrl" class="card-img-top" alt="@p.Nome" style="height: 180px; object-fit: cover;" />
+                                        <img src="@p.ImagemUrl" class="card-img-top w-100 h-100" alt="@p.Nome" style="object-fit: cover; object-position: center;" />
                                     }
                                     else
                                     {
-                                        <div class="bg-light d-flex align-items-center justify-content-center card-img-top" style="height: 180px;">
+                                        <div class="d-flex align-items-center justify-content-center w-100 h-100 bg-light">
                                             <i class="icon-base ri ri-image-line text-muted" style="font-size: 2.5rem;"></i>
                                         </div>
                                     }
@@ -304,12 +304,12 @@
             </div>
         </div>
 
-        <!-- Card 2: Leilão em Andamento (Banco de Dados + Modal JS) -->
+        <!-- Card 2: Leilão em Andamento (Cor Azul bg-primary / btn-primary) -->
         @if (Model.LeilaoAtivo != null)
         {
             <div class="card mb-4 border-0 shadow-sm overflow-hidden hover-top transition">
-                <div class="card-header bg-danger py-2 px-3 d-flex justify-content-between align-items-center text-white">
-                    <span class="badge bg-white text-danger fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-fire-fill me-1"></i>Ao Vivo</span>
+                <div class="card-header bg-primary py-2 px-3 d-flex justify-content-between align-items-center text-white">
+                    <span class="badge bg-white text-primary fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-fire-fill me-1"></i>Ao Vivo</span>
                     <small class="fw-medium text-white-50"><i class="icon-base ri ri-time-line me-1"></i>@(Model.LeilaoAtivo.Badge ?? "Em Andamento")</small>
                 </div>
                 <div class="position-relative cursor-pointer" onclick="abrirModalEngajamento('leilao')" title="Clique para abrir galeria e dar lance">
@@ -325,22 +325,22 @@
                     
                     <div class="p-2 bg-light rounded d-flex justify-content-between align-items-center mb-3">
                         <small class="text-muted">Lance Atual:</small>
-                        <strong class="text-danger fs-6">R$ @Model.LeilaoAtivo.LanceAtual.ToString("N2")</strong>
+                        <strong class="text-primary fs-6">R$ @Model.LeilaoAtivo.LanceAtual.ToString("N2")</strong>
                     </div>
                     
-                    <button class="btn btn-sm btn-danger w-100 shadow-sm" onclick="abrirModalEngajamento('leilao')">
+                    <button class="btn btn-sm btn-primary w-100 shadow-sm" onclick="abrirModalEngajamento('leilao')">
                         <i class="icon-base ri ri-auction-line me-1"></i> Dar Lance / Detalhes
                     </button>
                 </div>
             </div>
         }
 
-        <!-- Card 3: Rifa Ativa do Mês (Banco de Dados + Modal JS) -->
+        <!-- Card 3: Rifa Ativa do Mês / Ação entre Amigos (Banco de Dados + Modal JS) -->
         @if (Model.RifaAtiva != null)
         {
             <div class="card mb-4 border-0 shadow-sm overflow-hidden hover-top transition">
                 <div class="card-header bg-success py-2 px-3 d-flex justify-content-between align-items-center text-white">
-                    <span class="badge bg-white text-success fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-ticket-2-fill me-1"></i>Rifa do Mês</span>
+                    <span class="badge bg-white text-success fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-ticket-2-fill me-1"></i>Ação entre Amigos</span>
                     <small class="fw-medium text-white-50">@Model.RifaAtiva.CotasVendidas/@Model.RifaAtiva.TotalCotas Cotas</small>
                 </div>
                 <div class="position-relative cursor-pointer" onclick="abrirModalEngajamento('rifa')" title="Clique para abrir galeria e cotas">
@@ -352,7 +352,7 @@
                 </div>
                 <div class="card-body p-3">
                     <h6 class="fw-bold mb-1 cursor-pointer" style="color: #1E3A2B;" onclick="abrirModalEngajamento('rifa')">@Model.RifaAtiva.Titulo</h6>
-                    <small class="text-muted d-block mb-2">Sorteio: @Model.RifaAtiva.DataSorteio.ToString("dd/MM/yyyy")</small>
+                    <small class="text-muted d-block mb-2">Apuração: @Model.RifaAtiva.DataSorteio.ToString("dd/MM/yyyy")</small>
 
                     <!-- Barra de Progresso de Bilhetes Vendidos -->
                     <div class="mb-3">
@@ -423,7 +423,7 @@
             leilao: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LeilaoAtivo != null ? new {
                 tipo = "leilao",
                 id = Model.LeilaoAtivo.Id,
-                titulo = "🔥 " + Model.LeilaoAtivo.Titulo,
+                titulo = "⚡ " + Model.LeilaoAtivo.Titulo,
                 subtitulo = Model.LeilaoAtivo.Subtitulo,
                 descricao = Model.LeilaoAtivo.Descricao,
                 fotoPrincipal = Model.LeilaoAtivo.FotoPrincipalUrl,
@@ -495,7 +495,7 @@
                     </div>
                     <div class="col-md-6 d-flex flex-column justify-content-between">
                         <div>
-                            <span class="badge ${item.tipo === 'leilao' ? 'bg-danger' : 'bg-success'} px-3 py-2 fs-6 mb-3">
+                            <span class="badge ${item.tipo === 'leilao' ? 'bg-primary' : 'bg-success'} px-3 py-2 fs-6 mb-3">
                                 ${item.badge}
                             </span>
                             <p class="text-muted small mb-2">${item.subtitulo || ''}</p>
@@ -511,10 +511,10 @@
             if (item.tipo === 'leilao') {
                 htmlBody += `
                         <div>
-                            <div class="p-3 bg-label-danger rounded mb-3">
+                            <div class="p-3 bg-label-primary rounded mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="text-muted small">Lance Mais Alto Atual:</span>
-                                    <strong class="text-danger fs-4">${item.lanceAtual}</strong>
+                                    <strong class="text-primary fs-4">${item.lanceAtual}</strong>
                                 </div>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">R$</span>
@@ -542,7 +542,7 @@
                                 ${(item.historicoLances && item.historicoLances.length > 0) ? item.historicoLances.map(l => `
                                     <tr>
                                         <td>${l.usuario}</td>
-                                        <td class="fw-bold text-danger">${l.valor}</td>
+                                        <td class="fw-bold text-primary">${l.valor}</td>
                                         <td class="text-muted">${l.hora}</td>
                                     </tr>
                                 `).join('') : '<tr><td colspan="3" class="text-muted">Nenhum lance registrado ainda. Seja o primeiro!</td></tr>'}
@@ -554,7 +554,7 @@
 
                 rodapeEl.innerHTML = `
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-danger px-4" onclick="confirmarLanceSimulado()">
+                    <button type="button" class="btn btn-primary px-4" onclick="confirmarLanceSimulado()">
                         <i class="icon-base ri ri-auction-line me-1"></i> Confirmar Lance
                     </button>
                 `;

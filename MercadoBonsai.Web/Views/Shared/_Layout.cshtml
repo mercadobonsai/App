@@ -41,12 +41,11 @@
             <!-- Navbar -->
             <nav class="layout-navbar navbar navbar-expand-xl align-items-center" id="layout-navbar">
                 <div class="container-xxl">
-                    <!-- Brand Logo Alinhado: [ Ícone da Planta ] + [ Logotipo da Marca ] + [ Texto "Mercado Bonsai" ] -->
+                    <!-- Brand Logo Padrao Revertido -->
                     <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-6">
-                        <a asp-controller="Home" asp-action="Index" class="app-brand-link gap-2 align-items-center d-flex flex-row">
-                            <i class="icon-base ri ri-plant-line text-success fs-3 me-1"></i>
-                            <img src="~/starter-kit/assets/img/logo.png" alt="Mercado Bonsai Logo" style="height: 36px; width: auto; object-fit: contain; border-radius: 4px;" />
-                            <span class="app-brand-text demo menu-text fw-bold ms-2 fs-4" style="color: #4A7C59; white-space: nowrap;">Mercado Bonsai</span>
+                        <a asp-controller="Home" asp-action="Index" class="app-brand-link gap-2 align-items-center">
+                            <img src="~/starter-kit/assets/img/logo.png" alt="Mercado Bonsai Logo" style="height: 38px; width: auto; border-radius: 6px;" />
+                            <span class="app-brand-text demo menu-text fw-bold ms-1" style="color: #4A7C59;">Mercado Bonsai</span>
                         </a>
                         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
                             <i class="icon-base ri ri-close-line icon-sm"></i>
@@ -190,11 +189,11 @@
                                     </a>
                                 </li>
 
-                                <!-- Link Leilões & Ações entre Amigos -->
+                                <!-- Link Leilões & Ações (Simplificado) -->
                                 <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Leilao" && ViewContext.RouteData.Values["action"]?.ToString() == "Encerrados" ? "active" : "")">
                                     <a asp-controller="Leilao" asp-action="Encerrados" class="menu-link">
                                         <i class="menu-icon icon-base ri ri-auction-line"></i>
-                                        <div>Leilões & Ações entre Amigos</div>
+                                        <div>Leilões & Ações</div>
                                     </a>
                                 </li>
 
