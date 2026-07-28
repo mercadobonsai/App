@@ -501,7 +501,7 @@
     </div>
 </div>
 
-<!-- MODAL INTERATIVO UNIFICADO (XL): 4 Espaços Visuais com Botões de Valor Limpos como Seletores e Upload na Imagem -->
+<!-- MODAL INTERATIVO UNIFICADO (XL): Seletor de Imagem Centralizado + Botão de Preço Clicável no Canto Superior Direito -->
 <div class="modal fade" id="modalSolicitarPropaganda" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -514,7 +514,7 @@
             <div class="modal-body p-4" style="max-height: 82vh; overflow-y: auto;">
                 <div class="alert alert-success border-0 py-2 mb-4 d-flex align-items-center">
                     <i class="icon-base ri ri-information-line me-2 fs-5"></i>
-                    <span>Use o <strong>Botão de Valor</strong> para selecionar o plano e <strong>clique sobre a imagem</strong> para carregar a arte do anúncio.</span>
+                    <span>Clique sobre a <strong>área da imagem</strong> para carregar a arte e clique no <strong>botão de preço no canto superior direito</strong> para solicitar o espaço!</span>
                 </div>
 
                 <!-- LINHA 1: Card Avançado em Largura Total (col-12) — Altura +50% Maior (card-ad-avancado) -->
@@ -522,7 +522,7 @@
                     <div class="col-12">
                         <div class="card border-2 border-primary shadow-sm overflow-hidden card-opcao-propaganda" id="containerAd_Avancado">
                             <div class="card-body p-0 position-relative">
-                                <!-- Corpo do Card (Espaço da Imagem) - Upload & Preview da Arte -->
+                                <!-- Seletor da Imagem (Upload & Preview da Arte) -->
                                 <div class="position-relative overflow-hidden bg-light cursor-pointer dropzone-ad-box card-ad-avancado w-100" 
                                      onclick="document.getElementById('fileAd_Avancado').click()"
                                      title="Clique para anexar a arte do Banner Full Avançado">
@@ -530,7 +530,7 @@
                                     <img id="previewImg_Avancado" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Avançado" />
                                     
                                     <!-- Indicador Visual de Seleção -->
-                                    <span id="checkAd_Avancado" class="badge bg-success position-absolute top-0 start-0 m-3 d-none shadow fs-6 px-3 py-2">
+                                    <span id="checkAd_Avancado" class="badge bg-success position-absolute top-0 start-0 m-3 d-none shadow fs-6 px-3 py-2" style="z-index: 15;">
                                         <i class="icon-base ri ri-checkbox-circle-fill me-1"></i> Selecionado
                                     </span>
 
@@ -541,17 +541,15 @@
                                     </div>
                                 </div>
 
-                                <input type="file" id="fileAd_Avancado" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Avancado', 'checkAd_Avancado', 'containerAd_Avancado', 'btnPreco_Avancado', 'Avancado')" />
-
-                                <!-- Botão de Valor Limpo como Seletor Exclusivo do Plano -->
-                                <div class="p-3 bg-light d-flex justify-content-between align-items-center border-top">
-                                    <button type="button" id="btnPreco_Avancado" class="btn btn-outline-primary fw-bold btn-sm shadow-sm btn-seletor-preco" onclick="selecionarEspacoPorPreco('Avancado', 'containerAd_Avancado', 'btnPreco_Avancado')">
-                                        Avançado — R$ 299,90 / mês
-                                    </button>
-                                    <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" onclick="solicitarAdPorEspaco('Avancado', 'fileAd_Avancado')">
-                                        Solicitar Anúncio
-                                    </button>
+                                <!-- Botão de Preço Clicável no Canto Superior Direito (Submete a Solicitação) -->
+                                <div class="position-absolute top-0 end-0 m-3 bg-dark bg-opacity-50 text-white text-center py-2 px-3 shadow-sm rounded cursor-pointer btn-solicitar-preco-top" 
+                                     style="backdrop-filter: blur(2px); z-index: 20;" 
+                                     onclick="solicitarAdPorEspaco('Avancado', 'fileAd_Avancado')"
+                                     title="Clique para solicitar Anúncio Avançado (R$ 299,90/mês)">
+                                    <span class="fw-bold fs-6">Avançado — R$ 299,90 / mês</span>
                                 </div>
+
+                                <input type="file" id="fileAd_Avancado" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Avancado', 'checkAd_Avancado', 'containerAd_Avancado', 'Avancado')" />
                             </div>
                         </div>
                     </div>
@@ -562,8 +560,8 @@
                     <!-- Esquerda (col-md-6): Card Intermediário com Altura Fixa em CSS (card-ad-intermediario) -->
                     <div class="col-md-6">
                         <div class="card h-100 border-2 border-info shadow-sm overflow-hidden card-opcao-propaganda" id="containerAd_Intermediario">
-                            <div class="card-body p-0 d-flex flex-column justify-content-between position-relative">
-                                <!-- Corpo do Card (Espaço da Imagem) - Upload & Preview -->
+                            <div class="card-body p-0 position-relative">
+                                <!-- Seletor da Imagem (Upload & Preview da Arte) -->
                                 <div class="position-relative overflow-hidden bg-light cursor-pointer dropzone-ad-box card-ad-intermediario w-100" 
                                      onclick="document.getElementById('fileAd_Intermediario').click()"
                                      title="Clique para anexar a arte Intermediário">
@@ -571,7 +569,7 @@
                                     <img id="previewImg_Intermediario" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Intermediário" />
                                     
                                     <!-- Indicador Visual de Seleção -->
-                                    <span id="checkAd_Intermediario" class="badge bg-success position-absolute top-0 start-0 m-3 d-none shadow px-3 py-2">
+                                    <span id="checkAd_Intermediario" class="badge bg-success position-absolute top-0 start-0 m-3 d-none shadow px-3 py-2" style="z-index: 15;">
                                         <i class="icon-base ri ri-checkbox-circle-fill me-1"></i> Selecionado
                                     </span>
 
@@ -582,17 +580,15 @@
                                     </div>
                                 </div>
 
-                                <input type="file" id="fileAd_Intermediario" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Intermediario', 'checkAd_Intermediario', 'containerAd_Intermediario', 'btnPreco_Intermediario', 'Intermediario')" />
-
-                                <!-- Botão de Valor Limpo como Seletor Exclusivo do Plano -->
-                                <div class="p-3 bg-light d-flex justify-content-between align-items-center border-top">
-                                    <button type="button" id="btnPreco_Intermediario" class="btn btn-outline-info text-dark fw-bold btn-sm shadow-sm btn-seletor-preco" onclick="selecionarEspacoPorPreco('Intermediario', 'containerAd_Intermediario', 'btnPreco_Intermediario')">
-                                        Intermediário — R$ 149,90 / mês
-                                    </button>
-                                    <button type="button" class="btn btn-info text-dark fw-bold btn-sm px-3 shadow-sm" onclick="solicitarAdPorEspaco('Intermediario', 'fileAd_Intermediario')">
-                                        Solicitar Anúncio
-                                    </button>
+                                <!-- Botão de Preço Clicável no Canto Superior Direito (Submete a Solicitação) -->
+                                <div class="position-absolute top-0 end-0 m-3 bg-dark bg-opacity-50 text-white text-center py-2 px-3 shadow-sm rounded cursor-pointer btn-solicitar-preco-top" 
+                                     style="backdrop-filter: blur(2px); z-index: 20;" 
+                                     onclick="solicitarAdPorEspaco('Intermediario', 'fileAd_Intermediario')"
+                                     title="Clique para solicitar Anúncio Intermediário (R$ 149,90/mês)">
+                                    <span class="fw-bold small">Intermediário — R$ 149,90 / mês</span>
                                 </div>
+
+                                <input type="file" id="fileAd_Intermediario" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Intermediario', 'checkAd_Intermediario', 'containerAd_Intermediario', 'Intermediario')" />
                             </div>
                         </div>
                     </div>
@@ -603,8 +599,8 @@
                             <!-- Card Básico (col-6) com Altura Fixa em CSS (card-ad-basico) -->
                             <div class="col-6">
                                 <div class="card h-100 border-2 border-success shadow-sm overflow-hidden card-opcao-propaganda" id="containerAd_Basico">
-                                    <div class="card-body p-0 d-flex flex-column justify-content-between position-relative">
-                                        <!-- Corpo do Card (Espaço da Imagem) - Upload & Preview -->
+                                    <div class="card-body p-0 position-relative">
+                                        <!-- Seletor da Imagem (Upload & Preview da Arte) -->
                                         <div class="position-relative overflow-hidden bg-light cursor-pointer dropzone-ad-box card-ad-basico w-100" 
                                              onclick="document.getElementById('fileAd_Basico').click()"
                                              title="Clique para anexar a arte Básico">
@@ -612,7 +608,7 @@
                                             <img id="previewImg_Basico" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Básico" />
                                             
                                             <!-- Indicador Visual -->
-                                            <span id="checkAd_Basico" class="badge bg-success position-absolute top-0 start-0 m-2 d-none shadow" style="font-size: 0.7rem;">
+                                            <span id="checkAd_Basico" class="badge bg-success position-absolute top-0 start-0 m-2 d-none shadow" style="font-size: 0.7rem; z-index: 15;">
                                                 <i class="icon-base ri ri-checkbox-circle-fill"></i> Selecionado
                                             </span>
 
@@ -623,17 +619,15 @@
                                             </div>
                                         </div>
 
-                                        <input type="file" id="fileAd_Basico" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Basico', 'checkAd_Basico', 'containerAd_Basico', 'btnPreco_Basico', 'Basico')" />
-
-                                        <!-- Botão de Valor Limpo como Seletor Exclusivo do Plano -->
-                                        <div class="p-2 bg-light d-flex flex-column gap-1 border-top text-center">
-                                            <button type="button" id="btnPreco_Basico" class="btn btn-outline-success fw-bold btn-xs py-1 shadow-sm btn-seletor-preco" onclick="selecionarEspacoPorPreco('Basico', 'containerAd_Basico', 'btnPreco_Basico')">
-                                                Básico — R$ 79,90/mês
-                                            </button>
-                                            <button type="button" class="btn btn-success btn-xs w-100 py-1 shadow-sm" onclick="solicitarAdPorEspaco('Basico', 'fileAd_Basico')">
-                                                Solicitar Anúncio
-                                            </button>
+                                        <!-- Botão de Preço Clicável no Canto Superior Direito (Submete a Solicitação) -->
+                                        <div class="position-absolute top-0 end-0 m-2 bg-dark bg-opacity-50 text-white text-center py-1 px-2 shadow-sm rounded cursor-pointer btn-solicitar-preco-top" 
+                                             style="backdrop-filter: blur(2px); z-index: 20; font-size: 0.7rem;" 
+                                             onclick="solicitarAdPorEspaco('Basico', 'fileAd_Basico')"
+                                             title="Clique para solicitar Anúncio Básico (R$ 79,90/mês)">
+                                            <span class="fw-bold">Básico — R$ 79,90 / mês</span>
                                         </div>
+
+                                        <input type="file" id="fileAd_Basico" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Basico', 'checkAd_Basico', 'containerAd_Basico', 'Basico')" />
                                     </div>
                                 </div>
                             </div>
@@ -641,8 +635,8 @@
                             <!-- Card Econômico (col-6) com Altura Fixa em CSS (card-ad-economico) -->
                             <div class="col-6">
                                 <div class="card h-100 border-2 border-secondary shadow-sm overflow-hidden card-opcao-propaganda" id="containerAd_Economico">
-                                    <div class="card-body p-0 d-flex flex-column justify-content-between position-relative">
-                                        <!-- Corpo do Card (Espaço da Imagem) - Upload & Preview -->
+                                    <div class="card-body p-0 position-relative">
+                                        <!-- Seletor da Imagem (Upload & Preview da Arte) -->
                                         <div class="position-relative overflow-hidden bg-light cursor-pointer dropzone-ad-box card-ad-economico w-100" 
                                              onclick="document.getElementById('fileAd_Economico').click()"
                                              title="Clique para anexar a arte Econômico">
@@ -650,7 +644,7 @@
                                             <img id="previewImg_Economico" src="~/starter-kit/assets/img/logo.png" class="w-100 h-100" style="object-fit: cover;" alt="Preview Econômico" />
                                             
                                             <!-- Indicador Visual -->
-                                            <span id="checkAd_Economico" class="badge bg-success position-absolute top-0 start-0 m-2 d-none shadow" style="font-size: 0.7rem;">
+                                            <span id="checkAd_Economico" class="badge bg-success position-absolute top-0 start-0 m-2 d-none shadow" style="font-size: 0.7rem; z-index: 15;">
                                                 <i class="icon-base ri ri-checkbox-circle-fill"></i> Selecionado
                                             </span>
 
@@ -661,17 +655,15 @@
                                             </div>
                                         </div>
 
-                                        <input type="file" id="fileAd_Economico" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Economico', 'checkAd_Economico', 'containerAd_Economico', 'btnPreco_Economico', 'Economico')" />
-
-                                        <!-- Botão de Valor Limpo como Seletor Exclusivo do Plano -->
-                                        <div class="p-2 bg-light d-flex flex-column gap-1 border-top text-center">
-                                            <button type="button" id="btnPreco_Economico" class="btn btn-outline-secondary fw-bold btn-xs py-1 shadow-sm btn-seletor-preco" onclick="selecionarEspacoPorPreco('Economico', 'containerAd_Economico', 'btnPreco_Economico')">
-                                                Econômico — R$ 49,90/mês
-                                            </button>
-                                            <button type="button" class="btn btn-secondary btn-xs w-100 py-1 shadow-sm" onclick="solicitarAdPorEspaco('Economico', 'fileAd_Economico')">
-                                                Solicitar Anúncio
-                                            </button>
+                                        <!-- Botão de Preço Clicável no Canto Superior Direito (Submete a Solicitação) -->
+                                        <div class="position-absolute top-0 end-0 m-2 bg-dark bg-opacity-50 text-white text-center py-1 px-2 shadow-sm rounded cursor-pointer btn-solicitar-preco-top" 
+                                             style="backdrop-filter: blur(2px); z-index: 20; font-size: 0.7rem;" 
+                                             onclick="solicitarAdPorEspaco('Economico', 'fileAd_Economico')"
+                                             title="Clique para solicitar Anúncio Econômico (R$ 49,90/mês)">
+                                            <span class="fw-bold">Econômico — R$ 49,90 / mês</span>
                                         </div>
+
+                                        <input type="file" id="fileAd_Economico" class="d-none" accept="image/*" onchange="processarSelecaoArte(this, 'previewImg_Economico', 'checkAd_Economico', 'containerAd_Economico', 'Economico')" />
                                     </div>
                                 </div>
                             </div>
@@ -715,6 +707,16 @@
         .thumb-gallery.active, .thumb-gallery:hover { opacity: 1; border: 2px solid #4A7C59 !important; }
         .dropzone-ad-box:hover { opacity: 0.95; transform: scale(1.003); }
 
+        /* Estilo do Botão de Preço no Canto Superior Direito (Estilo idêntico ao seletor central com efeito hover) */
+        .btn-solicitar-preco-top {
+            transition: all 0.25s ease;
+        }
+        .btn-solicitar-preco-top:hover {
+            background-color: rgba(25, 135, 84, 0.9) !important;
+            transform: scale(1.04);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+
         /* Alturas Fixas dos Cards de Propaganda (Ajustável manualmente via CSS) */
         .card-ad-avancado {
             height: 300px !important; /* Aumentado em +50% em relação aos demais */
@@ -739,31 +741,7 @@
             bsModal.show();
         }
 
-        function selecionarEspacoPorPreco(tipoEspaco, containerId, btnPrecoId) {
-            // Resetar estilos visuais dos outros cards
-            document.querySelectorAll('.card-opcao-propaganda').forEach(c => {
-                c.classList.remove('border-success', 'shadow-lg');
-                c.style.borderWidth = '2px';
-            });
-
-            // Destacar o card selecionado em verde
-            const container = document.getElementById(containerId);
-            if (container) {
-                container.classList.add('border-success', 'shadow-lg');
-                container.style.borderWidth = '3px';
-            }
-
-            // Atualizar estado dos botões de preço
-            document.querySelectorAll('.btn-seletor-preco').forEach(b => {
-                b.classList.remove('btn-success', 'text-white');
-            });
-            const btn = document.getElementById(btnPrecoId);
-            if (btn) {
-                btn.classList.add('btn-success', 'text-white');
-            }
-        }
-
-        function processarSelecaoArte(input, imgId, checkBadgeId, containerId, btnPrecoId, tipoEspaco) {
+        function processarSelecaoArte(input, imgId, checkBadgeId, containerId, tipoEspaco) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
@@ -773,7 +751,16 @@
                     const checkBadge = document.getElementById(checkBadgeId);
                     if (checkBadge) checkBadge.classList.remove('d-none');
 
-                    selecionarEspacoPorPreco(tipoEspaco, containerId, btnPrecoId);
+                    document.querySelectorAll('.card-opcao-propaganda').forEach(c => {
+                        c.classList.remove('border-success', 'shadow-lg');
+                        c.style.borderWidth = '2px';
+                    });
+
+                    const container = document.getElementById(containerId);
+                    if (container) {
+                        container.classList.add('border-success', 'shadow-lg');
+                        container.style.borderWidth = '3px';
+                    }
                 };
                 reader.readAsDataURL(input.files[0]);
             }
