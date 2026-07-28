@@ -3,7 +3,13 @@ using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Infrastructure.Data;
 using MercadoBonsai.Infrastructure.Repositories;
 
-var builder = WebApplication.CreateBuilder(args);
+var options = new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = Directory.GetCurrentDirectory()
+};
+
+var builder = WebApplication.CreateBuilder(options);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
