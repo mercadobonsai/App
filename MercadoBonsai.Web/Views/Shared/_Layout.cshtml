@@ -189,11 +189,11 @@
                                     </a>
                                 </li>
 
-                                <!-- Link Leilões Encerrados -->
+                                <!-- Link Leilões & Ações entre Amigos -->
                                 <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Leilao" && ViewContext.RouteData.Values["action"]?.ToString() == "Encerrados" ? "active" : "")">
                                     <a asp-controller="Leilao" asp-action="Encerrados" class="menu-link">
                                         <i class="menu-icon icon-base ri ri-auction-line"></i>
-                                        <div>Leilões Encerrados</div>
+                                        <div>Leilões & Ações entre Amigos</div>
                                     </a>
                                 </li>
 
@@ -221,7 +221,7 @@
                                             <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Rifa" ? "active" : "")">
                                                 <a asp-controller="Rifa" asp-action="MinhasRifas" class="menu-link">
                                                     <i class="menu-icon icon-base ri ri-ticket-line me-2"></i>
-                                                    <div>Minhas Rifas</div>
+                                                    <div>Minhas Ações entre Amigos</div>
                                                 </a>
                                             </li>
                                         </ul>
@@ -302,6 +302,22 @@
     <script src="~/starter-kit/assets/vendor/js/menu.js"></script>
     <script src="~/starter-kit/assets/js/main.js"></script>
     <script src="~/starter-kit/assets/js/masks.js"></script>
+
+    <!-- Script Global de Spinner de Carregamento para Botões de Submit -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const forms = document.querySelectorAll("form");
+            forms.forEach(function (form) {
+                form.addEventListener("submit", function () {
+                    const submitBtns = form.querySelectorAll("button[type='submit'], input[type='submit']");
+                    submitBtns.forEach(function (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processando...';
+                    });
+                });
+            });
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -159,6 +159,7 @@ public class AdminController : Controller
         existente.LimiteRifas30Dias = plano.LimiteRifas30Dias;
         existente.LimiteLeiloes30Dias = plano.LimiteLeiloes30Dias;
         existente.LimiteAnuncios = plano.LimiteAnuncios;
+        existente.LimiteFotos = plano.LimiteFotos;
         existente.DestaquesHome = plano.DestaquesHome;
 
         await _planoRepository.AtualizarAsync(existente);

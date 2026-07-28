@@ -1,16 +1,16 @@
 @model IEnumerable<MercadoBonsai.Domain.Entities.Rifa>
 @{
-    ViewData["Title"] = "Minhas Rifas - Mercado Bonsai";
+    ViewData["Title"] = "Minhas Ações entre Amigos - Mercado Bonsai";
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-1" style="color: #4A7C59;">🎟️ Minhas Rifas & Ações Entre Amigos</h4>
-            <p class="text-muted mb-0">Gerencie suas cotas, acompanhe vendas e datas de sorteio</p>
+            <h4 class="fw-bold mb-1" style="color: #4A7C59;">🎟️ Minhas Ações entre Amigos</h4>
+            <p class="text-muted mb-0">Gerencie suas cotas, acompanhe reservas e datas de apuração</p>
         </div>
         <a asp-action="Criar" class="btn btn-success">
-            <i class="icon-base ri ri-add-line me-1"></i> Criar Nova Rifa
+            <i class="icon-base ri ri-add-line me-1"></i> Criar Nova Ação entre Amigos
         </a>
     </div>
 
@@ -35,10 +35,10 @@
                 <thead class="table-light">
                     <tr>
                         <th style="width: 70px;">Foto</th>
-                        <th>Título da Rifa</th>
+                        <th>Título da Ação entre Amigos</th>
                         <th>Valor Cota</th>
                         <th>Progresso Vendido</th>
-                        <th>Data do Sorteio</th>
+                        <th>Data da Apuração</th>
                         <th>Status</th>
                         <th class="text-end">Ações</th>
                     </tr>
@@ -49,7 +49,7 @@
                         <tr>
                             <td colspan="7" class="text-center py-4 text-muted">
                                 <i class="icon-base ri ri-ticket-line fs-3 mb-2 d-block"></i>
-                                Você ainda não possui rifas cadastradas.
+                                Você ainda não possui Ações entre Amigos cadastradas.
                             </td>
                         </tr>
                     }
@@ -85,7 +85,7 @@
                                     }
                                     else if (item.Status == 2)
                                     {
-                                        <span class="badge bg-primary">Sorteada</span>
+                                        <span class="badge bg-primary">Apurada</span>
                                     }
                                     else
                                     {

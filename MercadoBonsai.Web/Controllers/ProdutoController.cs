@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using MercadoBonsai.Domain.Entities;
+using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Web.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -60,6 +61,18 @@ public class ProdutoController : Controller
         {
             return NotFound();
         }
+
+        // Regra de Negócio: Bloqueio de acesso para produtos Indisponíveis/Vendidos se não for o proprietário ou Admin
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(userIdClaim, out int currentUserId);
+        bool isOwnerOrAdmin = User.IsInRole("Administrador") || (currentUserId > 0 && produto.VendedorId == currentUserId);
+
+        if ((produto.Status == StatusProduto.Indisponivel || produto.Status == StatusProduto.Vendido) && !isOwnerOrAdmin)
+        {
+            TempData["Erro"] = "Este produto está indisponível para visualização pública.";
+            return RedirectToAction("Index");
+        }
+
         return View(produto);
     }
 
@@ -68,7 +81,7 @@ public class ProdutoController : Controller
     [Authorize(Roles = "Vendedor, Administrador")]
     public IActionResult Criar()
     {
-        return View();
+        return View(new CriarProdutoViewModel { FormaEnvio = "Frete por conta comprador" });
     }
 
     // POST: /Produto/Criar
@@ -122,7 +135,7 @@ public class ProdutoController : Controller
             Largura = model.Largura,
             Comprimento = model.Comprimento,
             Peso = model.Peso,
-            FormaEnvio = model.FormaEnvio,
+            FormaEnvio = string.IsNullOrWhiteSpace(model.FormaEnvio) ? "Frete por conta comprador" : model.FormaEnvio,
             Categoria = model.Categoria,
             ImagemUrl = imagemUrl ?? string.Empty,
             DataCriacao = DateTime.UtcNow
@@ -163,7 +176,7 @@ public class ProdutoController : Controller
             Largura = produto.Largura,
             Comprimento = produto.Comprimento,
             Peso = produto.Peso,
-            FormaEnvio = produto.FormaEnvio,
+            FormaEnvio = string.IsNullOrWhiteSpace(produto.FormaEnvio) ? "Frete por conta comprador" : produto.FormaEnvio,
             Categoria = produto.Categoria,
             ImagemUrlAtual = produto.ImagemUrl
         };
@@ -228,7 +241,7 @@ public class ProdutoController : Controller
         produto.Largura = model.Largura;
         produto.Comprimento = model.Comprimento;
         produto.Peso = model.Peso;
-        produto.FormaEnvio = model.FormaEnvio;
+        produto.FormaEnvio = string.IsNullOrWhiteSpace(model.FormaEnvio) ? "Frete por conta comprador" : model.FormaEnvio;
         produto.Categoria = model.Categoria;
 
         await _produtoRepository.AtualizarAsync(produto);

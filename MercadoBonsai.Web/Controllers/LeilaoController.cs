@@ -15,28 +15,37 @@ namespace MercadoBonsai.Web.Controllers;
 public class LeilaoController : Controller
 {
     private readonly ILeilaoRepository _leilaoRepository;
+    private readonly IRifaRepository _rifaRepository;
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPlanoRepository _planoRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
     public LeilaoController(
         ILeilaoRepository leilaoRepository,
+        IRifaRepository rifaRepository,
         IUsuarioRepository usuarioRepository,
         IPlanoRepository planoRepository,
         IWebHostEnvironment webHostEnvironment)
     {
         _leilaoRepository = leilaoRepository;
+        _rifaRepository = rifaRepository;
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
         _webHostEnvironment = webHostEnvironment;
     }
 
-    // GET: /Leilao/Encerrados (Consulta pública de Leilões Encerrados/Arrematados)
+    // GET: /Leilao/Encerrados (Consulta de leilões e ações entre amigos, em andamento ou encerrados)
     [HttpGet]
     public async Task<IActionResult> Encerrados()
     {
-        var leiloesEncerrados = await _leilaoRepository.ListarEncerradosAsync();
-        return View(leiloesEncerrados);
+        var leiloes = await _leilaoRepository.ListarEncerradosAsync();
+        var rifaAtiva = await _rifaRepository.ObterRifaAtivaRecenteAsync();
+        var leilaoAtivo = await _leilaoRepository.ObterLeilaoAtivoRecenteAsync();
+
+        ViewData["RifaAtiva"] = rifaAtiva;
+        ViewData["LeilaoAtivo"] = leilaoAtivo;
+
+        return View(leiloes);
     }
 
     // GET: /Leilao/MeusLeiloes (Gestão do Vendedor)
@@ -78,7 +87,8 @@ public class LeilaoController : Controller
         var leilao = new Leilao
         {
             DataFinalizacao = DateTime.UtcNow.AddDays(7),
-            IncrementoMinimo = 50.00m
+            IncrementoMinimo = 50.00m,
+            Status = StatusLeilao.Criado
         };
 
         return View(leilao);
@@ -190,7 +200,6 @@ public class LeilaoController : Controller
         // Regra de Negócio: Se o leilão já foi iniciado e possui lances registrados, bloqueia alteração de informações gerais
         if (!leilao.PodeEditarDadosGerais)
         {
-            // Permite APENAS a prorrogação da data de término
             if (model.DataFinalizacao < leilao.DataFinalizacao)
             {
                 ModelState.AddModelError("DataFinalizacao", "Não é permitido antecipar o término de um leilão em andamento com lances. Apenas prorrogações são aceitas.");

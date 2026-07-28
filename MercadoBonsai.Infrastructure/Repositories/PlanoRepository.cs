@@ -25,6 +25,7 @@ public class PlanoRepository : IPlanoRepository
             limitelifas30dias AS LimiteRifas30Dias, 
             limiteleiloes30dias AS LimiteLeiloes30Dias, 
             limiteanuncios AS LimiteAnuncios, 
+            limitefotos AS LimiteFotos,
             destaqueshome AS DestaquesHome
         FROM planos";
 
@@ -54,6 +55,7 @@ public class PlanoRepository : IPlanoRepository
                 limitelifas30dias = @LimiteRifas30Dias,
                 limiteleiloes30dias = @LimiteLeiloes30Dias,
                 limiteanuncios = @LimiteAnuncios,
+                limitefotos = @LimiteFotos,
                 destaqueshome = @DestaquesHome
             WHERE id = @Id;";
 

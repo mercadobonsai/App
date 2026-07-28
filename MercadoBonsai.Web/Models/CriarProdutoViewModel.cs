@@ -27,7 +27,7 @@ public class CriarProdutoViewModel
     [Display(Name = "Status da Oferta")]
     public StatusProduto Status { get; set; } = StatusProduto.Disponivel;
 
-    // Dimensões Físicas (cm) & Peso (kg)
+    // Dimensões Físicas (cm) & Peso (kg com 3 casas decimais)
     [Display(Name = "Altura (cm)")]
     public decimal Altura { get; set; }
 
@@ -42,11 +42,11 @@ public class CriarProdutoViewModel
 
     // Envio e Categorização
     [Display(Name = "Forma de Envio")]
-    public string FormaEnvio { get; set; } = "A combinar";
+    public string FormaEnvio { get; set; } = "Frete por conta comprador";
 
     [Display(Name = "Categoria do Produto")]
     public string Categoria { get; set; } = "Bonsai";
 
-    [Display(Name = "Foto do Produto")]
+    [Display(Name = "Foto de Capa (Principal)")]
     public IFormFile? Imagem { get; set; }
 }

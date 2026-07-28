@@ -1,6 +1,6 @@
 @model MercadoBonsai.Domain.Entities.Rifa
 @{
-    ViewData["Title"] = "Nova Rifa - Mercado Bonsai";
+    ViewData["Title"] = "Nova Ação entre Amigos - Mercado Bonsai";
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -8,7 +8,7 @@
         <div class="col-md-8 col-lg-7">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-ticket-line me-2"></i>Cadastrar Nova Rifa / Ação Entre Amigos</h5>
+                    <h5 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-ticket-line me-2"></i>Cadastrar Nova Ação Entre Amigos</h5>
                     <a asp-action="MinhasRifas" class="btn btn-sm btn-outline-secondary">Voltar</a>
                 </div>
                 <div class="card-body p-4">
@@ -17,18 +17,18 @@
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4" role="alert"></div>
 
                         <div class="mb-3">
-                            <label asp-for="Titulo" class="form-label fw-semibold">Título do Prêmio / Ação</label>
-                            <input asp-for="Titulo" class="form-control" placeholder="Ex: Rifa Oficial - Bonsai Pinus Parviflora 15 anos" required />
+                            <label asp-for="Titulo" class="form-label fw-semibold">Título da Ação entre Amigos</label>
+                            <input asp-for="Titulo" class="form-control" placeholder="Ex: Ação Entre Amigos - Bonsai Pinus Parviflora 15 anos" required />
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Subtitulo" class="form-label fw-semibold">Subtítulo / Descrição Rápida</label>
+                            <label asp-for="Subtitulo" class="form-label fw-semibold">Exemplar da Ação / Subtítulo</label>
                             <input asp-for="Subtitulo" class="form-control" placeholder="Ex: Edição Especial de Primavera com Vaso Japonês" />
                         </div>
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
-                                <label asp-for="ValorCota" class="form-label fw-semibold">Preço por Cota (R$)</label>
+                                <label asp-for="ValorCota" class="form-label fw-semibold">Valor por Cota (R$)</label>
                                 <input asp-for="ValorCota" class="form-control" type="number" step="0.01" value="25.00" />
                             </div>
                             <div class="col-md-4">
@@ -36,19 +36,19 @@
                                 <input asp-for="TotalCotas" class="form-control" type="number" value="100" />
                             </div>
                             <div class="col-md-4">
-                                <label asp-for="DataSorteio" class="form-label fw-semibold">Data Prevista do Sorteio</label>
+                                <label asp-for="DataSorteio" class="form-label fw-semibold">Data da Apuração</label>
                                 <input asp-for="DataSorteio" type="date" class="form-control" value="@Model.DataSorteio.ToString("yyyy-MM-dd")" />
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Descricao" class="form-label fw-semibold">Descrição do Prêmio</label>
-                            <textarea asp-for="Descricao" class="form-control" rows="4" placeholder="Descreva os detalhes da planta ou insumo sorteado, frete por conta do ganhador ou grátis, regulamento..."></textarea>
+                            <label asp-for="Descricao" class="form-label fw-semibold">Descrição do Exemplar da Ação</label>
+                            <textarea asp-for="Descricao" class="form-control" rows="4" placeholder="Descreva os detalhes da planta ou insumo, regulamento e envio..."></textarea>
                         </div>
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Foto do Prêmio</label>
+                                <label class="form-label fw-semibold">Foto Principal (Capa)</label>
                                 <input type="file" name="fotoPrincipal" class="form-control" accept="image/*" required />
                             </div>
                             <div class="col-md-6">
@@ -59,7 +59,7 @@
 
                         <div class="d-flex justify-content-end gap-2">
                             <a asp-action="MinhasRifas" class="btn btn-outline-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-success px-4"><i class="icon-base ri ri-save-line me-1"></i> Publicar Rifa</button>
+                            <button type="submit" class="btn btn-success px-4"><i class="icon-base ri ri-save-line me-1"></i> Publicar Ação entre Amigos</button>
                         </div>
                     </form>
                 </div>

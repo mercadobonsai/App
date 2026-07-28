@@ -1,6 +1,6 @@
 @model MercadoBonsai.Domain.Entities.Rifa
 @{
-    ViewData["Title"] = $"Editar Rifa #{Model.Id}";
+    ViewData["Title"] = $"Editar Ação entre Amigos #{Model.Id}";
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -8,7 +8,7 @@
         <div class="col-md-8 col-lg-7">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-edit-box-line me-2"></i>Editar Rifa</h5>
+                    <h5 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-edit-box-line me-2"></i>Editar Ação entre Amigos</h5>
                     <a asp-action="MinhasRifas" class="btn btn-sm btn-outline-secondary">Voltar</a>
                 </div>
                 <div class="card-body p-4">
@@ -17,12 +17,12 @@
                         <input type="hidden" asp-for="Id" />
 
                         <div class="mb-3">
-                            <label asp-for="Titulo" class="form-label fw-semibold"></label>
+                            <label asp-for="Titulo" class="form-label fw-semibold">Título da Ação entre Amigos</label>
                             <input asp-for="Titulo" class="form-control" required />
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Subtitulo" class="form-label fw-semibold"></label>
+                            <label asp-for="Subtitulo" class="form-label fw-semibold">Exemplar da Ação</label>
                             <input asp-for="Subtitulo" class="form-control" />
                         </div>
 
@@ -36,32 +36,32 @@
                                 <input asp-for="TotalCotas" class="form-control" type="number" />
                             </div>
                             <div class="col-md-3">
-                                <label asp-for="CotasVendidas" class="form-label fw-semibold">Vendidas</label>
+                                <label asp-for="CotasVendidas" class="form-label fw-semibold">Reservadas</label>
                                 <input asp-for="CotasVendidas" class="form-control" type="number" />
                             </div>
                             <div class="col-md-3">
                                 <label asp-for="Status" class="form-label fw-semibold">Status</label>
                                 <select asp-for="Status" class="form-select">
                                     <option value="1">Ativa</option>
-                                    <option value="2">Sorteada</option>
+                                    <option value="2">Apurada</option>
                                     <option value="3">Cancelada</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="DataSorteio" class="form-label fw-semibold">Data Prevista do Sorteio</label>
+                            <label asp-for="DataSorteio" class="form-label fw-semibold">Data Prevista da Apuração</label>
                             <input asp-for="DataSorteio" type="date" class="form-control" value="@Model.DataSorteio.ToString("yyyy-MM-dd")" />
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Descricao" class="form-label fw-semibold"></label>
+                            <label asp-for="Descricao" class="form-label fw-semibold">Descrição do Exemplar da Ação</label>
                             <textarea asp-for="Descricao" class="form-control" rows="4"></textarea>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 pt-2">
                             <a asp-action="MinhasRifas" class="btn btn-outline-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-success px-4"><i class="icon-base ri ri-save-line me-1"></i> Salvar Rifa</button>
+                            <button type="submit" class="btn btn-success px-4"><i class="icon-base ri ri-save-line me-1"></i> Salvar Ação</button>
                         </div>
                     </form>
                 </div>

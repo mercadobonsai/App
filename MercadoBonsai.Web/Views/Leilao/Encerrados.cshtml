@@ -1,24 +1,161 @@
 @model IEnumerable<MercadoBonsai.Domain.Entities.Leilao>
+@using MercadoBonsai.Domain.Entities
+@using MercadoBonsai.Domain.Enums
 @{
-    ViewData["Title"] = "Histórico de Leilões Encerrados - Mercado Bonsai";
+    ViewData["Title"] = "Leilões & Ações entre Amigos - Mercado Bonsai";
+    var rifaAtiva = ViewData["RifaAtiva"] as Rifa;
+    var leilaoAtivo = ViewData["LeilaoAtivo"] as Leilao;
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Cabeçalho Principal Solicitado -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold mb-1" style="color: #4A7C59;">🔨 Leilões Encerrados & Historico de Arremates</h3>
-            <p class="text-muted mb-0">Consulte exemplares raros arrematados pela comunidade de bonsaístas</p>
+            <h3 class="fw-bold mb-1" style="color: #4A7C59;">🔨 Leilões & Ações entre Amigos</h3>
+            <p class="text-muted mb-0">Consulta de leilões e ações entre amigos, em andamento ou encerrados</p>
         </div>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Voltar à Home</a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar à Home
+        </a>
     </div>
 
+    <!-- Seção 1: Oportunidades em Andamento -->
+    <h4 class="fw-bold mb-3 text-dark"><i class="icon-base ri ri-fire-line text-danger me-2"></i>Em Andamento (Ao Vivo)</h4>
+    <div class="row g-4 mb-5">
+        <!-- Leilão em Andamento -->
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-label-danger py-2 px-3 d-flex justify-content-between align-items-center">
+                    <span class="badge bg-danger"><i class="icon-base ri ri-auction-line me-1"></i>Leilão em Andamento</span>
+                    @if (leilaoAtivo != null && leilaoAtivo.Status == StatusLeilao.Iniciado)
+                    {
+                        <span class="badge bg-success">Status: Iniciado</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Aguardando Início</span>
+                    }
+                </div>
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    @if (leilaoAtivo != null)
+                    {
+                        <div>
+                            <div class="d-flex gap-3 mb-3">
+                                <img src="@leilaoAtivo.FotoPrincipalUrl" class="rounded shadow-sm" alt="@leilaoAtivo.Titulo" style="width: 100px; height: 100px; object-fit: cover;" />
+                                <div>
+                                    <h5 class="fw-bold mb-1">@leilaoAtivo.Titulo</h5>
+                                    <p class="text-muted small mb-1">@leilaoAtivo.Subtitulo</p>
+                                    <small class="text-muted">Organizado por: <strong>@(leilaoAtivo.VendedorNome ?? "Viveiro VIP")</strong></small>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-light rounded d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <small class="text-muted d-block">Lance Atual:</small>
+                                    <strong class="text-danger fs-4">R$ @leilaoAtivo.LanceAtual.ToString("N2")</strong>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">Término em:</small>
+                                    <strong class="text-dark">@leilaoAtivo.DataFinalizacao.ToString("dd/MM/yyyy HH:mm")</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trava de Status para Lances -->
+                        @if (leilaoAtivo.Status == StatusLeilao.Iniciado)
+                        {
+                            <button class="btn btn-danger w-100 shadow-sm" onclick="alert('Sistema de lances ao vivo!')">
+                                <i class="icon-base ri ri-auction-line me-1"></i> Dar Lance (Mínimo: R$ @leilaoAtivo.ProximoLanceMinimo.ToString("N2"))
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary w-100 disabled" disabled tabindex="-1">
+                                <i class="icon-base ri ri-lock-line me-1"></i> Leilão não iniciado para lances
+                            </button>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="icon-base ri ri-auction-line fs-1 mb-2"></i>
+                            <p class="mb-0">Nenhum leilão em andamento no momento.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Ação entre Amigos em Andamento -->
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-label-success py-2 px-3 d-flex justify-content-between align-items-center">
+                    <span class="badge bg-success"><i class="icon-base ri ri-ticket-line me-1"></i>Ação entre Amigos Ativa</span>
+                    @if (rifaAtiva != null && rifaAtiva.Status == 1)
+                    {
+                        <span class="badge bg-success">Status: Ativa</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Aguardando Início</span>
+                    }
+                </div>
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    @if (rifaAtiva != null)
+                    {
+                        <div>
+                            <div class="d-flex gap-3 mb-3">
+                                <img src="@rifaAtiva.FotoPrincipalUrl" class="rounded shadow-sm" alt="@rifaAtiva.Titulo" style="width: 100px; height: 100px; object-fit: cover;" />
+                                <div>
+                                    <h5 class="fw-bold mb-1">@rifaAtiva.Titulo</h5>
+                                    <p class="text-muted small mb-1">Exemplar da Ação: @rifaAtiva.Subtitulo</p>
+                                    <small class="text-muted">Organizado por: <strong>@(rifaAtiva.VendedorNome ?? "Viveiro Parceiro")</strong></small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>Progresso das Cotas:</span>
+                                    <strong class="text-success">@rifaAtiva.PorcentagemVendida% vendidas</strong>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: @rifaAtiva.PorcentagemVendida%;" aria-valuenow="@rifaAtiva.PorcentagemVendida" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <small class="text-muted d-block mt-1">@rifaAtiva.CotasVendidas de @rifaAtiva.TotalCotas cotas reservadas (Valor Cota: R$ @rifaAtiva.ValorCota.ToString("N2"))</small>
+                            </div>
+                        </div>
+
+                        <!-- Trava de Status para Participação -->
+                        @if (rifaAtiva.Status == 1)
+                        {
+                            <button class="btn btn-success w-100 shadow-sm" onclick="alert('Sistema de escolha de bilhetes!')">
+                                <i class="icon-base ri ri-ticket-line me-1"></i> Comprar Cota (R$ @rifaAtiva.ValorCota.ToString("N2"))
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary w-100 disabled" disabled tabindex="-1">
+                                <i class="icon-base ri ri-lock-line me-1"></i> Ação entre Amigos não iniciada
+                            </button>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="icon-base ri ri-ticket-line fs-1 mb-2"></i>
+                            <p class="mb-0">Nenhuma ação entre amigos ativa no momento.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 2: Histórico de Encerrados -->
+    <h4 class="fw-bold mb-3 text-dark"><i class="icon-base ri ri-history-line text-secondary me-2"></i>Histórico de Leilões Encerrados</h4>
     @if (!Model.Any())
     {
-        <div class="card text-center p-5 border-0 shadow-sm">
+        <div class="card text-center p-4 border-0 shadow-sm">
             <div class="card-body">
-                <i class="icon-base ri ri-auction-line text-muted mb-2" style="font-size: 3.5rem;"></i>
-                <h5 class="fw-bold">Nenhum leilão encerrado ainda</h5>
-                <p class="text-muted">Acompanhe os leilões ao vivo na Home para participar dos próximos lances!</p>
+                <p class="text-muted mb-0">Nenhum leilão encerrado registrado no histórico.</p>
             </div>
         </div>
     }
@@ -29,9 +166,9 @@
             {
                 <div class="col-sm-6 col-md-4 col-lg-3">
                     <div class="card h-100 shadow-sm border-0 overflow-hidden">
-                        <div class="position-relative">
-                            <img src="@l.FotoPrincipalUrl" class="card-img-top" alt="@l.Titulo" style="height: 180px; object-fit: cover; filter: grayscale(20%);" />
-                            <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-sm">Encerrado</span>
+                        <div class="position-relative overflow-hidden" style="aspect-ratio: 4/3;">
+                            <img src="@l.FotoPrincipalUrl" class="card-img-top w-100 h-100" alt="@l.Titulo" style="object-fit: cover; filter: grayscale(20%);" />
+                            <span class="badge bg-secondary position-absolute top-0 end-0 m-3 shadow-sm">Encerrado</span>
                         </div>
                         <div class="card-body d-flex flex-column justify-content-between p-3">
                             <div>

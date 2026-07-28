@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold mb-1" style="color: #4A7C59;"><i class="icon-base ri ri-vip-crown-line me-2"></i>Gestão de Planos de Assinatura</h3>
-            <p class="text-muted mb-0">Configure preços, percentuais de comissão e limites mensais de leilões e rifas para cada plano</p>
+            <p class="text-muted mb-0">Configure preços, percentuais de comissão e limites mensais de leilões, ações entre amigos e fotos</p>
         </div>
         <a asp-action="Clientes" class="btn btn-outline-secondary">Voltar a Clientes</a>
     </div>
@@ -52,7 +52,7 @@
 
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <label class="form-label fw-semibold">Limite Rifas / 30d</label>
+                                    <label class="form-label fw-semibold">Limite Ações / 30d</label>
                                     <input type="number" name="LimiteRifas30Dias" value="@plano.LimiteRifas30Dias" class="form-control" required />
                                 </div>
                                 <div class="col-6">
@@ -61,9 +61,15 @@
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Limite Total de Anúncios</label>
-                                <input type="number" name="LimiteAnuncios" value="@plano.LimiteAnuncios" class="form-control" required />
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">Limite Anúncios</label>
+                                    <input type="number" name="LimiteAnuncios" value="@plano.LimiteAnuncios" class="form-control" required />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">Limite Fotos / Anúncio</label>
+                                    <input type="number" name="LimiteFotos" value="@plano.LimiteFotos" class="form-control" required />
+                                </div>
                             </div>
 
                             <div class="form-check form-switch mb-4">
