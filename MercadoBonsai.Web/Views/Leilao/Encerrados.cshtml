@@ -20,13 +20,13 @@
     </div>
 
     <!-- Seção 1: Oportunidades em Andamento -->
-    <h4 class="fw-bold mb-3 text-dark"><i class="icon-base ri ri-fire-line text-danger me-2"></i>Em Andamento (Ao Vivo)</h4>
+    <h4 class="fw-bold mb-3 text-dark"><i class="icon-base ri ri-fire-line text-primary me-2"></i>Em Andamento (Ao Vivo)</h4>
     <div class="row g-4 mb-5">
-        <!-- Leilão em Andamento -->
+        <!-- Leilão em Andamento (Paleta Azul) -->
         <div class="col-md-6">
             <div class="card h-100 border-0 shadow-sm overflow-hidden">
-                <div class="card-header bg-label-danger py-2 px-3 d-flex justify-content-between align-items-center">
-                    <span class="badge bg-danger"><i class="icon-base ri ri-auction-line me-1"></i>Leilão em Andamento</span>
+                <div class="card-header bg-label-primary py-2 px-3 d-flex justify-content-between align-items-center">
+                    <span class="badge bg-primary"><i class="icon-base ri ri-auction-line me-1"></i>Leilão em Andamento</span>
                     @if (leilaoAtivo != null && leilaoAtivo.Status == StatusLeilao.Iniciado)
                     {
                         <span class="badge bg-success">Status: Iniciado</span>
@@ -51,7 +51,7 @@
                             <div class="p-3 bg-light rounded d-flex justify-content-between align-items-center mb-3">
                                 <div>
                                     <small class="text-muted d-block">Lance Atual:</small>
-                                    <strong class="text-danger fs-4">R$ @leilaoAtivo.LanceAtual.ToString("N2")</strong>
+                                    <strong class="text-primary fs-4">R$ @leilaoAtivo.LanceAtual.ToString("N2")</strong>
                                 </div>
                                 <div class="text-end">
                                     <small class="text-muted d-block">Término em:</small>
@@ -60,10 +60,10 @@
                             </div>
                         </div>
 
-                        <!-- Trava de Status para Lances -->
+                        <!-- Trava de Status para Lances (Cor Azul btn-primary) -->
                         @if (leilaoAtivo.Status == StatusLeilao.Iniciado)
                         {
-                            <button class="btn btn-danger w-100 shadow-sm" onclick="alert('Sistema de lances ao vivo!')">
+                            <button class="btn btn-primary w-100 shadow-sm" onclick="alert('Sistema de lances ao vivo!')">
                                 <i class="icon-base ri ri-auction-line me-1"></i> Dar Lance (Mínimo: R$ @leilaoAtivo.ProximoLanceMinimo.ToString("N2"))
                             </button>
                         }
@@ -178,7 +178,7 @@
                             </div>
                             <div class="p-2 bg-light rounded text-center">
                                 <small class="text-muted d-block">Valor Final Arrematado:</small>
-                                <strong class="text-danger fs-5">R$ @l.LanceAtual.ToString("N2")</strong>
+                                <strong class="text-primary fs-5">R$ @l.LanceAtual.ToString("N2")</strong>
                                 <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Finalizado em: @l.DataFinalizacao.ToString("dd/MM/yyyy")</small>
                             </div>
                         </div>

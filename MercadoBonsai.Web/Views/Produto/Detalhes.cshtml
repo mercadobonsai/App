@@ -48,7 +48,7 @@
                     <h2 class="fw-bold mb-2 text-dark">@Model.Nome</h2>
                     <h3 class="fw-bold mb-4 @(isIndisponivel ? "text-muted" : "text-success")">R$ @Model.Preco.ToString("N2")</h3>
 
-                    <!-- Especificações Físicas & Medidas -->
+                    <!-- Especificações Físicas & Medidas (2 casas decimais para Altura/Largura/Comprimento e 3 para Peso) -->
                     <div class="card bg-light border-0 p-3 mb-4">
                         <h6 class="fw-bold mb-3 text-dark d-flex align-items-center">
                             <i class="icon-base ri ri-ruler-line text-success me-2 fs-5"></i>Especificações Físicas & Dimensões
@@ -56,15 +56,15 @@
                         <div class="row g-3">
                             <div class="col-6 col-sm-3 text-center border-end">
                                 <small class="text-muted d-block">Altura</small>
-                                <strong class="text-dark">@(Model.Altura > 0 ? $"{Model.Altura:N1} cm" : "N/I")</strong>
+                                <strong class="text-dark">@(Model.Altura > 0 ? $"{Model.Altura:N2} cm" : "N/I")</strong>
                             </div>
                             <div class="col-6 col-sm-3 text-center border-end">
                                 <small class="text-muted d-block">Largura</small>
-                                <strong class="text-dark">@(Model.Largura > 0 ? $"{Model.Largura:N1} cm" : "N/I")</strong>
+                                <strong class="text-dark">@(Model.Largura > 0 ? $"{Model.Largura:N2} cm" : "N/I")</strong>
                             </div>
                             <div class="col-6 col-sm-3 text-center border-end">
                                 <small class="text-muted d-block">Comprimento</small>
-                                <strong class="text-dark">@(Model.Comprimento > 0 ? $"{Model.Comprimento:N1} cm" : "N/I")</strong>
+                                <strong class="text-dark">@(Model.Comprimento > 0 ? $"{Model.Comprimento:N2} cm" : "N/I")</strong>
                             </div>
                             <div class="col-6 col-sm-3 text-center">
                                 <small class="text-muted d-block">Peso (kg)</small>

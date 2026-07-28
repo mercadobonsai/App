@@ -7,10 +7,10 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-1" style="color: #4A7C59;">🔥 Gerenciamento de Leilões</h4>
+            <h4 class="fw-bold mb-1" style="color: #4A7C59;">⚡ Gerenciamento de Leilões</h4>
             <p class="text-muted mb-0">Crie, acompanhe lances e gerencie a prorrogação dos seus leilões</p>
         </div>
-        <a asp-action="Criar" class="btn btn-danger">
+        <a asp-action="Criar" class="btn btn-primary">
             <i class="icon-base ri ri-add-line me-1"></i> Criar Novo Leilão
         </a>
     </div>
@@ -67,7 +67,7 @@
                                     <small class="text-muted">@item.Subtitulo</small>
                                 </td>
                                 <td>
-                                    <strong class="text-danger">R$ @item.LanceAtual.ToString("N2")</strong>
+                                    <strong class="text-primary">R$ @item.LanceAtual.ToString("N2")</strong>
                                 </td>
                                 <td><small class="text-muted">R$ @item.IncrementoMinimo.ToString("N2")</small></td>
                                 <td><small>@item.DataFinalizacao.ToString("dd/MM/yyyy HH:mm")</small></td>
@@ -78,7 +78,7 @@
                                             <span class="badge bg-info">Criado</span>
                                             break;
                                         case StatusLeilao.Iniciado:
-                                            <span class="badge bg-danger">Iniciado / Ao Vivo</span>
+                                            <span class="badge bg-primary">Iniciado / Ao Vivo</span>
                                             break;
                                         case StatusLeilao.Suspenso:
                                             <span class="badge bg-warning text-dark">Suspenso</span>
@@ -89,7 +89,7 @@
                                     }
                                 </td>
                                 <td class="text-end">
-                                    <a asp-action="Editar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">
+                                    <a asp-action="Editar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
                                         <i class="icon-base ri ri-edit-line me-1"></i> Gerenciar / Alterar
                                     </a>
                                 </td>
