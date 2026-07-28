@@ -8,6 +8,7 @@ public interface ILeilaoRepository
 {
     Task<Leilao?> ObterPorIdAsync(int id);
     Task<Leilao?> ObterLeilaoAtivoRecenteAsync();
+    Task<IEnumerable<Leilao>> ListarAtivosAsync();
     Task<IEnumerable<Leilao>> ListarPorVendedorAsync(int vendedorId);
     Task<IEnumerable<Leilao>> ListarEncerradosAsync();
     Task<int> InserirAsync(Leilao leilao);

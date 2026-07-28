@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <!-- Destaques da Semana Section (Fotos com Proporção Ajustada e Encaixe Perfeito) -->
+        <!-- Destaques da Semana Section (Fotos com Proporção Padronizada 4/3 sem Cortes) -->
         <div class="mb-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
@@ -230,7 +230,7 @@
 
     </div>
 
-    <!-- Coluna Lateral EXCLUSIVA para Viveiros em Destaque (Carrossel), Leilões e Rifas -->
+    <!-- Coluna Lateral EXCLUSIVA para Viveiros em Destaque, Leilões e Ações (Múltiplos Registros com Navegação Manual) -->
     <div class="col-lg-3 col-12 mb-4">
 
         <!-- Card 1: Carrossel Dinâmico de 'Viveiros em Destaque' -->
@@ -304,38 +304,72 @@
             </div>
         </div>
 
-        <!-- Card 2: Leilão em Andamento (Cor Azul bg-primary / btn-primary) -->
-        @if (Model.LeilaoAtivo != null)
-        {
-            <div class="card mb-4 border-0 shadow-sm overflow-hidden hover-top transition">
-                <div class="card-header bg-primary py-2 px-3 d-flex justify-content-between align-items-center text-white">
-                    <span class="badge bg-white text-primary fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-fire-fill me-1"></i>Ao Vivo</span>
-                    <small class="fw-medium text-white-50"><i class="icon-base ri ri-time-line me-1"></i>@(Model.LeilaoAtivo.Badge ?? "Em Andamento")</small>
-                </div>
-                <div class="position-relative cursor-pointer" onclick="abrirModalEngajamento('leilao')" title="Clique para abrir galeria e dar lance">
-                    <img src="@Model.LeilaoAtivo.FotoPrincipalUrl" class="card-img-top img-zoom" alt="@Model.LeilaoAtivo.Titulo" style="height: 160px; object-fit: cover;" />
-                    <span class="badge bg-dark bg-opacity-75 text-white position-absolute bottom-0 start-0 m-2">Leilão #@Model.LeilaoAtivo.Id</span>
-                    <div class="position-absolute top-50 start-50 translate-middle opacity-0 hover-opacity-100 bg-dark bg-opacity-50 text-white rounded-circle p-2 transition">
-                        <i class="icon-base ri ri-zoom-in-line fs-3"></i>
+        <!-- Card 2: Múltiplos Leilões Ativos com Navegação Manual Limpa (Botões Anterior/Próximo) -->
+        <div id="carouselLeiloesHome" class="carousel slide mb-4" data-bs-ride="false">
+            <div class="carousel-inner">
+                @if (Model.LeiloesAtivos != null && Model.LeiloesAtivos.Any())
+                {
+                    var firstL = true;
+                    var idx = 1;
+                    var totalL = Model.LeiloesAtivos.Count();
+                    foreach (var l in Model.LeiloesAtivos)
+                    {
+                        <div class="carousel-item @(firstL ? "active" : "")">
+                            <div class="card border-0 shadow-sm overflow-hidden hover-top transition">
+                                <div class="card-header bg-primary py-2 px-3 d-flex justify-content-between align-items-center text-white">
+                                    <span class="badge bg-white text-primary fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-fire-fill me-1"></i>Ao Vivo (@idx/@totalL)</span>
+                                    <small class="fw-medium text-white-50"><i class="icon-base ri ri-time-line me-1"></i>@(l.Badge ?? "Em Andamento")</small>
+                                </div>
+                                <div class="position-relative cursor-pointer" onclick="abrirModalEngajamentoItem('leilao', @l.Id)" title="Clique para abrir galeria e dar lance">
+                                    <img src="@l.FotoPrincipalUrl" class="card-img-top img-zoom" alt="@l.Titulo" style="height: 160px; object-fit: cover;" />
+                                    <span class="badge bg-dark bg-opacity-75 text-white position-absolute bottom-0 start-0 m-2">Leilão #@l.Id</span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <h6 class="fw-bold mb-1 text-truncate cursor-pointer" style="color: #1E3A2B;" onclick="abrirModalEngajamentoItem('leilao', @l.Id)">@l.Titulo</h6>
+                                    <small class="text-muted d-block mb-2 text-truncate">Vendedor: <strong>@(l.VendedorNome ?? "Cultivador Mercado Bonsai")</strong></small>
+                                    
+                                    <div class="p-2 bg-light rounded d-flex justify-content-between align-items-center mb-3">
+                                        <small class="text-muted">Lance Atual:</small>
+                                        <strong class="text-primary fs-6">R$ @l.LanceAtual.ToString("N2")</strong>
+                                    </div>
+                                    
+                                    <button class="btn btn-sm btn-primary w-100 shadow-sm" onclick="abrirModalEngajamentoItem('leilao', @l.Id)">
+                                        <i class="icon-base ri ri-auction-line me-1"></i> Dar Lance / Detalhes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        firstL = false;
+                        idx++;
+                    }
+                }
+                else
+                {
+                    <div class="carousel-item active">
+                        <div class="card border-0 shadow-sm p-4 text-center">
+                            <i class="icon-base ri ri-auction-line text-muted fs-1 mb-2"></i>
+                            <p class="text-muted small mb-0">Nenhum leilão ativo no momento.</p>
+                        </div>
                     </div>
-                </div>
-                <div class="card-body p-3">
-                    <h6 class="fw-bold mb-1 cursor-pointer" style="color: #1E3A2B;" onclick="abrirModalEngajamento('leilao')">@Model.LeilaoAtivo.Titulo</h6>
-                    <p class="text-muted small mb-2 text-truncate">@Model.LeilaoAtivo.Subtitulo</p>
-                    
-                    <div class="p-2 bg-light rounded d-flex justify-content-between align-items-center mb-3">
-                        <small class="text-muted">Lance Atual:</small>
-                        <strong class="text-primary fs-6">R$ @Model.LeilaoAtivo.LanceAtual.ToString("N2")</strong>
-                    </div>
-                    
-                    <button class="btn btn-sm btn-primary w-100 shadow-sm" onclick="abrirModalEngajamento('leilao')">
-                        <i class="icon-base ri ri-auction-line me-1"></i> Dar Lance / Detalhes
+                }
+            </div>
+
+            <!-- Navegação Manual Limpa (Botões Anterior/Próximo) em uma linha abaixo do botão de lance -->
+            @if (Model.LeiloesAtivos != null && Model.LeiloesAtivos.Count() > 1)
+            {
+                <div class="d-flex justify-content-between align-items-center px-3 py-2 bg-light rounded-bottom border-top">
+                    <button class="btn btn-xs btn-outline-primary py-1 px-2" type="button" data-bs-target="#carouselLeiloesHome" data-bs-slide="prev">
+                        <i class="icon-base ri ri-arrow-left-s-line me-1"></i> Anterior
+                    </button>
+                    <small class="text-muted fw-bold" style="font-size: 0.75rem;">Leilões Ativos</small>
+                    <button class="btn btn-xs btn-outline-primary py-1 px-2" type="button" data-bs-target="#carouselLeiloesHome" data-bs-slide="next">
+                        Próximo <i class="icon-base ri ri-arrow-right-s-line ms-1"></i>
                     </button>
                 </div>
-            </div>
-        }
+            }
+        </div>
 
-        <!-- Card 3: Rifa Ativa do Mês / Ação entre Amigos (Banco de Dados + Modal JS) -->
+        <!-- Card 3: Ação entre Amigos (Banco de Dados + Modal JS) -->
         @if (Model.RifaAtiva != null)
         {
             <div class="card mb-4 border-0 shadow-sm overflow-hidden hover-top transition">
@@ -343,15 +377,12 @@
                     <span class="badge bg-white text-success fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-ticket-2-fill me-1"></i>Ação entre Amigos</span>
                     <small class="fw-medium text-white-50">@Model.RifaAtiva.CotasVendidas/@Model.RifaAtiva.TotalCotas Cotas</small>
                 </div>
-                <div class="position-relative cursor-pointer" onclick="abrirModalEngajamento('rifa')" title="Clique para abrir galeria e cotas">
+                <div class="position-relative cursor-pointer" onclick="abrirModalEngajamentoItem('rifa', @Model.RifaAtiva.Id)" title="Clique para abrir galeria e cotas">
                     <img src="@Model.RifaAtiva.FotoPrincipalUrl" class="card-img-top img-zoom" alt="@Model.RifaAtiva.Titulo" style="height: 160px; object-fit: cover;" />
                     <span class="badge bg-label-success position-absolute bottom-0 start-0 m-2">R$ @Model.RifaAtiva.ValorCota.ToString("N2") / Cota</span>
-                    <div class="position-absolute top-50 start-50 translate-middle opacity-0 hover-opacity-100 bg-dark bg-opacity-50 text-white rounded-circle p-2 transition">
-                        <i class="icon-base ri ri-zoom-in-line fs-3"></i>
-                    </div>
                 </div>
                 <div class="card-body p-3">
-                    <h6 class="fw-bold mb-1 cursor-pointer" style="color: #1E3A2B;" onclick="abrirModalEngajamento('rifa')">@Model.RifaAtiva.Titulo</h6>
+                    <h6 class="fw-bold mb-1 cursor-pointer" style="color: #1E3A2B;" onclick="abrirModalEngajamentoItem('rifa', @Model.RifaAtiva.Id)">@Model.RifaAtiva.Titulo</h6>
                     <small class="text-muted d-block mb-2">Apuração: @Model.RifaAtiva.DataSorteio.ToString("dd/MM/yyyy")</small>
 
                     <!-- Barra de Progresso de Bilhetes Vendidos -->
@@ -365,7 +396,7 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-sm btn-outline-success w-100" onclick="abrirModalEngajamento('rifa')">
+                    <button class="btn btn-sm btn-outline-success w-100" onclick="abrirModalEngajamentoItem('rifa', @Model.RifaAtiva.Id)">
                         <i class="icon-base ri ri-ticket-line me-1"></i> Adquirir Cotas / Galeria
                     </button>
                 </div>
@@ -418,41 +449,40 @@
 
 @section Scripts {
     <script>
-        // Dados alimentados em tempo de execução via banco de dados (PostgreSQL/Supabase)
-        const dadosEngajamento = {
-            leilao: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LeilaoAtivo != null ? new {
-                tipo = "leilao",
-                id = Model.LeilaoAtivo.Id,
-                titulo = "⚡ " + Model.LeilaoAtivo.Titulo,
-                subtitulo = Model.LeilaoAtivo.Subtitulo,
-                descricao = Model.LeilaoAtivo.Descricao,
-                fotoPrincipal = Model.LeilaoAtivo.FotoPrincipalUrl,
-                fotoDetalhe = string.IsNullOrEmpty(Model.LeilaoAtivo.FotoDetalheUrl) ? Model.LeilaoAtivo.FotoPrincipalUrl : Model.LeilaoAtivo.FotoDetalheUrl,
-                badge = Model.LeilaoAtivo.Badge ?? "Ao Vivo",
-                lanceAtual = "R$ " + Model.LeilaoAtivo.LanceAtual.ToString("N2"),
-                proximoLanceMin = Model.LeilaoAtivo.ProximoLanceMinimo,
-                vendedor = Model.LeilaoAtivo.VendedorNome ?? "Cultivador Mercado Bonsai",
-                historicoLances = Model.LeilaoAtivo.Lances.Select(l => new {
-                    usuario = l.UsuarioNome,
-                    valor = "R$ " + l.Valor.ToString("N2"),
-                    hora = l.DataLance.ToString("dd/MM HH:mm")
-                })
-            } : null)),
-            rifa: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RifaAtiva != null ? new {
-                tipo = "rifa",
-                id = Model.RifaAtiva.Id,
-                titulo = "🎟️ " + Model.RifaAtiva.Titulo,
-                subtitulo = Model.RifaAtiva.Subtitulo,
-                descricao = Model.RifaAtiva.Descricao,
-                fotoPrincipal = Model.RifaAtiva.FotoPrincipalUrl,
-                fotoDetalhe = string.IsNullOrEmpty(Model.RifaAtiva.FotoDetalheUrl) ? Model.RifaAtiva.FotoPrincipalUrl : Model.RifaAtiva.FotoDetalheUrl,
-                badge = $"{Model.RifaAtiva.PorcentagemVendida}% das cotas vendidas ({Model.RifaAtiva.CotasVendidas} / {Model.RifaAtiva.TotalCotas})",
-                precoCota = Model.RifaAtiva.ValorCota,
-                totalCotas = Model.RifaAtiva.TotalCotas,
-                cotasVendidas = Model.RifaAtiva.CotasVendidas,
-                vendedor = Model.RifaAtiva.VendedorNome ?? "Mercado Bonsai Oficial"
-            } : null))
-        };
+        // Mapeamento dinâmico de leilões e ações ativas alimentados pelo PostgreSQL/Supabase
+        const listaLeiloesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.LeiloesAtivos ?? new List<MercadoBonsai.Domain.Entities.Leilao>()).Select(l => new {
+            tipo = "leilao",
+            id = l.Id,
+            titulo = "⚡ " + l.Titulo,
+            subtitulo = l.Subtitulo,
+            descricao = l.Descricao,
+            fotoPrincipal = l.FotoPrincipalUrl,
+            fotoDetalhe = string.IsNullOrEmpty(l.FotoDetalheUrl) ? l.FotoPrincipalUrl : l.FotoDetalheUrl,
+            badge = l.Badge ?? "Ao Vivo",
+            lanceAtual = "R$ " + l.LanceAtual.ToString("N2"),
+            proximoLanceMin = l.ProximoLanceMinimo,
+            vendedor = l.VendedorNome ?? "Cultivador Mercado Bonsai",
+            historicoLances = l.Lances != null ? l.Lances.Select(h => new {
+                usuario = h.UsuarioNome,
+                valor = "R$ " + h.Valor.ToString("N2"),
+                hora = h.DataLance.ToString("dd/MM HH:mm")
+            }) : null
+        })));
+
+        const rifaData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RifaAtiva != null ? new {
+            tipo = "rifa",
+            id = Model.RifaAtiva.Id,
+            titulo = "🎟️ " + Model.RifaAtiva.Titulo,
+            subtitulo = Model.RifaAtiva.Subtitulo,
+            descricao = Model.RifaAtiva.Descricao,
+            fotoPrincipal = Model.RifaAtiva.FotoPrincipalUrl,
+            fotoDetalhe = string.IsNullOrEmpty(Model.RifaAtiva.FotoDetalheUrl) ? Model.RifaAtiva.FotoPrincipalUrl : Model.RifaAtiva.FotoDetalheUrl,
+            badge = $"{Model.RifaAtiva.PorcentagemVendida}% das cotas vendidas ({Model.RifaAtiva.CotasVendidas} / {Model.RifaAtiva.TotalCotas})",
+            precoCota = Model.RifaAtiva.ValorCota,
+            totalCotas = Model.RifaAtiva.TotalCotas,
+            cotasVendidas = Model.RifaAtiva.CotasVendidas,
+            vendedor = Model.RifaAtiva.VendedorNome ?? "Mercado Bonsai Oficial"
+        } : null));
 
         function trocarFotoModal(src, el) {
             document.getElementById('modalFotoPrincipalDisplay').src = src;
@@ -466,8 +496,14 @@
             document.getElementById('totalCalculadoRifa').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
         }
 
-        function abrirModalEngajamento(tipo) {
-            const item = dadosEngajamento[tipo];
+        function abrirModalEngajamentoItem(tipo, id) {
+            let item = null;
+            if (tipo === 'leilao') {
+                item = listaLeiloesData.find(l => l.id === id) || listaLeiloesData[0];
+            } else {
+                item = rifaData;
+            }
+
             if (!item) {
                 alert('Informações do ' + tipo + ' indisponíveis no momento.');
                 return;
@@ -502,8 +538,8 @@
                             <p class="text-body small mb-3">${item.descricao || ''}</p>
 
                             <div class="card bg-light border-0 p-3 mb-3">
-                                <h6 class="fw-bold mb-1 text-dark" style="font-size: 0.85rem;">Organizador:</h6>
-                                <small class="text-success fw-bold">${item.vendedor}</small>
+                                <h6 class="fw-bold mb-1 text-dark" style="font-size: 0.85rem;">Organizador / Vendedor:</h6>
+                                <small class="text-primary fw-bold">${item.vendedor}</small>
                             </div>
                         </div>
             `;

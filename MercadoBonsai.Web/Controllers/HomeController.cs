@@ -63,7 +63,6 @@ public class HomeController : Controller
             })
             .Take(6);
 
-        // Se houver poucos produtos em destaque pagos, completa com os mais recentes ativos para manter a estética
         if (!produtosDestaque.Any())
         {
             produtosDestaque = todosProdutos.Where(p => p.Status != StatusProduto.Vendido).Take(6);
@@ -71,10 +70,10 @@ public class HomeController : Controller
 
         var viveirosDestaque = await _usuarioRepository.ListarViveirosEmDestaqueAsync();
         var leilaoAtivo = await _leilaoRepository.ObterLeilaoAtivoRecenteAsync();
+        var leiloesAtivos = await _leilaoRepository.ListarAtivosAsync();
         var rifaAtiva = await _rifaRepository.ObterRifaAtivaRecenteAsync();
         var patrocinioDestaque = await _patrocinioRepository.ObterPatrocinioDestaqueAsync();
 
-        // Carregamento de Dicas de Cultivo a partir do arquivo JSON externo
         DicaCultivo? dicaJson = null;
         try
         {
@@ -96,6 +95,7 @@ public class HomeController : Controller
             ProdutosDestaque = produtosDestaque,
             ViveirosEmDestaque = viveirosDestaque,
             LeilaoAtivo = leilaoAtivo,
+            LeiloesAtivos = leiloesAtivos,
             RifaAtiva = rifaAtiva,
             PatrocinioDestaque = patrocinioDestaque,
             DicaCultivoSemana = dicaJson ?? await _dicaCultivoRepository.ObterDicaRecenteAsync()

@@ -100,6 +100,18 @@ public class LeilaoRepository : ILeilaoRepository
         return leilao;
     }
 
+    public async Task<IEnumerable<Leilao>> ListarAtivosAsync()
+    {
+        var sql = $@"
+            SELECT {SelectFields}
+            FROM leiloes
+            WHERE status IN (1, 2)
+            ORDER BY datacriacao DESC;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        return await connection.QueryAsync<Leilao>(sql);
+    }
+
     public async Task<IEnumerable<Leilao>> ListarPorVendedorAsync(int vendedorId)
     {
         var sql = $@"
