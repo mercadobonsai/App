@@ -23,11 +23,11 @@ public class ProdutoController : Controller
         _webHostEnvironment = webHostEnvironment;
     }
 
-    // GET: /Produto (Catálogo Completo / Vitrine de Busca com Filtros)
+    // GET: /Produto (Vitrine de Plantas: apenas Pré-bonsai e Bonsai)
     [HttpGet]
     public async Task<IActionResult> Index(string? busca, string? ordem)
     {
-        var produtos = await _produtoRepository.ListarTodosAsync();
+        var produtos = await _produtoRepository.ListarPorCategoriasAsync("pré-bonsai", "bonsai");
 
         if (!string.IsNullOrWhiteSpace(busca))
         {
@@ -118,13 +118,19 @@ public class ProdutoController : Controller
             Preco = model.Preco,
             QuantidadeEstoque = model.QuantidadeEstoque,
             Status = model.Status,
+            Altura = model.Altura,
+            Largura = model.Largura,
+            Comprimento = model.Comprimento,
+            Peso = model.Peso,
+            FormaEnvio = model.FormaEnvio,
+            Categoria = model.Categoria,
             ImagemUrl = imagemUrl ?? string.Empty,
             DataCriacao = DateTime.UtcNow
         };
 
         await _produtoRepository.InserirAsync(produto);
 
-        TempData["Sucesso"] = "Produto / Bonsai cadastrado com sucesso!";
+        TempData["Sucesso"] = "Produto cadastrado com sucesso!";
         return RedirectToAction("MeusProdutos");
     }
 
@@ -153,6 +159,12 @@ public class ProdutoController : Controller
             Preco = produto.Preco,
             QuantidadeEstoque = produto.QuantidadeEstoque,
             Status = produto.Status,
+            Altura = produto.Altura,
+            Largura = produto.Largura,
+            Comprimento = produto.Comprimento,
+            Peso = produto.Peso,
+            FormaEnvio = produto.FormaEnvio,
+            Categoria = produto.Categoria,
             ImagemUrlAtual = produto.ImagemUrl
         };
 
@@ -187,7 +199,6 @@ public class ProdutoController : Controller
             return View(model);
         }
 
-        // Upload de nova imagem se fornecido
         if (model.NovaImagem != null && model.NovaImagem.Length > 0)
         {
             var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "produtos");
@@ -213,10 +224,16 @@ public class ProdutoController : Controller
         produto.Preco = model.Preco;
         produto.QuantidadeEstoque = model.QuantidadeEstoque;
         produto.Status = model.Status;
+        produto.Altura = model.Altura;
+        produto.Largura = model.Largura;
+        produto.Comprimento = model.Comprimento;
+        produto.Peso = model.Peso;
+        produto.FormaEnvio = model.FormaEnvio;
+        produto.Categoria = model.Categoria;
 
         await _produtoRepository.AtualizarAsync(produto);
 
-        TempData["Sucesso"] = $"Anúncio '{produto.Nome}' alterado com sucesso!";
+        TempData["Sucesso"] = $"Produto '{produto.Nome}' alterado com sucesso!";
 
         if (User.IsInRole("Administrador"))
         {

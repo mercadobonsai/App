@@ -1,0 +1,150 @@
+@model MercadoBonsai.Web.Models.HomeEngajamentoViewModel
+@using MercadoBonsai.Domain.Enums
+@{
+    ViewData["Title"] = "Vasos & Cerâmicas - Mercado Bonsai";
+    var busca = ViewData["Busca"] as string;
+}
+
+<div class="row">
+    <!-- Coluna Principal (9 colunas em telas grandes, 12 em mobile) -->
+    <div class="col-lg-9 col-12 mb-4">
+        <!-- Header da Seção -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+            <div>
+                <h3 class="fw-bold mb-1" style="color: #4A7C59;">🏺 Vasos & Cerâmicas de Bonsai</h3>
+                <p class="text-muted mb-0">Vasos esmaltados, não esmaltados, artesanais e importados para valorizar suas plantas</p>
+            </div>
+            @if (User.IsInRole("Vendedor") || User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Produto" asp-action="Criar" class="btn btn-success">
+                    <i class="icon-base ri ri-add-line me-1"></i> Anunciar Vaso
+                </a>
+            }
+        </div>
+
+        <!-- Barra de Busca -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <form method="get" asp-action="Index" class="row g-3 align-items-center">
+                    <div class="col-md-9">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="icon-base ri ri-search-line"></i></span>
+                            <input type="text" name="busca" value="@busca" class="form-control" placeholder="Buscar por vaso retangular, oval, esmaltado, Yixing..." />
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-success w-100">Buscar</button>
+                        @if (!string.IsNullOrEmpty(busca))
+                        {
+                            <a asp-action="Index" class="btn btn-outline-secondary" title="Limpar">
+                                <i class="icon-base ri ri-close-line"></i>
+                            </a>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Grid de Vasos -->
+        @if (Model.ProdutosDestaque != null && Model.ProdutosDestaque.Any())
+        {
+            <div class="row g-4 mb-5">
+                @foreach (var p in Model.ProdutosDestaque)
+                {
+                    var isIndisponivel = p.Status == StatusProduto.Indisponivel;
+                    <div class="col-sm-6 col-md-4">
+                        <div class="card h-100 shadow-sm border-0 hover-top transition overflow-hidden" style="@(isIndisponivel ? "opacity: 0.65; filter: grayscale(30%);" : "")">
+                            <div class="position-relative">
+                                @if (!string.IsNullOrEmpty(p.ImagemUrl))
+                                {
+                                    <img src="@p.ImagemUrl" class="card-img-top" alt="@p.Nome" style="height: 180px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="bg-light d-flex align-items-center justify-content-center card-img-top" style="height: 180px;">
+                                        <i class="icon-base ri ri-cup-line text-muted" style="font-size: 2.5rem;"></i>
+                                    </div>
+                                }
+                                <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2 shadow-sm">Vaso</span>
+                                @if (isIndisponivel)
+                                {
+                                    <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-sm">Indisponível</span>
+                                }
+                            </div>
+                            <div class="card-body d-flex flex-column justify-content-between p-3">
+                                <div>
+                                    <h6 class="card-title fw-bold mb-1">@p.Nome</h6>
+                                    <p class="card-text text-muted text-truncate-2 small mb-2">@(string.IsNullOrWhiteSpace(p.Descricao) ? "Vaso de alta qualidade para bonsai." : p.Descricao)</p>
+                                    
+                                    @if (p.Altura > 0 || p.Largura > 0 || p.Comprimento > 0)
+                                    {
+                                        <small class="text-muted d-block mb-1">
+                                            <i class="icon-base ri ri-ruler-line me-1"></i>Dimensões: @p.Comprimento x @p.Largura x @p.Altura cm
+                                        </small>
+                                    }
+                                    <small class="text-muted d-block mb-2"><i class="icon-base ri ri-truck-line me-1"></i>@p.FormaEnvio</small>
+                                </div>
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="fs-5 fw-bold @(isIndisponivel ? "text-muted" : "text-success")">R$ @p.Preco.ToString("N2")</span>
+                                        <small class="text-muted"><i class="icon-base ri ri-stack-line me-1"></i>Estoque: @p.QuantidadeEstoque</small>
+                                    </div>
+                                    <a asp-controller="Produto" asp-action="Detalhes" asp-route-id="@p.Id" class="btn btn-sm @(isIndisponivel ? "btn-outline-secondary" : "btn-outline-success") w-100">
+                                        <i class="icon-base ri ri-eye-line me-1"></i> Ver Detalhes
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card text-center p-5 border-0 shadow-sm mb-5">
+                <div class="card-body">
+                    <i class="icon-base ri ri-cup-line text-muted" style="font-size: 3.5rem;"></i>
+                    <h5 class="mt-3 fw-bold">Nenhum vaso ou cerâmica cadastrado</h5>
+                    <p class="text-muted">Seja o primeiro a anunciar peças artesanais e vasos importados!</p>
+                    <a asp-controller="Produto" asp-action="Criar" class="btn btn-sm btn-success mt-1 px-3">Anunciar Vaso</a>
+                </div>
+            </div>
+        }
+
+        <!-- Dica de Cerâmica -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="icon-base ri ri-lightbulb-line fs-3 text-warning me-2"></i>
+                    <h5 class="fw-bold mb-0">Harmonia entre Planta e Vaso</h5>
+                </div>
+                <p class="text-body mb-0">Para coníferas (como Pinus e Juníperos), prefira vasos não esmaltados de tons terrosos. Para espécies floríferas e frutíferas, esmaltes coloridos trazem realce!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Lateral EXCLUSIVA (Carrossel, Leilões, Rifas, Propaganda) -->
+    <div class="col-lg-3 col-12 mb-4">
+        <!-- Carrossel de Ceramistas -->
+        <div class="card mb-4 border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-label-success py-2 px-3 d-flex justify-content-between align-items-center">
+                <span class="badge bg-success fw-semibold" style="font-size: 0.75rem;"><i class="icon-base ri ri-award-line me-1"></i>Ateliês & Ceramistas</span>
+            </div>
+            <div class="card-body p-3 text-center">
+                <i class="icon-base ri ri-cup-line text-success mb-2" style="font-size: 2.5rem;"></i>
+                <h6 class="fw-bold mb-1">Cerâmicas Exclusivas</h6>
+                <p class="text-muted small mb-3">Conheça os ceramistas parceiros que moldam a história do bonsai no Brasil.</p>
+            </div>
+        </div>
+
+        <!-- Banner Comercial -->
+        <div class="card border-0 shadow-sm text-center p-3" style="border: 2px dashed #4A7C59 !important; background-color: #F4F8F5;">
+            <div class="card-body p-0">
+                <i class="icon-base ri ri-advertisement-line text-success mb-2" style="font-size: 2rem;"></i>
+                <h6 class="fw-bold mb-1" style="color: #1E3A2B;">Anuncie Suas Peças de Cerâmica</h6>
+                <p class="text-muted small mb-3">Destaque sua produção artesanal de vasos para bonsaístas de todo o país.</p>
+                <a href="mailto:comercial@mercadobonsai.com.br" class="btn btn-sm btn-success w-100">Falar com Comercial</a>
+            </div>
+        </div>
+    </div>
+</div>

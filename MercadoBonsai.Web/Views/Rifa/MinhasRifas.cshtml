@@ -1,0 +1,107 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Rifa>
+@{
+    ViewData["Title"] = "Minhas Rifas - Mercado Bonsai";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1" style="color: #4A7C59;">🎟️ Minhas Rifas & Ações Entre Amigos</h4>
+            <p class="text-muted mb-0">Gerencie suas cotas, acompanhe vendas e datas de sorteio</p>
+        </div>
+        <a asp-action="Criar" class="btn btn-success">
+            <i class="icon-base ri ri-add-line me-1"></i> Criar Nova Rifa
+        </a>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" role="alert">
+            @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-4" role="alert">
+            @TempData["Erro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 70px;">Foto</th>
+                        <th>Título da Rifa</th>
+                        <th>Valor Cota</th>
+                        <th>Progresso Vendido</th>
+                        <th>Data do Sorteio</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="icon-base ri ri-ticket-line fs-3 mb-2 d-block"></i>
+                                Você ainda não possui rifas cadastradas.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <img src="@item.FotoPrincipalUrl" alt="@item.Titulo" class="rounded" style="width: 50px; height: 50px; object-fit: cover;" />
+                                </td>
+                                <td>
+                                    <strong class="d-block text-heading">@item.Titulo</strong>
+                                    <small class="text-muted">@item.Subtitulo</small>
+                                </td>
+                                <td>
+                                    <strong class="text-success">R$ @item.ValorCota.ToString("N2")</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2" style="min-width: 140px;">
+                                        <div class="progress w-100" style="height: 8px;">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: @item.PorcentagemVendida%;" aria-valuenow="@item.PorcentagemVendida" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small class="fw-bold">@item.PorcentagemVendida%</small>
+                                    </div>
+                                    <small class="text-muted">@item.CotasVendidas / @item.TotalCotas cotas</small>
+                                </td>
+                                <td><small>@item.DataSorteio.ToString("dd/MM/yyyy")</small></td>
+                                <td>
+                                    @if (item.Status == 1)
+                                    {
+                                        <span class="badge bg-success">Ativa</span>
+                                    }
+                                    else if (item.Status == 2)
+                                    {
+                                        <span class="badge bg-primary">Sorteada</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Cancelada</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Editar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-success">
+                                        <i class="icon-base ri ri-edit-line me-1"></i> Editar
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,19 +1,17 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Hosting;
-using MercadoBonsai.Web.Models;
 using MercadoBonsai.Domain.Entities;
-using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
+using MercadoBonsai.Web.Models;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MercadoBonsai.Web.Controllers;
 
-public class HomeController : Controller
+public class VasoController : Controller
 {
     private readonly IProdutoRepository _produtoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
@@ -21,17 +19,15 @@ public class HomeController : Controller
     private readonly IRifaRepository _rifaRepository;
     private readonly IPatrocinioRepository _patrocinioRepository;
     private readonly IDicaCultivoRepository _dicaCultivoRepository;
-    private readonly IPlanoRepository _planoRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public HomeController(
+    public VasoController(
         IProdutoRepository produtoRepository,
         IUsuarioRepository usuarioRepository,
         ILeilaoRepository leilaoRepository,
         IRifaRepository rifaRepository,
         IPatrocinioRepository patrocinioRepository,
         IDicaCultivoRepository dicaCultivoRepository,
-        IPlanoRepository planoRepository,
         IWebHostEnvironment webHostEnvironment)
     {
         _produtoRepository = produtoRepository;
@@ -40,33 +36,21 @@ public class HomeController : Controller
         _rifaRepository = rifaRepository;
         _patrocinioRepository = patrocinioRepository;
         _dicaCultivoRepository = dicaCultivoRepository;
-        _planoRepository = planoRepository;
         _webHostEnvironment = webHostEnvironment;
     }
 
-    // GET: / (Home Oficial do Portal com Conexão ao Banco e JSON)
-    public async Task<IActionResult> Index()
+    // GET: /Vaso (Página Segmentada de Vasos e Cerâmicas em 2 Colunas)
+    [HttpGet]
+    public async Task<IActionResult> Index(string? busca)
     {
-        var todosProdutos = await _produtoRepository.ListarTodosAsync();
-        var todosUsuarios = await _usuarioRepository.ListarTodosAsync(null, null);
-        var usuariosMap = todosUsuarios.ToDictionary(u => u.Id);
+        var produtosVasos = await _produtoRepository.ListarPorCategoriasAsync("vaso");
 
-        // Regra de Negócio: Produtos do Plano Bronze (PlanoId = 1) NÃO aparecem nos Destaques da Semana da Home
-        var produtosDestaque = todosProdutos
-            .Where(p => p.Status != StatusProduto.Vendido)
-            .Where(p => {
-                if (usuariosMap.TryGetValue(p.VendedorId, out var vendedor))
-                {
-                    return vendedor.PlanoId > 1; // Apenas Plano Prata e Ouro aparecem na Home
-                }
-                return true;
-            })
-            .Take(6);
-
-        // Se houver poucos produtos em destaque pagos, completa com os mais recentes ativos para manter a estética
-        if (!produtosDestaque.Any())
+        if (!string.IsNullOrWhiteSpace(busca))
         {
-            produtosDestaque = todosProdutos.Where(p => p.Status != StatusProduto.Vendido).Take(6);
+            var termo = busca.Trim().ToLower();
+            produtosVasos = produtosVasos.Where(p => 
+                p.Nome.ToLower().Contains(termo) || 
+                (p.Descricao != null && p.Descricao.ToLower().Contains(termo)));
         }
 
         var viveirosDestaque = await _usuarioRepository.ListarViveirosEmDestaqueAsync();
@@ -74,7 +58,6 @@ public class HomeController : Controller
         var rifaAtiva = await _rifaRepository.ObterRifaAtivaRecenteAsync();
         var patrocinioDestaque = await _patrocinioRepository.ObterPatrocinioDestaqueAsync();
 
-        // Carregamento de Dicas de Cultivo a partir do arquivo JSON externo
         DicaCultivo? dicaJson = null;
         try
         {
@@ -91,9 +74,11 @@ public class HomeController : Controller
             dicaJson = await _dicaCultivoRepository.ObterDicaRecenteAsync();
         }
 
+        ViewData["Busca"] = busca;
+
         var viewModel = new HomeEngajamentoViewModel
         {
-            ProdutosDestaque = produtosDestaque,
+            ProdutosDestaque = produtosVasos,
             ViveirosEmDestaque = viveirosDestaque,
             LeilaoAtivo = leilaoAtivo,
             RifaAtiva = rifaAtiva,
@@ -102,16 +87,5 @@ public class HomeController : Controller
         };
 
         return View(viewModel);
-    }
-
-    public IActionResult Privacy()
-    {
-        return View();
-    }
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

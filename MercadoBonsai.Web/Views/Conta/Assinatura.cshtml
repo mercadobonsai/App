@@ -1,0 +1,103 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Plano>
+@{
+    ViewData["Title"] = "Assinatura e Planos - Mercado Bonsai";
+    var planoAtualId = ViewData["PlanoAtualId"] as int? ?? 1;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="text-center mb-5">
+        <span class="badge bg-label-success px-3 py-2 fs-6 fw-bold mb-2">⭐ Planos para Cultivadores e Vendedores</span>
+        <h2 class="fw-bold mb-2" style="color: #4A7C59;">Escolha o Plano Ideal para o Seu Viveiro</h2>
+        <p class="text-muted">Aumente seus limites de leilões, rifas, reduza taxas de comissão e destaque suas plantas na Home</p>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" role="alert">
+            @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4 justify-content-center">
+        @foreach (var plano in Model)
+        {
+            var ePlanoAtual = plano.Id == planoAtualId;
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 border-0 shadow-sm position-relative overflow-hidden @(ePlanoAtual ? "border-2 border-success" : "")">
+                    @if (ePlanoAtual)
+                    {
+                        <div class="bg-success text-white text-center py-1 fw-bold small">
+                            PLANO ATUALMENTE ATIVO
+                        </div>
+                    }
+                    <div class="card-body p-4 p-lg-5 d-flex flex-column justify-content-between text-center">
+                        <div>
+                            <h4 class="fw-bold mb-2">Plano @plano.Nome</h4>
+                            <div class="my-4">
+                                @if (plano.Preco == 0)
+                                {
+                                    <h2 class="display-6 fw-bold text-success mb-0">Gratuito</h2>
+                                    <small class="text-muted">Sem mensalidade fixas</small>
+                                }
+                                else
+                                {
+                                    <h2 class="display-6 fw-bold text-success mb-0">R$ @plano.Preco.ToString("N2")</h2>
+                                    <small class="text-muted">por mês</small>
+                                }
+                            </div>
+
+                            <ul class="list-unstyled text-start my-4 gap-3 d-flex flex-column">
+                                <li class="d-flex align-items-center">
+                                    <i class="icon-base ri ri-checkbox-circle-fill text-success fs-5 me-2"></i>
+                                    <span>Comissão reduzida por venda: <strong>@plano.PercentualComissao.ToString("N1")%</strong></span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="icon-base ri ri-checkbox-circle-fill text-success fs-5 me-2"></i>
+                                    <span>Até <strong>@plano.LimiteLeiloes30Dias leilões</strong> a cada 30 dias</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="icon-base ri ri-checkbox-circle-fill text-success fs-5 me-2"></i>
+                                    <span>Até <strong>@plano.LimiteRifas30Dias rifas</strong> a cada 30 dias</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="icon-base ri ri-checkbox-circle-fill text-success fs-5 me-2"></i>
+                                    <span>Limite de até <strong>@plano.LimiteAnuncios anúncios</strong> ativos</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    @if (plano.DestaquesHome)
+                                    {
+                                        <i class="icon-base ri ri-checkbox-circle-fill text-success fs-5 me-2"></i>
+                                        <span>Exibição na seção <strong>Destaques da Semana</strong> na Home</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="icon-base ri ri-close-circle-line text-muted fs-5 me-2"></i>
+                                        <span class="text-muted">Sem exibição em Destaques na Home</span>
+                                    }
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            @if (ePlanoAtual)
+                            {
+                                <button class="btn btn-outline-success w-100 disabled" disabled>Plano Ativo</button>
+                            }
+                            else
+                            {
+                                <form asp-action="TrocarPlano" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="planoId" value="@plano.Id" />
+                                    <button type="submit" class="btn @(plano.Id == 3 ? "btn-warning" : "btn-success") w-100 fw-bold shadow-sm">
+                                        Assinar Plano @plano.Nome
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,84 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Plano>
+@{
+    ViewData["Title"] = "Gestão de Planos de Assinatura - Admin";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1" style="color: #4A7C59;"><i class="icon-base ri ri-vip-crown-line me-2"></i>Gestão de Planos de Assinatura</h3>
+            <p class="text-muted mb-0">Configure preços, percentuais de comissão e limites mensais de leilões e rifas para cada plano</p>
+        </div>
+        <a asp-action="Clientes" class="btn btn-outline-secondary">Voltar a Clientes</a>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" role="alert">
+            @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        @foreach (var plano in Model)
+        {
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0 text-dark">Plano @plano.Nome</h5>
+                        <span class="badge @(plano.Id == 3 ? "bg-warning text-dark" : (plano.Id == 2 ? "bg-primary" : "bg-secondary"))">ID #@plano.Id</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <form asp-action="SalvarPlano" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Id" value="@plano.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Nome do Plano</label>
+                                <input type="text" name="Nome" value="@plano.Nome" class="form-control" required />
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">Valor Mensal (R$)</label>
+                                    <input type="number" step="0.01" name="Preco" value="@plano.Preco" class="form-control" required />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">Comissão (%)</label>
+                                    <input type="number" step="0.1" name="PercentualComissao" value="@plano.PercentualComissao" class="form-control" required />
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">Limite Rifas / 30d</label>
+                                    <input type="number" name="LimiteRifas30Dias" value="@plano.LimiteRifas30Dias" class="form-control" required />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold">Limite Leilões / 30d</label>
+                                    <input type="number" name="LimiteLeiloes30Dias" value="@plano.LimiteLeiloes30Dias" class="form-control" required />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Limite Total de Anúncios</label>
+                                <input type="number" name="LimiteAnuncios" value="@plano.LimiteAnuncios" class="form-control" required />
+                            </div>
+
+                            <div class="form-check form-switch mb-4">
+                                <input class="form-check-input" type="checkbox" name="DestaquesHome" value="true" id="destaque_@plano.Id" @(plano.DestaquesHome ? "checked" : "") />
+                                <input type="hidden" name="DestaquesHome" value="false" />
+                                <label class="form-check-label fw-semibold" for="destaque_@plano.Id">Exibir produtos na seção 'Destaques da Semana' na Home</label>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="icon-base ri ri-save-line me-1"></i> Salvar Plano @plano.Nome
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

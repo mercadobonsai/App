@@ -19,11 +19,16 @@ namespace MercadoBonsai.Web.Controllers;
 public class ContaController : Controller
 {
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IPlanoRepository _planoRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public ContaController(IUsuarioRepository usuarioRepository, IWebHostEnvironment webHostEnvironment)
+    public ContaController(
+        IUsuarioRepository usuarioRepository, 
+        IPlanoRepository planoRepository, 
+        IWebHostEnvironment webHostEnvironment)
     {
         _usuarioRepository = usuarioRepository;
+        _planoRepository = planoRepository;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -200,7 +205,6 @@ public class ContaController : Controller
             return View(model);
         }
 
-        // Upload de logotipo do viveiro se enviado
         if (model.LogotipoArquivo != null && model.LogotipoArquivo.Length > 0)
         {
             var folder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "logotipos");
@@ -239,6 +243,55 @@ public class ContaController : Controller
 
         TempData["Sucesso"] = "Seus dados de perfil e viveiro foram atualizados com sucesso!";
         return RedirectToAction("MeuPerfil");
+    }
+
+    // GET: /Conta/Assinatura (Planos e Assinatura do Vendedor)
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> Assinatura()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var usuario = await _usuarioRepository.ObterPorIdAsync(userId);
+        var planos = await _planoRepository.ListarTodosAsync();
+
+        ViewData["PlanoAtualId"] = usuario?.PlanoId ?? 1;
+        return View(planos);
+    }
+
+    // POST: /Conta/TrocarPlano
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TrocarPlano(int planoId)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var usuario = await _usuarioRepository.ObterPorIdAsync(userId);
+        var plano = await _planoRepository.ObterPorIdAsync(planoId);
+
+        if (usuario == null || plano == null)
+        {
+            return NotFound();
+        }
+
+        usuario.PlanoId = plano.Id;
+        usuario.DataUltimaAlteracao = DateTime.UtcNow;
+        usuario.UsuarioAlteracaoId = userId;
+        usuario.UsuarioAlteracaoNome = usuario.Nome;
+
+        await _usuarioRepository.AtualizarAsync(usuario);
+
+        TempData["Sucesso"] = $"Parabéns! Sua assinatura foi atualizada com sucesso para o Plano {plano.Nome}.";
+        return RedirectToAction("Assinatura");
     }
 
     // GET: /Conta/Logout

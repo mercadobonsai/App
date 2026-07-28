@@ -1,0 +1,103 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Leilao>
+@using MercadoBonsai.Domain.Enums
+@{
+    ViewData["Title"] = "Meus Leilões - Mercado Bonsai";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1" style="color: #4A7C59;">🔥 Gerenciamento de Leilões</h4>
+            <p class="text-muted mb-0">Crie, acompanhe lances e gerencie a prorrogação dos seus leilões</p>
+        </div>
+        <a asp-action="Criar" class="btn btn-danger">
+            <i class="icon-base ri ri-add-line me-1"></i> Criar Novo Leilão
+        </a>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" role="alert">
+            @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-4" role="alert">
+            @TempData["Erro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 70px;">Foto</th>
+                        <th>Título do Leilão</th>
+                        <th>Lance Atual</th>
+                        <th>Incremento</th>
+                        <th>Término</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="icon-base ri ri-auction-line fs-3 mb-2 d-block"></i>
+                                Você ainda não possui leilões cadastrados.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <img src="@item.FotoPrincipalUrl" alt="@item.Titulo" class="rounded" style="width: 50px; height: 50px; object-fit: cover;" />
+                                </td>
+                                <td>
+                                    <strong class="d-block text-heading">@item.Titulo</strong>
+                                    <small class="text-muted">@item.Subtitulo</small>
+                                </td>
+                                <td>
+                                    <strong class="text-danger">R$ @item.LanceAtual.ToString("N2")</strong>
+                                </td>
+                                <td><small class="text-muted">R$ @item.IncrementoMinimo.ToString("N2")</small></td>
+                                <td><small>@item.DataFinalizacao.ToString("dd/MM/yyyy HH:mm")</small></td>
+                                <td>
+                                    @switch (item.Status)
+                                    {
+                                        case StatusLeilao.Criado:
+                                            <span class="badge bg-info">Criado</span>
+                                            break;
+                                        case StatusLeilao.Iniciado:
+                                            <span class="badge bg-danger">Iniciado / Ao Vivo</span>
+                                            break;
+                                        case StatusLeilao.Suspenso:
+                                            <span class="badge bg-warning text-dark">Suspenso</span>
+                                            break;
+                                        case StatusLeilao.Finalizado:
+                                            <span class="badge bg-secondary">Finalizado</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Editar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">
+                                        <i class="icon-base ri ri-edit-line me-1"></i> Gerenciar / Alterar
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

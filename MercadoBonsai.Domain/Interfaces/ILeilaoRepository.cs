@@ -6,8 +6,11 @@ namespace MercadoBonsai.Domain.Interfaces;
 
 public interface ILeilaoRepository
 {
-    Task<Leilao?> ObterLeilaoAtivoRecenteAsync();
     Task<Leilao?> ObterPorIdAsync(int id);
-    Task<IEnumerable<LanceLeilao>> ListarLancesPorLeilaoIdAsync(int leilaoId);
-    Task InserirLanceAsync(LanceLeilao lance);
+    Task<Leilao?> ObterLeilaoAtivoRecenteAsync();
+    Task<IEnumerable<Leilao>> ListarPorVendedorAsync(int vendedorId);
+    Task<IEnumerable<Leilao>> ListarEncerradosAsync();
+    Task<int> InserirAsync(Leilao leilao);
+    Task AtualizarAsync(Leilao leilao);
+    Task<int> ContarPorVendedorNosUltimos30DiasAsync(int vendedorId);
 }

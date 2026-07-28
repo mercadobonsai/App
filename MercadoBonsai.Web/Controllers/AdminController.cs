@@ -15,11 +15,16 @@ namespace MercadoBonsai.Web.Controllers;
 public class AdminController : Controller
 {
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IPlanoRepository _planoRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public AdminController(IUsuarioRepository usuarioRepository, IWebHostEnvironment webHostEnvironment)
+    public AdminController(
+        IUsuarioRepository usuarioRepository, 
+        IPlanoRepository planoRepository, 
+        IWebHostEnvironment webHostEnvironment)
     {
         _usuarioRepository = usuarioRepository;
+        _planoRepository = planoRepository;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -87,7 +92,6 @@ public class AdminController : Controller
             return View(model);
         }
 
-        // Upload de logotipo do viveiro se enviado
         if (model.LogotipoArquivo != null && model.LogotipoArquivo.Length > 0)
         {
             var folder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "logotipos");
@@ -131,5 +135,35 @@ public class AdminController : Controller
 
         TempData["Sucesso"] = $"Cadastro do cliente/vendedor '{usuario.Nome}' atualizado com sucesso!";
         return RedirectToAction("Clientes");
+    }
+
+    // GET: /Admin/Planos (Configuração de Planos de Assinatura)
+    [HttpGet]
+    public async Task<IActionResult> Planos()
+    {
+        var planos = await _planoRepository.ListarTodosAsync();
+        return View(planos);
+    }
+
+    // POST: /Admin/SalvarPlano
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SalvarPlano(Plano plano)
+    {
+        var existente = await _planoRepository.ObterPorIdAsync(plano.Id);
+        if (existente == null) return NotFound();
+
+        existente.Nome = plano.Nome;
+        existente.Preco = plano.Preco;
+        existente.PercentualComissao = plano.PercentualComissao;
+        existente.LimiteRifas30Dias = plano.LimiteRifas30Dias;
+        existente.LimiteLeiloes30Dias = plano.LimiteLeiloes30Dias;
+        existente.LimiteAnuncios = plano.LimiteAnuncios;
+        existente.DestaquesHome = plano.DestaquesHome;
+
+        await _planoRepository.AtualizarAsync(existente);
+
+        TempData["Sucesso"] = $"Configurações do Plano '{existente.Nome}' salvas com sucesso!";
+        return RedirectToAction("Planos");
     }
 }

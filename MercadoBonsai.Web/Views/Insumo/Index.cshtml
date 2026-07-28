@@ -1,0 +1,143 @@
+@model MercadoBonsai.Web.Models.HomeEngajamentoViewModel
+@using MercadoBonsai.Domain.Enums
+@{
+    ViewData["Title"] = "Insumos & Ferramentas - Mercado Bonsai";
+    var busca = ViewData["Busca"] as string;
+}
+
+<div class="row">
+    <!-- Coluna Principal (9 colunas em telas grandes, 12 em mobile) -->
+    <div class="col-lg-9 col-12 mb-4">
+        <!-- Header da Seção -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+            <div>
+                <h3 class="fw-bold mb-1" style="color: #4A7C59;">🧪 Insumos, Substratos & Ferramentas</h3>
+                <p class="text-muted mb-0">Adubos, tesouras de poda japonesas, arames e substratos especiais para bonsai</p>
+            </div>
+            @if (User.IsInRole("Vendedor") || User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Produto" asp-action="Criar" class="btn btn-success">
+                    <i class="icon-base ri ri-add-line me-1"></i> Anunciar Insumo / Ferramenta
+                </a>
+            }
+        </div>
+
+        <!-- Barra de Busca -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <form method="get" asp-action="Index" class="row g-3 align-items-center">
+                    <div class="col-md-9">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="icon-base ri ri-search-line"></i></span>
+                            <input type="text" name="busca" value="@busca" class="form-control" placeholder="Buscar por adubo, tesoura, arame, akadama..." />
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-success w-100">Buscar</button>
+                        @if (!string.IsNullOrEmpty(busca))
+                        {
+                            <a asp-action="Index" class="btn btn-outline-secondary" title="Limpar">
+                                <i class="icon-base ri ri-close-line"></i>
+                            </a>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Grid de Insumos -->
+        @if (Model.ProdutosDestaque != null && Model.ProdutosDestaque.Any())
+        {
+            <div class="row g-4 mb-5">
+                @foreach (var p in Model.ProdutosDestaque)
+                {
+                    var isIndisponivel = p.Status == StatusProduto.Indisponivel;
+                    <div class="col-sm-6 col-md-4">
+                        <div class="card h-100 shadow-sm border-0 hover-top transition overflow-hidden" style="@(isIndisponivel ? "opacity: 0.65; filter: grayscale(30%);" : "")">
+                            <div class="position-relative">
+                                @if (!string.IsNullOrEmpty(p.ImagemUrl))
+                                {
+                                    <img src="@p.ImagemUrl" class="card-img-top" alt="@p.Nome" style="height: 180px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="bg-light d-flex align-items-center justify-content-center card-img-top" style="height: 180px;">
+                                        <i class="icon-base ri ri-tools-line text-muted" style="font-size: 2.5rem;"></i>
+                                    </div>
+                                }
+                                <span class="badge bg-info position-absolute top-0 start-0 m-2 shadow-sm">@p.Categoria</span>
+                                @if (isIndisponivel)
+                                {
+                                    <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-sm">Indisponível</span>
+                                }
+                            </div>
+                            <div class="card-body d-flex flex-column justify-content-between p-3">
+                                <div>
+                                    <h6 class="card-title fw-bold mb-1">@p.Nome</h6>
+                                    <p class="card-text text-muted text-truncate-2 small mb-2">@(string.IsNullOrWhiteSpace(p.Descricao) ? "Insumo de alta qualidade para cultivo." : p.Descricao)</p>
+                                    <small class="text-muted d-block mb-2"><i class="icon-base ri ri-truck-line me-1"></i>@p.FormaEnvio</small>
+                                </div>
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="fs-5 fw-bold @(isIndisponivel ? "text-muted" : "text-success")">R$ @p.Preco.ToString("N2")</span>
+                                        <small class="text-muted"><i class="icon-base ri ri-stack-line me-1"></i>Estoque: @p.QuantidadeEstoque</small>
+                                    </div>
+                                    <a asp-controller="Produto" asp-action="Detalhes" asp-route-id="@p.Id" class="btn btn-sm @(isIndisponivel ? "btn-outline-secondary" : "btn-outline-success") w-100">
+                                        <i class="icon-base ri ri-eye-line me-1"></i> Ver Detalhes
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card text-center p-5 border-0 shadow-sm mb-5">
+                <div class="card-body">
+                    <i class="icon-base ri ri-tools-line text-muted" style="font-size: 3.5rem;"></i>
+                    <h5 class="mt-3 fw-bold">Nenhum insumo ou ferramenta cadastrado</h5>
+                    <p class="text-muted">Seja o primeiro a anunciar produtos de nutrição e ferramentas!</p>
+                    <a asp-controller="Produto" asp-action="Criar" class="btn btn-sm btn-success mt-1 px-3">Anunciar Insumo</a>
+                </div>
+            </div>
+        }
+
+        <!-- Dica de Cultivo -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="icon-base ri ri-lightbulb-line fs-3 text-warning me-2"></i>
+                    <h5 class="fw-bold mb-0">Substratos e Ferramentas Recomendados</h5>
+                </div>
+                <p class="text-body mb-0">Use sempre tesouras amoladas com corte concavo para cicatrizacoes perfeitas em galhos e troncos de bonsais.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Lateral EXCLUSIVA (Carrossel, Leilões, Rifas, Propaganda) -->
+    <div class="col-lg-3 col-12 mb-4">
+        <!-- Carrossel de Viveiros -->
+        <div class="card mb-4 border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-label-success py-2 px-3 d-flex justify-content-between align-items-center">
+                <span class="badge bg-success fw-semibold" style="font-size: 0.75rem;"><i class="icon-base ri ri-award-line me-1"></i>Viveiros de Insumos</span>
+            </div>
+            <div class="card-body p-3 text-center">
+                <i class="icon-base ri ri-store-3-line text-success mb-2" style="font-size: 2.5rem;"></i>
+                <h6 class="fw-bold mb-1">Fornecedores Certificados</h6>
+                <p class="text-muted small mb-3">Encontre os melhores fertilizantes organo-minerais e ferramentas japonesas.</p>
+            </div>
+        </div>
+
+        <!-- Banner Comercial -->
+        <div class="card border-0 shadow-sm text-center p-3" style="border: 2px dashed #4A7C59 !important; background-color: #F4F8F5;">
+            <div class="card-body p-0">
+                <i class="icon-base ri ri-advertisement-line text-success mb-2" style="font-size: 2rem;"></i>
+                <h6 class="fw-bold mb-1" style="color: #1E3A2B;">Anuncie Seus Insumos Aqui</h6>
+                <p class="text-muted small mb-3">Destaque sua marca de fertilizantes e ferramentas para milhaes de cultivadores.</p>
+                <a href="mailto:comercial@mercadobonsai.com.br" class="btn btn-sm btn-success w-100">Falar com Comercial</a>
+            </div>
+        </div>
+    </div>
+</div>

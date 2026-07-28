@@ -29,6 +29,26 @@ public class EditarProdutoViewModel
     [Display(Name = "Status da Oferta")]
     public StatusProduto Status { get; set; } = StatusProduto.Disponivel;
 
+    // Dimensões Físicas (cm) & Peso (kg)
+    [Display(Name = "Altura (cm)")]
+    public decimal Altura { get; set; }
+
+    [Display(Name = "Largura (cm)")]
+    public decimal Largura { get; set; }
+
+    [Display(Name = "Comprimento (cm)")]
+    public decimal Comprimento { get; set; }
+
+    [Display(Name = "Peso (kg)")]
+    public decimal Peso { get; set; }
+
+    // Envio e Categorização
+    [Display(Name = "Forma de Envio")]
+    public string FormaEnvio { get; set; } = "A combinar";
+
+    [Display(Name = "Categoria do Produto")]
+    public string Categoria { get; set; } = "Bonsai";
+
     public string? ImagemUrlAtual { get; set; }
 
     [Display(Name = "Alterar Foto do Produto")]

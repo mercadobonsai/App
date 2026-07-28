@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MercadoBonsai.Domain.Enums;
 
 namespace MercadoBonsai.Domain.Entities;
 
@@ -18,8 +19,11 @@ public class Leilao
     public int? VendedorId { get; set; }
     public string? VendedorNome { get; set; }
     public DateTime DataFinalizacao { get; set; }
-    public int Status { get; set; } = 1; // 1=Ativo, 2=Finalizado, 3=Cancelado
+    public StatusLeilao Status { get; set; } = StatusLeilao.Criado; // 1=Criado, 2=Iniciado, 3=Suspenso, 4=Finalizado
     public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 
     public List<LanceLeilao> Lances { get; set; } = new();
+
+    public bool TemLances => Lances != null && Lances.Count > 0;
+    public bool PodeEditarDadosGerais => Status == StatusLeilao.Criado || (Status == StatusLeilao.Iniciado && !TemLances);
 }

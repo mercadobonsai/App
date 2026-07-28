@@ -1,0 +1,53 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Leilao>
+@{
+    ViewData["Title"] = "Histórico de Leilões Encerrados - Mercado Bonsai";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1" style="color: #4A7C59;">🔨 Leilões Encerrados & Historico de Arremates</h3>
+            <p class="text-muted mb-0">Consulte exemplares raros arrematados pela comunidade de bonsaístas</p>
+        </div>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Voltar à Home</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card text-center p-5 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="icon-base ri ri-auction-line text-muted mb-2" style="font-size: 3.5rem;"></i>
+                <h5 class="fw-bold">Nenhum leilão encerrado ainda</h5>
+                <p class="text-muted">Acompanhe os leilões ao vivo na Home para participar dos próximos lances!</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var l in Model)
+            {
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100 shadow-sm border-0 overflow-hidden">
+                        <div class="position-relative">
+                            <img src="@l.FotoPrincipalUrl" class="card-img-top" alt="@l.Titulo" style="height: 180px; object-fit: cover; filter: grayscale(20%);" />
+                            <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-sm">Encerrado</span>
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-between p-3">
+                            <div>
+                                <h6 class="fw-bold mb-1">@l.Titulo</h6>
+                                <small class="text-muted d-block mb-2">Organizado por: @(l.VendedorNome ?? "Cultivador Mercado Bonsai")</small>
+                                <p class="text-muted small text-truncate-2 mb-3">@l.Subtitulo</p>
+                            </div>
+                            <div class="p-2 bg-light rounded text-center">
+                                <small class="text-muted d-block">Valor Final Arrematado:</small>
+                                <strong class="text-danger fs-5">R$ @l.LanceAtual.ToString("N2")</strong>
+                                <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Finalizado em: @l.DataFinalizacao.ToString("dd/MM/yyyy")</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

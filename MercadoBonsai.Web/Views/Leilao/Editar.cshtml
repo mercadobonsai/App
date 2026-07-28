@@ -1,0 +1,77 @@
+@model MercadoBonsai.Domain.Entities.Leilao
+@using MercadoBonsai.Domain.Enums
+@{
+    ViewData["Title"] = $"Editar Leilão #{Model.Id}";
+    var podeEditarGeral = Model.PodeEditarDadosGerais;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-edit-box-line me-2"></i>Gerenciar / Alterar Leilão</h5>
+                    <a asp-action="MeusLeiloes" class="btn btn-sm btn-outline-secondary">Voltar</a>
+                </div>
+                <div class="card-body p-4">
+
+                    @if (!podeEditarGeral)
+                    {
+                        <div class="alert alert-warning border-0 shadow-sm mb-4" role="alert">
+                            <i class="icon-base ri ri-lock-line me-2 fs-5 align-middle"></i>
+                            <strong>Atenção (Trava de Segurança):</strong> Este leilão já está <u>Iniciado e possui lances registrados</u>. Para garantir a transparência das disputas, a alteração de dados gerais está bloqueada. <strong>É permitida apenas a prorrogação da data de término!</strong>
+                        </div>
+                    }
+
+                    <form asp-action="Editar" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label asp-for="Titulo" class="form-label fw-semibold"></label>
+                            <input asp-for="Titulo" class="form-control" readonly="@(!podeEditarGeral)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Subtitulo" class="form-label fw-semibold"></label>
+                            <input asp-for="Subtitulo" class="form-control" readonly="@(!podeEditarGeral)" />
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="LanceAtual" class="form-label fw-semibold"></label>
+                                <input asp-for="LanceAtual" class="form-control" type="number" step="0.01" readonly="@(!podeEditarGeral)" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="IncrementoMinimo" class="form-label fw-semibold"></label>
+                                <input asp-for="IncrementoMinimo" class="form-control" type="number" step="1" readonly="@(!podeEditarGeral)" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Status" class="form-label fw-semibold"></label>
+                                <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<StatusLeilao>()"></select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 bg-label-warning p-3 rounded">
+                            <label asp-for="DataFinalizacao" class="form-label fw-bold text-dark">
+                                <i class="icon-base ri ri-calendar-event-line me-1"></i> Data e Hora de Término (Prorrogação Permite Apenas Extensão)
+                            </label>
+                            <input asp-for="DataFinalizacao" type="datetime-local" class="form-control" value="@Model.DataFinalizacao.ToString("yyyy-MM-ddTHH:mm")" />
+                            <small class="text-muted mt-1 d-block">Caso necessário, aumente o prazo de encerramento para dar mais tempo às disputas.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Descricao" class="form-label fw-semibold"></label>
+                            <textarea asp-for="Descricao" class="form-control" rows="4" readonly="@(!podeEditarGeral)"></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-2">
+                            <a asp-action="MeusLeiloes" class="btn btn-outline-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-danger px-4"><i class="icon-base ri ri-save-line me-1"></i> Salvar Alterações</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

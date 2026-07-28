@@ -6,10 +6,10 @@
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
+        <div class="col-md-9 col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-edit-box-line me-2"></i>Alterar Anúncio de Bonsai</h5>
+                    <h5 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-edit-box-line me-2"></i>Alterar Anúncio</h5>
                     <a asp-action="MeusProdutos" class="btn btn-sm btn-outline-secondary">
                         <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar
                     </a>
@@ -22,10 +22,22 @@
 
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4" role="alert"></div>
 
-                        <div class="mb-4">
-                            <label asp-for="Nome" class="form-label fw-semibold"></label>
-                            <input asp-for="Nome" class="form-control" placeholder="Ex: Bonsai Junípero 5 anos" autofocus />
-                            <span asp-validation-for="Nome" class="text-danger small"></span>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label asp-for="Nome" class="form-label fw-semibold"></label>
+                                <input asp-for="Nome" class="form-control" autofocus />
+                                <span asp-validation-for="Nome" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Categoria" class="form-label fw-semibold"></label>
+                                <select asp-for="Categoria" class="form-select">
+                                    <option value="Pré-bonsai">Pré-bonsai</option>
+                                    <option value="Bonsai">Bonsai</option>
+                                    <option value="Insumo">Insumo</option>
+                                    <option value="Ferramenta">Ferramenta</option>
+                                    <option value="Vaso">Vaso</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="row g-3 mb-4">
@@ -40,7 +52,7 @@
 
                             <div class="col-md-4">
                                 <label asp-for="QuantidadeEstoque" class="form-label fw-semibold"></label>
-                                <input asp-for="QuantidadeEstoque" type="number" class="form-control" placeholder="1" />
+                                <input asp-for="QuantidadeEstoque" type="number" class="form-control" />
                                 <span asp-validation-for="QuantidadeEstoque" class="text-danger small"></span>
                             </div>
 
@@ -50,9 +62,41 @@
                             </div>
                         </div>
 
+                        <!-- Dimensões Físicas & Peso -->
+                        <div class="card bg-light border-0 p-3 mb-4">
+                            <h6 class="fw-bold mb-3 text-dark"><i class="icon-base ri ri-ruler-line me-2"></i>Dimensões Físicas & Peso</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label asp-for="Altura" class="form-label small fw-semibold">Altura (cm)</label>
+                                    <input asp-for="Altura" type="number" step="0.1" class="form-control form-control-sm" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="Largura" class="form-label small fw-semibold">Largura (cm)</label>
+                                    <input asp-for="Largura" type="number" step="0.1" class="form-control form-control-sm" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="Comprimento" class="form-label small fw-semibold">Comprimento (cm)</label>
+                                    <input asp-for="Comprimento" type="number" step="0.1" class="form-control form-control-sm" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label asp-for="Peso" class="form-label small fw-semibold">Peso (kg)</label>
+                                    <input asp-for="Peso" type="number" step="0.1" class="form-control form-control-sm" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="FormaEnvio" class="form-label fw-semibold"></label>
+                            <select asp-for="FormaEnvio" class="form-select">
+                                <option value="Frete incluso">Frete incluso</option>
+                                <option value="Frete por conta comprador">Frete por conta comprador</option>
+                                <option value="A combinar">A combinar</option>
+                            </select>
+                        </div>
+
                         <div class="mb-4">
                             <label asp-for="Descricao" class="form-label fw-semibold"></label>
-                            <textarea asp-for="Descricao" class="form-control" rows="4" placeholder="Descreva os detalhes da planta, idade, cuidados recomendados, etc."></textarea>
+                            <textarea asp-for="Descricao" class="form-control" rows="4"></textarea>
                             <span asp-validation-for="Descricao" class="text-danger small"></span>
                         </div>
 
