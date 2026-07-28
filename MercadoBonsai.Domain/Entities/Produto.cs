@@ -1,21 +1,17 @@
 using System;
-using System.Collections.Generic;
 using MercadoBonsai.Domain.Enums;
 
 namespace MercadoBonsai.Domain.Entities;
 
 public class Produto
 {
-    public Guid Id { get; set; }
-    public Guid VendedorId { get; set; }
+    public int Id { get; set; }
+    public int VendedorId { get; set; }
     public string Nome { get; set; } = string.Empty;
     public string Descricao { get; set; } = string.Empty;
     public decimal Preco { get; set; }
-    public string Especie { get; set; } = string.Empty;
-    public int IdadeAnos { get; set; }
-    public StatusProduto Status { get; set; }
-    public ModalidadeEntrega TipoModalidade { get; set; }
-    public DateTime DataCadastro { get; set; }
-    
-    public ICollection<FotoProduto> Fotos { get; set; } = new List<FotoProduto>();
+    public int QuantidadeEstoque { get; set; }
+    public string ImagemUrl { get; set; } = string.Empty;
+    public StatusProduto Status { get; set; } = StatusProduto.Disponivel;
+    public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 }

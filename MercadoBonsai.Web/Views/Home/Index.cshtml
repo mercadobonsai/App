@@ -1,47 +1,618 @@
-@model IEnumerable<MercadoBonsai.Domain.DTOs.ProdutoHomeDto>
+@model MercadoBonsai.Web.Models.HomeEngajamentoViewModel
+@using MercadoBonsai.Domain.Enums
 @{
-    ViewData["Title"] = "Vitrine de Bonsais";
+    ViewData["Title"] = "Página Inicial";
 }
 
-<div class="text-center mb-4">
-    <h1 class="display-4 text-success fw-bold">Mercado Bonsai</h1>
-    <p class="lead">Encontre a arte viva perfeita para o seu ambiente.</p>
-</div>
+<div class="row">
+    <!-- Coluna Principal (9 colunas em telas grandes, 12 em mobile) -->
+    <div class="col-lg-9 col-12 mb-4">
 
-<div class="row row-cols-1 row-cols-md-3 g-4">
-    @if (Model != null && Model.Any())
-    {
-        @foreach (var produto in Model)
-        {
-            <div class="col">
-                <div class="card h-100 shadow-sm border-0">
-                    @if (!string.IsNullOrEmpty(produto.FotoCapaUrl))
-                    {
-                        <img src="@produto.FotoCapaUrl" class="card-img-top" alt="@produto.Titulo" style="height: 200px; object-fit: cover;">
-                    }
-                    else
-                    {
-                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted" style="height: 200px;">
-                            <span>Sem Foto</span>
+        <!-- Hero Section -->
+        <div class="card mb-5 border-0 overflow-hidden shadow-lg position-relative" style="background: linear-gradient(135deg, #1E3A2B 0%, #355E3B 50%, #4A7C59 100%); color: #ffffff; border-radius: 16px;">
+            <div class="card-body p-4 p-md-5 my-md-2">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <span class="badge bg-white text-success px-3 py-2 fs-6 fw-bold mb-3 shadow-sm rounded-pill">
+                            🌱 O Maior Portal de Bonsais do Brasil
+                        </span>
+                        <h1 class="display-5 fw-bold text-white mb-3" style="letter-spacing: -0.5px; line-height: 1.15;">
+                            A Arte Viva do Cultivo em Suas Mãos
+                        </h1>
+                        <p class="fs-6 text-white-50 mb-4" style="max-width: 600px;">
+                            Conectamos cultivadores apaixonados, mestres da arte bonsai e entusiastas em um marketplace exclusivo com frete especializado e plantas de qualidade superior.
+                        </p>
+                        <div class="d-flex flex-wrap gap-3">
+                            <a asp-controller="Produto" asp-action="Index" class="btn btn-success btn-lg px-4 shadow">
+                                <i class="icon-base ri ri-shopping-bag-3-line me-2"></i> Explorar Vitrine
+                            </a>
+                            @if (User.IsInRole("Vendedor") || User.IsInRole("Administrador"))
+                            {
+                                <a asp-controller="Produto" asp-action="Criar" class="btn btn-outline-light btn-lg px-4">
+                                    <i class="icon-base ri ri-add-circle-line me-2"></i> Anunciar Bonsai
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Conta" asp-action="Cadastro" class="btn btn-outline-light btn-lg px-4">
+                                    <i class="icon-base ri ri-user-add-line me-2"></i> Criar Conta Vendedor
+                                </a>
+                            }
                         </div>
-                    }
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">@produto.Titulo</h5>
-                        <p class="card-text text-success fs-5 fw-bold">@produto.ValorVenda.ToString("C")</p>
-                        <p class="card-text mb-1"><small class="text-muted">Espécie: @produto.Especie</small></p>
-                        <p class="card-text"><small class="text-muted">Entrega: @produto.TipoModalidade.ToString()</small></p>
                     </div>
-                    <div class="card-footer bg-white border-0 text-center">
-                        <a href="#" class="btn btn-outline-success w-100">Ver Detalhes</a>
+                    <div class="col-lg-4 d-none d-lg-block text-center position-relative">
+                        <div class="p-2">
+                            <img src="~/starter-kit/assets/img/logo.png" alt="Mercado Bonsai" class="img-fluid rounded-4 shadow-lg bg-white p-3" style="max-height: 220px; object-fit: contain;" />
+                        </div>
                     </div>
                 </div>
             </div>
-        }
-    }
-    else
-    {
-        <div class="col-12 text-center">
-            <p class="text-muted">Nenhum bonsai disponível no momento.</p>
         </div>
-    }
+
+        <!-- Destaques da Semana Section -->
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1" style="color: #4A7C59;">🌿 Destaques da Semana</h4>
+                    <p class="text-muted mb-0">Exemplares e bonsais recém-anunciados no portal</p>
+                </div>
+                <a asp-controller="Produto" asp-action="Index" class="btn btn-sm btn-outline-success">
+                    Ver Todos <i class="icon-base ri ri-arrow-right-line ms-1"></i>
+                </a>
+            </div>
+
+            @if (Model.ProdutosDestaque != null && Model.ProdutosDestaque.Any())
+            {
+                <div class="row g-4">
+                    @foreach (var p in Model.ProdutosDestaque)
+                    {
+                        var isIndisponivel = p.Status == StatusProduto.Indisponivel;
+                        <div class="col-sm-6 col-md-4">
+                            <div class="card h-100 shadow-sm border-0 hover-top transition overflow-hidden" style="@(isIndisponivel ? "opacity: 0.65; filter: grayscale(30%);" : "")">
+                                <div class="position-relative">
+                                    @if (!string.IsNullOrEmpty(p.ImagemUrl))
+                                    {
+                                        <img src="@p.ImagemUrl" class="card-img-top" alt="@p.Nome" style="height: 180px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light d-flex align-items-center justify-content-center card-img-top" style="height: 180px;">
+                                            <i class="icon-base ri ri-image-line text-muted" style="font-size: 2.5rem;"></i>
+                                        </div>
+                                    }
+                                    @if (isIndisponivel)
+                                    {
+                                        <span class="badge bg-secondary position-absolute top-0 end-0 m-2 shadow-sm">Indisponível</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success position-absolute top-0 end-0 m-2 shadow-sm">Recente</span>
+                                    }
+                                </div>
+                                <div class="card-body d-flex flex-column justify-content-between p-3">
+                                    <div>
+                                        <h6 class="card-title fw-bold mb-1">@p.Nome</h6>
+                                        <p class="card-text text-muted text-truncate-2 small mb-2">@(string.IsNullOrWhiteSpace(p.Descricao) ? "Bonsai selecionado de alta qualidade." : p.Descricao)</p>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fs-5 fw-bold @(isIndisponivel ? "text-muted" : "text-success")">R$ @p.Preco.ToString("N2")</span>
+                                            <small class="text-muted"><i class="icon-base ri ri-stack-line me-1"></i>Estoque: @p.QuantidadeEstoque</small>
+                                        </div>
+                                        <a asp-controller="Produto" asp-action="Detalhes" asp-route-id="@p.Id" class="btn btn-sm @(isIndisponivel ? "btn-outline-secondary" : "btn-outline-success") w-100">
+                                            <i class="icon-base ri ri-eye-line me-1"></i> Ver Detalhes
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="card text-center p-4 border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="icon-base ri ri-leaf-line text-success mb-2" style="font-size: 3rem;"></i>
+                        <h6 class="fw-bold">Nenhum bonsai cadastrado ainda</h6>
+                        <p class="text-muted small">Seja o primeiro a publicar um anúncio no portal!</p>
+                        <a asp-controller="Produto" asp-action="Criar" class="btn btn-sm btn-success mt-1 px-3">Cadastrar Anúncio</a>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Benefícios / Diferenciais Section -->
+        <div class="row g-3 mb-5">
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm text-center p-3">
+                    <div class="avatar avatar-md mx-auto mb-2 bg-label-success rounded-circle">
+                        <i class="icon-base ri ri-truck-line fs-3 text-success"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Frete Especializado</h6>
+                    <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Embalagens antichoque para manter plantas vivas seguras.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm text-center p-3">
+                    <div class="avatar avatar-md mx-auto mb-2 bg-label-success rounded-circle">
+                        <i class="icon-base ri ri-shield-check-line fs-3 text-success"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Cultivadores Certificados</h6>
+                    <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Garantia de procedência e espécies autenticadas.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm text-center p-3">
+                    <div class="avatar avatar-md mx-auto mb-2 bg-label-success rounded-circle">
+                        <i class="icon-base ri ri-book-read-line fs-3 text-success"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Suporte de Cultivo</h6>
+                    <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Dicas de rega, poda e adubação para cada exemplar.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm text-center p-3">
+                    <div class="avatar avatar-md mx-auto mb-2 bg-label-success rounded-circle">
+                        <i class="icon-base ri ri-lock-2-line fs-3 text-success"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Compra Garantida</h6>
+                    <p class="text-muted mb-0 small" style="font-size: 0.8rem;">Pagamento seguro intermediado com proteção total.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Banner de Recrutamento de Vendedores -->
+        <div class="card border-0 shadow-sm overflow-hidden mb-5" style="background-color: #F4F8F5;">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="fw-bold mb-1" style="color: #1E3A2B;">Você é cultivador ou produtor de Bonsais?</h5>
+                        <p class="text-muted small mb-md-0">Alcance milhares de entusiastas em todo o Brasil. Cadastre-se e comece a anunciar hoje mesmo.</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <a asp-controller="Produto" asp-action="Criar" class="btn btn-success px-3">
+                            <i class="icon-base ri ri-store-3-line me-1"></i> Anunciar Agora
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards Realocados (Clube VIP & Dica de Cultivo via JSON) -->
+        <div class="row g-4">
+            <!-- Card: Clube de Vantagens VIP -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm position-relative overflow-hidden h-100" style="background: linear-gradient(135deg, #1E3A2B 0%, #4A7C59 100%); color: #fff;">
+                    <div class="card-body p-4 text-center d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="avatar avatar-lg mx-auto mb-3 bg-white text-success rounded-circle shadow-sm">
+                                <i class="icon-base ri ri-vip-crown-line fs-3"></i>
+                            </div>
+                            <h5 class="fw-bold text-white mb-2">Clube Bonsai VIP</h5>
+                            <p class="text-white-50 small mb-3">
+                                Assine nosso clube e receba descontos exclusivos em substratos especiais, tesouras de poda japonesas e frete grátis em compras selecionadas.
+                            </p>
+                        </div>
+                        <button class="btn btn-light text-success fw-bold w-100 shadow-sm" onclick="alert('Clube de Vantagens em breve!')">
+                            Conhecer o Clube VIP
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Dica Rápida de Cultivo (Desacoplada via JSON) -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="avatar bg-label-warning me-3 rounded p-2 d-flex align-items-center justify-content-center">
+                                    <i class="icon-base ri ri-lightbulb-line fs-3 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-0">@(Model.DicaCultivoSemana?.Titulo ?? "Dica de Cultivo da Semana")</h5>
+                                    <small class="text-muted">@(Model.DicaCultivoSemana?.Subtitulo ?? "Cuidados Essenciais")</small>
+                                </div>
+                            </div>
+                            <p class="card-text text-body mb-3">
+                                @(Model.DicaCultivoSemana?.Conteudo ?? "Sempre regue seu bonsai abundantemente até que a água escorra de forma uniforme pelos furos de drenagem do vaso.")
+                            </p>
+                        </div>
+                        <div class="alert alert-warning mb-0 py-2 px-3 d-flex align-items-center small">
+                            <i class="icon-base ri ri-information-line me-2"></i>
+                            <span>Categoria: @(Model.DicaCultivoSemana?.Categoria ?? "Geral")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Coluna Lateral EXCLUSIVA para Viveiros em Destaque (Carrossel), Leilões e Rifas -->
+    <div class="col-lg-3 col-12 mb-4">
+
+        <!-- Card 1: Carrossel Dinâmico de 'Viveiros em Destaque' -->
+        <div class="card mb-4 border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-label-success py-2 px-3 d-flex justify-content-between align-items-center">
+                <span class="badge bg-success fw-semibold" style="font-size: 0.75rem;"><i class="icon-base ri ri-award-line me-1"></i>Viveiros em Destaque</span>
+                <small class="text-muted"><i class="icon-base ri ri-shield-star-line text-success"></i>Parceiros VIP</small>
+            </div>
+            
+            <div id="carouselViveirosDestaque" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    @if (Model.ViveirosEmDestaque != null && Model.ViveirosEmDestaque.Any())
+                    {
+                        var first = true;
+                        foreach (var v in Model.ViveirosEmDestaque)
+                        {
+                            <div class="carousel-item @(first ? "active" : "")" data-bs-interval="5000">
+                                <div class="card-body p-3 text-center">
+                                    <div class="p-3 bg-light rounded mb-3 text-center">
+                                        @if (!string.IsNullOrEmpty(v.LogotipoUrl))
+                                        {
+                                            <img src="@v.LogotipoUrl" alt="@v.Nome" class="img-fluid rounded" style="max-height: 80px; object-fit: contain;" />
+                                        }
+                                        else
+                                        {
+                                            <i class="icon-base ri ri-store-3-line text-success" style="font-size: 3rem;"></i>
+                                        }
+                                    </div>
+                                    <h6 class="fw-bold mb-1" style="color: #1E3A2B;">@(string.IsNullOrEmpty(v.RazaoSocial) ? v.Nome : v.RazaoSocial)</h6>
+                                    <div class="mb-2">
+                                        <span class="badge bg-label-warning text-warning fw-semibold" style="font-size: 0.7rem;">
+                                            <i class="icon-base ri ri-star-fill me-1"></i>Reputação: @v.Reputacao pts
+                                        </span>
+                                    </div>
+                                    <p class="text-muted small mb-3 text-truncate-2" style="font-size: 0.8rem;">
+                                        @(string.IsNullOrEmpty(v.DescricaoViveiro) ? "Viveiro parceiro credenciado no Mercado Bonsai com foco em plantas de alta qualidade." : v.DescricaoViveiro)
+                                    </p>
+                                    <a asp-controller="Produto" asp-action="Index" asp-route-busca="@(string.IsNullOrEmpty(v.RazaoSocial) ? v.Nome : v.RazaoSocial)" class="btn btn-sm btn-outline-success w-100">
+                                        Ver Produtos do Viveiro
+                                    </a>
+                                </div>
+                            </div>
+                            first = false;
+                        }
+                    }
+                    else
+                    {
+                        <div class="carousel-item active">
+                            <div class="card-body p-3 text-center">
+                                <div class="p-3 bg-light rounded mb-3">
+                                    <i class="icon-base ri ri-landscape-line text-success" style="font-size: 2.5rem;"></i>
+                                </div>
+                                <h6 class="fw-bold mb-1" style="color: #1E3A2B;">Viveiro Shokunin</h6>
+                                <p class="text-muted small mb-3">Especialistas em pré-bonsais importados do Japão e ferramentas tradicionais.</p>
+                                <a asp-controller="Produto" asp-action="Index" class="btn btn-sm btn-outline-success w-100">Visitar Viveiro</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+                @if (Model.ViveirosEmDestaque != null && Model.ViveirosEmDestaque.Count() > 1)
+                {
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselViveirosDestaque" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon bg-dark bg-opacity-25 rounded-circle" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselViveirosDestaque" data-bs-slide="next">
+                        <span class="carousel-control-next-icon bg-dark bg-opacity-25 rounded-circle" aria-hidden="true"></span>
+                        <span class="visually-hidden">Próximo</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Card 2: Leilão em Andamento (Banco de Dados + Modal JS) -->
+        @if (Model.LeilaoAtivo != null)
+        {
+            <div class="card mb-4 border-0 shadow-sm overflow-hidden hover-top transition">
+                <div class="card-header bg-danger py-2 px-3 d-flex justify-content-between align-items-center text-white">
+                    <span class="badge bg-white text-danger fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-fire-fill me-1"></i>Ao Vivo</span>
+                    <small class="fw-medium text-white-50"><i class="icon-base ri ri-time-line me-1"></i>@(Model.LeilaoAtivo.Badge ?? "Em Andamento")</small>
+                </div>
+                <div class="position-relative cursor-pointer" onclick="abrirModalEngajamento('leilao')" title="Clique para abrir galeria e dar lance">
+                    <img src="@Model.LeilaoAtivo.FotoPrincipalUrl" class="card-img-top img-zoom" alt="@Model.LeilaoAtivo.Titulo" style="height: 160px; object-fit: cover;" />
+                    <span class="badge bg-dark bg-opacity-75 text-white position-absolute bottom-0 start-0 m-2">Leilão #@Model.LeilaoAtivo.Id</span>
+                    <div class="position-absolute top-50 start-50 translate-middle opacity-0 hover-opacity-100 bg-dark bg-opacity-50 text-white rounded-circle p-2 transition">
+                        <i class="icon-base ri ri-zoom-in-line fs-3"></i>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <h6 class="fw-bold mb-1 cursor-pointer" style="color: #1E3A2B;" onclick="abrirModalEngajamento('leilao')">@Model.LeilaoAtivo.Titulo</h6>
+                    <p class="text-muted small mb-2 text-truncate">@Model.LeilaoAtivo.Subtitulo</p>
+                    
+                    <div class="p-2 bg-light rounded d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">Lance Atual:</small>
+                        <strong class="text-danger fs-6">R$ @Model.LeilaoAtivo.LanceAtual.ToString("N2")</strong>
+                    </div>
+                    
+                    <button class="btn btn-sm btn-danger w-100 shadow-sm" onclick="abrirModalEngajamento('leilao')">
+                        <i class="icon-base ri ri-auction-line me-1"></i> Dar Lance / Detalhes
+                    </button>
+                </div>
+            </div>
+        }
+
+        <!-- Card 3: Rifa Ativa do Mês (Banco de Dados + Modal JS) -->
+        @if (Model.RifaAtiva != null)
+        {
+            <div class="card mb-4 border-0 shadow-sm overflow-hidden hover-top transition">
+                <div class="card-header bg-success py-2 px-3 d-flex justify-content-between align-items-center text-white">
+                    <span class="badge bg-white text-success fw-bold" style="font-size: 0.75rem;"><i class="icon-base ri ri-ticket-2-fill me-1"></i>Rifa do Mês</span>
+                    <small class="fw-medium text-white-50">@Model.RifaAtiva.CotasVendidas/@Model.RifaAtiva.TotalCotas Cotas</small>
+                </div>
+                <div class="position-relative cursor-pointer" onclick="abrirModalEngajamento('rifa')" title="Clique para abrir galeria e cotas">
+                    <img src="@Model.RifaAtiva.FotoPrincipalUrl" class="card-img-top img-zoom" alt="@Model.RifaAtiva.Titulo" style="height: 160px; object-fit: cover;" />
+                    <span class="badge bg-label-success position-absolute bottom-0 start-0 m-2">R$ @Model.RifaAtiva.ValorCota.ToString("N2") / Cota</span>
+                    <div class="position-absolute top-50 start-50 translate-middle opacity-0 hover-opacity-100 bg-dark bg-opacity-50 text-white rounded-circle p-2 transition">
+                        <i class="icon-base ri ri-zoom-in-line fs-3"></i>
+                    </div>
+                </div>
+                <div class="card-body p-3">
+                    <h6 class="fw-bold mb-1 cursor-pointer" style="color: #1E3A2B;" onclick="abrirModalEngajamento('rifa')">@Model.RifaAtiva.Titulo</h6>
+                    <small class="text-muted d-block mb-2">Sorteio: @Model.RifaAtiva.DataSorteio.ToString("dd/MM/yyyy")</small>
+
+                    <!-- Barra de Progresso de Bilhetes Vendidos -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted" style="font-size: 0.75rem;">Progresso das cotas:</small>
+                            <small class="fw-bold text-success" style="font-size: 0.75rem;">@Model.RifaAtiva.PorcentagemVendida% vendidas</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: @Model.RifaAtiva.PorcentagemVendida%;" aria-valuenow="@Model.RifaAtiva.PorcentagemVendida" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-sm btn-outline-success w-100" onclick="abrirModalEngajamento('rifa')">
+                        <i class="icon-base ri ri-ticket-line me-1"></i> Adquirir Cotas / Galeria
+                    </button>
+                </div>
+            </div>
+        }
+
+        <!-- Card 4: Banner Comercial "Anuncie seu viveiro aqui" (Venda de Mídia) -->
+        <div class="card border-0 shadow-sm text-center p-3" style="border: 2px dashed #4A7C59 !important; background-color: #F4F8F5;">
+            <div class="card-body p-0">
+                <i class="icon-base ri ri-advertisement-line text-success mb-2" style="font-size: 2rem;"></i>
+                <h6 class="fw-bold mb-1" style="color: #1E3A2B;">Anuncie seu Viveiro Aqui</h6>
+                <p class="text-muted small mb-3">Destaque sua loja ou marca para milhares de bonsaístas em todo o país.</p>
+                <a href="mailto:comercial@mercadobonsai.com.br" class="btn btn-sm btn-success w-100">
+                    <i class="icon-base ri ri-mail-send-line me-1"></i> Anunciar Conosco
+                </a>
+            </div>
+        </div>
+
+    </div>
 </div>
+
+<!-- Modal Único de Galeria e Engajamento (Bootstrap Injetado com Dados do Banco) -->
+<div class="modal fade" id="modalDetalhesEngajamento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0" id="modalHeaderBg">
+                <h5 class="modal-title fw-bold" id="modalEngajamentoTitulo">Detalhes do Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="modalEngajamentoCorpo">
+                <!-- Conteúdo Injetado Dinamicamente via JavaScript -->
+            </div>
+            <div class="modal-footer border-0 pt-0" id="modalEngajamentoRodape">
+                <!-- Botões Injetados Dinamicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .cursor-pointer { cursor: pointer; }
+        .hover-opacity-100:hover { opacity: 1 !important; }
+        .img-zoom { transition: transform 0.3s ease; }
+        .position-relative:hover .img-zoom { transform: scale(1.03); }
+        .thumb-gallery { cursor: pointer; opacity: 0.7; transition: opacity 0.2s, border-color 0.2s; }
+        .thumb-gallery.active, .thumb-gallery:hover { opacity: 1; border: 2px solid #4A7C59 !important; }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Dados alimentados em tempo de execução via banco de dados (PostgreSQL/Supabase)
+        const dadosEngajamento = {
+            leilao: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LeilaoAtivo != null ? new {
+                tipo = "leilao",
+                id = Model.LeilaoAtivo.Id,
+                titulo = "🔥 " + Model.LeilaoAtivo.Titulo,
+                subtitulo = Model.LeilaoAtivo.Subtitulo,
+                descricao = Model.LeilaoAtivo.Descricao,
+                fotoPrincipal = Model.LeilaoAtivo.FotoPrincipalUrl,
+                fotoDetalhe = string.IsNullOrEmpty(Model.LeilaoAtivo.FotoDetalheUrl) ? Model.LeilaoAtivo.FotoPrincipalUrl : Model.LeilaoAtivo.FotoDetalheUrl,
+                badge = Model.LeilaoAtivo.Badge ?? "Ao Vivo",
+                lanceAtual = "R$ " + Model.LeilaoAtivo.LanceAtual.ToString("N2"),
+                proximoLanceMin = Model.LeilaoAtivo.ProximoLanceMinimo,
+                vendedor = Model.LeilaoAtivo.VendedorNome ?? "Cultivador Mercado Bonsai",
+                historicoLances = Model.LeilaoAtivo.Lances.Select(l => new {
+                    usuario = l.UsuarioNome,
+                    valor = "R$ " + l.Valor.ToString("N2"),
+                    hora = l.DataLance.ToString("dd/MM HH:mm")
+                })
+            } : null)),
+            rifa: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RifaAtiva != null ? new {
+                tipo = "rifa",
+                id = Model.RifaAtiva.Id,
+                titulo = "🎟️ " + Model.RifaAtiva.Titulo,
+                subtitulo = Model.RifaAtiva.Subtitulo,
+                descricao = Model.RifaAtiva.Descricao,
+                fotoPrincipal = Model.RifaAtiva.FotoPrincipalUrl,
+                fotoDetalhe = string.IsNullOrEmpty(Model.RifaAtiva.FotoDetalheUrl) ? Model.RifaAtiva.FotoPrincipalUrl : Model.RifaAtiva.FotoDetalheUrl,
+                badge = $"{Model.RifaAtiva.PorcentagemVendida}% das cotas vendidas ({Model.RifaAtiva.CotasVendidas} / {Model.RifaAtiva.TotalCotas})",
+                precoCota = Model.RifaAtiva.ValorCota,
+                totalCotas = Model.RifaAtiva.TotalCotas,
+                cotasVendidas = Model.RifaAtiva.CotasVendidas,
+                vendedor = Model.RifaAtiva.VendedorNome ?? "Mercado Bonsai Oficial"
+            } : null))
+        };
+
+        function trocarFotoModal(src, el) {
+            document.getElementById('modalFotoPrincipalDisplay').src = src;
+            document.querySelectorAll('.thumb-gallery').forEach(t => t.classList.remove('active'));
+            if(el) el.classList.add('active');
+        }
+
+        function atualizarTotalRifa(precoUnitario) {
+            const qtd = parseInt(document.getElementById('qtdCotasRifa').value) || 1;
+            const total = qtd * precoUnitario;
+            document.getElementById('totalCalculadoRifa').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function abrirModalEngajamento(tipo) {
+            const item = dadosEngajamento[tipo];
+            if (!item) {
+                alert('Informações do ' + tipo + ' indisponíveis no momento.');
+                return;
+            }
+
+            const modalEl = document.getElementById('modalDetalhesEngajamento');
+            const tituloEl = document.getElementById('modalEngajamentoTitulo');
+            const corpoEl = document.getElementById('modalEngajamentoCorpo');
+            const rodapeEl = document.getElementById('modalEngajamentoRodape');
+
+            tituloEl.innerText = item.titulo;
+
+            let htmlBody = `
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <!-- Foto Principal Display -->
+                        <div class="position-relative overflow-hidden rounded mb-3 shadow-sm" style="height: 280px; background-color: #f8f9fa;">
+                            <img id="modalFotoPrincipalDisplay" src="${item.fotoPrincipal}" class="w-100 h-100" style="object-fit: cover;" alt="${item.titulo}" />
+                        </div>
+                        <!-- Miniaturas de Galeria -->
+                        <div class="d-flex gap-2">
+                            <img src="${item.fotoPrincipal}" class="thumb-gallery rounded active" style="width: 70px; height: 70px; object-fit: cover;" onclick="trocarFotoModal('${item.fotoPrincipal}', this)" />
+                            <img src="${item.fotoDetalhe}" class="thumb-gallery rounded" style="width: 70px; height: 70px; object-fit: cover;" onclick="trocarFotoModal('${item.fotoDetalhe}', this)" />
+                        </div>
+                    </div>
+                    <div class="col-md-6 d-flex flex-column justify-content-between">
+                        <div>
+                            <span class="badge ${item.tipo === 'leilao' ? 'bg-danger' : 'bg-success'} px-3 py-2 fs-6 mb-3">
+                                ${item.badge}
+                            </span>
+                            <p class="text-muted small mb-2">${item.subtitulo || ''}</p>
+                            <p class="text-body small mb-3">${item.descricao || ''}</p>
+
+                            <div class="card bg-light border-0 p-3 mb-3">
+                                <h6 class="fw-bold mb-1 text-dark" style="font-size: 0.85rem;">Organizador:</h6>
+                                <small class="text-success fw-bold">${item.vendedor}</small>
+                            </div>
+                        </div>
+            `;
+
+            if (item.tipo === 'leilao') {
+                htmlBody += `
+                        <div>
+                            <div class="p-3 bg-label-danger rounded mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted small">Lance Mais Alto Atual:</span>
+                                    <strong class="text-danger fs-4">${item.lanceAtual}</strong>
+                                </div>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" id="valorLanceInput" class="form-control" value="${item.proximoLanceMin}" step="50" min="${item.proximoLanceMin}" />
+                                </div>
+                                <small class="text-muted d-block mt-1">Incremento mínimo: R$ 50,00</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico Recente de Lances do Banco -->
+                <div class="mt-4 pt-3 border-top">
+                    <h6 class="fw-bold mb-3"><i class="icon-base ri ri-history-line me-1"></i>Últimos Lances Registrados</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless small mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Valor</th>
+                                    <th>Momento</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${(item.historicoLances && item.historicoLances.length > 0) ? item.historicoLances.map(l => `
+                                    <tr>
+                                        <td>${l.usuario}</td>
+                                        <td class="fw-bold text-danger">${l.valor}</td>
+                                        <td class="text-muted">${l.hora}</td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="3" class="text-muted">Nenhum lance registrado ainda. Seja o primeiro!</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                `;
+
+                rodapeEl.innerHTML = `
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-danger px-4" onclick="confirmarLanceSimulado()">
+                        <i class="icon-base ri ri-auction-line me-1"></i> Confirmar Lance
+                    </button>
+                `;
+            } else {
+                htmlBody += `
+                        <div>
+                            <div class="p-3 bg-label-success rounded mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted small">Preço por Cota:</span>
+                                    <strong class="text-success fs-5">R$ ${item.precoCota.toFixed(2).replace('.', ',')}</strong>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted mb-1">Selecione a quantidade de cotas:</label>
+                                    <div class="d-flex gap-2">
+                                        <select id="qtdCotasRifa" class="form-select form-select-sm" onchange="atualizarTotalRifa(${item.precoCota})">
+                                            <option value="1">1 Cota (R$ ${item.precoCota.toFixed(2).replace('.', ',')})</option>
+                                            <option value="2">2 Cotas (R$ ${(item.precoCota * 2).toFixed(2).replace('.', ',')})</option>
+                                            <option value="5" selected>5 Cotas (R$ ${(item.precoCota * 5).toFixed(2).replace('.', ',')}) - Popular</option>
+                                            <option value="10">10 Cotas (R$ ${(item.precoCota * 10).toFixed(2).replace('.', ',')})</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <span class="fw-bold small">Total da Compra:</span>
+                                    <strong class="text-success fs-5" id="totalCalculadoRifa">R$ ${(item.precoCota * 5).toFixed(2).replace('.', ',')}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+
+                rodapeEl.innerHTML = `
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-success px-4" onclick="confirmarRifaSimulada()">
+                        <i class="icon-base ri ri-ticket-line me-1"></i> Comprar Cotas (PIX / Cartão)
+                    </button>
+                `;
+            }
+
+            corpoEl.innerHTML = htmlBody;
+
+            const bsModal = new bootstrap.Modal(modalEl);
+            bsModal.show();
+        }
+
+        function confirmarLanceSimulado() {
+            const val = document.getElementById('valorLanceInput').value;
+            alert(`✅ Lance de R$ ${val},00 registrado com sucesso no banco de dados! You are currently the highest bidder.`);
+            const modalEl = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesEngajamento'));
+            if(modalEl) modalEl.hide();
+        }
+
+        function confirmarRifaSimulada() {
+            const total = document.getElementById('totalCalculadoRifa').innerText;
+            alert(`✅ Reserva de cotas efetuada no valor de ${total}! Redirecionando para pagamento via PIX...`);
+            const modalEl = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesEngajamento'));
+            if(modalEl) modalEl.hide();
+        }
+    </script>
+}

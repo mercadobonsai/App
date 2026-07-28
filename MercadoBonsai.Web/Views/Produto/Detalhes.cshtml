@@ -1,0 +1,61 @@
+@model MercadoBonsai.Domain.Entities.Produto
+@{
+    ViewData["Title"] = $"{Model.Nome} - Mercado Bonsai";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="mb-4">
+        <a asp-controller="Produto" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar para a Vitrine
+        </a>
+    </div>
+
+    <div class="card shadow-sm overflow-hidden">
+        <div class="row g-0">
+            <div class="col-md-6 bg-light d-flex align-items-center justify-content-center p-3">
+                @if (!string.IsNullOrEmpty(Model.ImagemUrl))
+                {
+                    <img src="@Model.ImagemUrl" class="img-fluid rounded" alt="@Model.Nome" style="max-height: 420px; object-fit: contain;" />
+                }
+                else
+                {
+                    <div class="text-center p-5 text-muted">
+                        <i class="icon-base ri ri-image-line" style="font-size: 5rem;"></i>
+                        <p class="mt-2">Nenhuma imagem cadastrada</p>
+                    </div>
+                }
+            </div>
+            <div class="col-md-6 p-4 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-label-success">Bonsai Disponível</span>
+                        <small class="text-muted">Anunciado em @Model.DataCriacao.ToString("dd/MM/yyyy")</small>
+                    </div>
+                    <h2 class="fw-bold mb-3">@Model.Nome</h2>
+                    <h3 class="text-primary fw-bold mb-4">R$ @Model.Preco.ToString("N2")</h3>
+
+                    <div class="mb-4">
+                        <h6 class="fw-semibold text-uppercase text-muted small">Descrição do Anúncio</h6>
+                        <p class="card-text text-body" style="white-space: pre-line;">@(string.IsNullOrWhiteSpace(Model.Descricao) ? "Sem descrição detalhada." : Model.Descricao)</p>
+                    </div>
+
+                    <div class="p-3 bg-light rounded mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="icon-base ri ri-checkbox-circle-line text-success fs-3"></i>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Estoque disponível: @Model.QuantidadeEstoque unidades</h6>
+                                <small class="text-muted">Pronto para entrega e envio imediato</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <button class="btn btn-primary btn-lg w-100 mb-2" onclick="alert('Funcionalidade de compra em breve!')">
+                        <i class="icon-base ri ri-shopping-cart-2-line me-2"></i> Comprar Agora
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

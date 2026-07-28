@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Dapper;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Infrastructure.Data;
 using MercadoBonsai.Infrastructure.Repositories;
+
+// Registra TypeHandler para Dapper + Npgsql mapear UUID -> Guid corretamente
+SqlMapper.AddTypeHandler(GuidTypeHandler.Instance);
 
 var options = new WebApplicationOptions
 {
@@ -18,6 +22,12 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<PostgresConnectionFactory>();
 builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ILeilaoRepository, LeilaoRepository>();
+builder.Services.AddScoped<IRifaRepository, RifaRepository>();
+builder.Services.AddScoped<IPatrocinioRepository, PatrocinioRepository>();
+builder.Services.AddScoped<IDicaCultivoRepository, DicaCultivoRepository>();
+builder.Services.AddScoped<IPlanoRepository, PlanoRepository>();
+builder.Services.AddScoped<IPropagandaRepository, PropagandaRepository>();
 
 // Autenticação por Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -41,6 +51,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();

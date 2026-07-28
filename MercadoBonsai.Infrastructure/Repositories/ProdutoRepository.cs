@@ -1,10 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dapper;
-using MercadoBonsai.Domain.DTOs;
 using MercadoBonsai.Domain.Entities;
-using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Infrastructure.Data;
 
@@ -19,50 +16,93 @@ public class ProdutoRepository : IProdutoRepository
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<Guid> InserirAsync(Produto produto)
+    public async Task<int> InserirAsync(Produto produto)
     {
         const string sql = @"
-            INSERT INTO Produtos (Id, VendedorId, Nome, Descricao, Preco, Especie, IdadeAnos, Status, TipoModalidade, DataCadastro)
-            VALUES (@Id, @VendedorId, @Nome, @Descricao, @Preco, @Especie, @IdadeAnos, @Status, @TipoModalidade, @DataCadastro)
-            RETURNING Id;";
+            INSERT INTO produtos (vendedorid, nome, descricao, preco, quantidadeestoque, imagemurl, status, datacriacao)
+            VALUES (@VendedorId, @Nome, @Descricao, @Preco, @QuantidadeEstoque, @ImagemUrl, @Status, @DataCriacao)
+            RETURNING id;";
 
         using var connection = _connectionFactory.CreateConnection();
-        return await connection.QuerySingleAsync<Guid>(sql, produto);
+        return await connection.QuerySingleAsync<int>(sql, produto);
     }
 
-    public async Task<Produto?> ObterPorIdAsync(Guid id)
-    {
-        const string sqlProduto = "SELECT * FROM Produtos WHERE Id = @Id;";
-        const string sqlFotos = "SELECT * FROM FotosProduto WHERE ProdutoId = @Id;";
-
-        using var connection = _connectionFactory.CreateConnection();
-        var produto = await connection.QuerySingleOrDefaultAsync<Produto>(sqlProduto, new { Id = id });
-
-        if (produto != null)
-        {
-            var fotos = await connection.QueryAsync<FotoProduto>(sqlFotos, new { Id = id });
-            produto.Fotos = fotos.AsList();
-        }
-
-        return produto;
-    }
-
-    public async Task<IEnumerable<ProdutoHomeDto>> ListarParaHomeAsync()
+    public async Task<Produto?> ObterPorIdAsync(int id)
     {
         const string sql = @"
             SELECT 
-                p.Id,
-                p.Nome AS Titulo,
-                p.Preco AS ValorVenda,
-                p.TipoModalidade,
-                p.Especie,
-                f.Url AS FotoCapaUrl
-            FROM Produtos p
-            LEFT JOIN FotosProduto f ON p.Id = f.ProdutoId AND f.IsPrincipal = true
-            WHERE p.Status = @Status
-            ORDER BY p.DataCadastro DESC;";
+                id AS Id, 
+                vendedorid AS VendedorId, 
+                nome AS Nome, 
+                descricao AS Descricao, 
+                preco AS Preco, 
+                quantidadeestoque AS QuantidadeEstoque, 
+                imagemurl AS ImagemUrl,
+                status AS Status,
+                datacriacao AS DataCriacao 
+            FROM produtos 
+            WHERE id = @Id;";
 
         using var connection = _connectionFactory.CreateConnection();
-        return await connection.QueryAsync<ProdutoHomeDto>(sql, new { Status = StatusProduto.Disponivel });
+        return await connection.QuerySingleOrDefaultAsync<Produto>(sql, new { Id = id });
+    }
+
+    public async Task<IEnumerable<Produto>> ListarTodosAsync()
+    {
+        const string sql = @"
+            SELECT 
+                id AS Id, 
+                vendedorid AS VendedorId, 
+                nome AS Nome, 
+                descricao AS Descricao, 
+                preco AS Preco, 
+                quantidadeestoque AS QuantidadeEstoque, 
+                imagemurl AS ImagemUrl,
+                status AS Status,
+                datacriacao AS DataCriacao 
+            FROM produtos 
+            WHERE status != 3
+            ORDER BY datacriacao DESC;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        return await connection.QueryAsync<Produto>(sql);
+    }
+
+    public async Task<IEnumerable<Produto>> ListarPorVendedorAsync(int vendedorId)
+    {
+        const string sql = @"
+            SELECT 
+                id AS Id, 
+                vendedorid AS VendedorId, 
+                nome AS Nome, 
+                descricao AS Descricao, 
+                preco AS Preco, 
+                quantidadeestoque AS QuantidadeEstoque, 
+                imagemurl AS ImagemUrl,
+                status AS Status,
+                datacriacao AS DataCriacao 
+            FROM produtos 
+            WHERE vendedorid = @VendedorId 
+            ORDER BY datacriacao DESC;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        return await connection.QueryAsync<Produto>(sql, new { VendedorId = vendedorId });
+    }
+
+    public async Task AtualizarAsync(Produto produto)
+    {
+        const string sql = @"
+            UPDATE produtos
+            SET 
+                nome = @Nome,
+                descricao = @Descricao,
+                preco = @Preco,
+                quantidadeestoque = @QuantidadeEstoque,
+                imagemurl = @ImagemUrl,
+                status = @Status
+            WHERE id = @Id;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, produto);
     }
 }

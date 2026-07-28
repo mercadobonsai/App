@@ -1,7 +1,7 @@
 @model MercadoBonsai.Web.Models.CadastroViewModel
 @{
     Layout = null;
-    ViewData["Title"] = "Criar Conta - MercadoBonsai";
+    ViewData["Title"] = "Criar Conta - Mercado Bonsai";
 }
 @using MercadoBonsai.Domain.Enums
 
@@ -13,7 +13,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <title>@ViewData["Title"]</title>
-    <link rel="icon" type="image/x-icon" href="~/starter-kit/assets/img/favicon/favicon.ico" />
+    <link rel="icon" type="image/png" href="~/starter-kit/assets/img/favicon/favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -34,18 +34,9 @@
             <div class="card p-2">
                 <div class="card-body">
                     <div class="app-brand justify-content-center mb-6">
-                        <a asp-controller="Home" asp-action="Index" class="app-brand-link gap-2">
-                            <span class="app-brand-logo demo">
-                                <span class="text-primary">
-                                    <svg width="30" height="24" viewBox="0 0 250 196" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.3002 1.25469L56.655 28.6432C59.0349 30.1128 60.4839 32.711 60.4839 35.5089V160.63C60.4839 163.468 58.9941 166.097 56.5603 167.553L12.2055 194.107C8.3836 196.395 3.43136 195.15 1.14435 191.327C0.395485 190.075 0 188.643 0 187.184V8.12039C0 3.66447 3.61061 0.0522461 8.06452 0.0522461C9.56056 0.0522461 11.0271 0.468577 12.3002 1.25469Z" fill="currentColor" />
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M237.71 1.22393L193.355 28.5207C190.97 29.9889 189.516 32.5905 189.516 35.3927V160.631C189.516 163.469 191.006 166.098 193.44 167.555L237.794 194.108C241.616 196.396 246.569 195.151 248.856 191.328C249.605 190.076 250 188.644 250 187.185V8.09597C250 3.64006 246.389 0.027832 241.935 0.027832C240.444 0.027832 238.981 0.441882 237.71 1.22393Z" fill="currentColor" />
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.2787 1.18923L125 70.3075V136.87L0 65.2465V8.06814C0 3.61223 3.61061 0 8.06452 0C9.552 0 11.0105 0.411583 12.2787 1.18923Z" fill="currentColor" />
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M237.721 1.18923L125 70.3075V136.87L250 65.2465V8.06814C250 3.61223 246.389 0 241.935 0C240.448 0 238.99 0.411583 237.721 1.18923Z" fill="currentColor" />
-                                    </svg>
-                                </span>
-                            </span>
-                            <span class="app-brand-text demo menu-text fw-semibold ms-1">MercadoBonsai</span>
+                        <a asp-controller="Produto" asp-action="Index" class="app-brand-link gap-2 align-items-center">
+                            <img src="~/starter-kit/assets/img/logo.png" alt="Mercado Bonsai Logo" style="height: 42px; width: auto; border-radius: 6px;" />
+                            <span class="app-brand-text demo menu-text fw-bold ms-1" style="color: #4A7C59;">Mercado Bonsai</span>
                         </a>
                     </div>
 
@@ -86,10 +77,10 @@
 
                         <div class="mb-6">
                             <label asp-for="Perfil" class="form-label"></label>
-                            <select asp-for="Perfil" class="form-select"
-                                    asp-items="Html.GetEnumSelectList<PerfilUsuario>()">
+                            <select asp-for="Perfil" class="form-select">
+                                <option value="@((int)PerfilUsuario.Comprador)">Comprador</option>
+                                <option value="@((int)PerfilUsuario.Vendedor)">Vendedor (para anunciar bonsais)</option>
                             </select>
-                            <div class="form-text">Selecione "Vendedor" para anunciar bonsais.</div>
                         </div>
 
                         <button type="submit" class="btn btn-primary d-grid w-100 mb-4">Criar conta</button>

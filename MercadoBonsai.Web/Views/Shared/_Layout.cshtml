@@ -9,9 +9,9 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-    <title>@ViewData["Title"] - MercadoBonsai</title>
+    <title>@ViewData["Title"] - Mercado Bonsai</title>
 
-    <link rel="icon" type="image/x-icon" href="~/starter-kit/assets/img/favicon/favicon.ico" />
+    <link rel="icon" type="image/png" href="~/starter-kit/assets/img/favicon/favicon.png" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -41,19 +41,11 @@
             <!-- Navbar -->
             <nav class="layout-navbar navbar navbar-expand-xl align-items-center" id="layout-navbar">
                 <div class="container-xxl">
+                    <!-- Brand Logo -->
                     <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-6">
-                        <a asp-controller="Home" asp-action="Index" class="app-brand-link gap-2">
-                            <span class="app-brand-logo demo">
-                                <span class="text-primary">
-                                    <svg width="30" height="24" viewBox="0 0 250 196" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.3002 1.25469L56.655 28.6432C59.0349 30.1128 60.4839 32.711 60.4839 35.5089V160.63C60.4839 163.468 58.9941 166.097 56.5603 167.553L12.2055 194.107C8.3836 196.395 3.43136 195.15 1.14435 191.327C0.395485 190.075 0 188.643 0 187.184V8.12039C0 3.66447 3.61061 0.0522461 8.06452 0.0522461C9.56056 0.0522461 11.0271 0.468577 12.3002 1.25469Z" fill="currentColor" />
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M237.71 1.22393L193.355 28.5207C190.97 29.9889 189.516 32.5905 189.516 35.3927V160.631C189.516 163.469 191.006 166.098 193.44 167.555L237.794 194.108C241.616 196.396 246.569 195.151 248.856 191.328C249.605 190.076 250 188.644 250 187.185V8.09597C250 3.64006 246.389 0.027832 241.935 0.027832C240.444 0.027832 238.981 0.441882 237.71 1.22393Z" fill="currentColor" />
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.2787 1.18923L125 70.3075V136.87L0 65.2465V8.06814C0 3.61223 3.61061 0 8.06452 0C9.552 0 11.0105 0.411583 12.2787 1.18923Z" fill="currentColor" />
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M237.721 1.18923L125 70.3075V136.87L250 65.2465V8.06814C250 3.61223 246.389 0 241.935 0C240.448 0 238.99 0.411583 237.721 1.18923Z" fill="currentColor" />
-                                    </svg>
-                                </span>
-                            </span>
-                            <span class="app-brand-text demo menu-text fw-semibold ms-1">MercadoBonsai</span>
+                        <a asp-controller="Home" asp-action="Index" class="app-brand-link gap-2 align-items-center">
+                            <img src="~/starter-kit/assets/img/logo.png" alt="Mercado Bonsai Logo" style="height: 38px; width: auto; border-radius: 6px;" />
+                            <span class="app-brand-text demo menu-text fw-bold ms-1" style="color: #4A7C59;">Mercado Bonsai</span>
                         </a>
                         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
                             <i class="icon-base ri ri-close-line icon-sm"></i>
@@ -78,22 +70,22 @@
                                     </a>
                                 </li>
 
-                                <!-- User dropdown -->
+                                <!-- Dropdown do Perfil de Usuário (Apenas dados pessoais) -->
                                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                                     <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
                                         <div class="avatar avatar-online">
-                                            <span class="avatar-initial rounded-circle bg-primary">
+                                            <span class="avatar-initial rounded-circle bg-success text-white">
                                                 @User.Identity.Name?.Substring(0, 1).ToUpper()
                                             </span>
                                         </div>
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li>
-                                            <a class="dropdown-item" href="#">
+                                            <a class="dropdown-item" asp-controller="Conta" asp-action="MeuPerfil">
                                                 <div class="d-flex">
                                                     <div class="flex-shrink-0 me-3">
                                                         <div class="avatar avatar-online">
-                                                            <span class="avatar-initial rounded-circle bg-primary">
+                                                            <span class="avatar-initial rounded-circle bg-success text-white">
                                                                 @User.Identity.Name?.Substring(0, 1).ToUpper()
                                                             </span>
                                                         </div>
@@ -102,7 +94,7 @@
                                                         <h6 class="mb-0">@User.Identity.Name</h6>
                                                         <small class="text-body-secondary">
                                                             @if (User.IsInRole("Administrador")) { <span class="badge bg-danger">Administrador</span> }
-                                                            else if (User.IsInRole("Vendedor")) { <span class="badge bg-warning">Vendedor</span> }
+                                                            else if (User.IsInRole("Vendedor")) { <span class="badge bg-warning text-dark">Vendedor</span> }
                                                             else { <span class="badge bg-info">Comprador</span> }
                                                         </small>
                                                     </div>
@@ -111,7 +103,7 @@
                                         </li>
                                         <li><div class="dropdown-divider my-1"></div></li>
                                         <li>
-                                            <a class="dropdown-item" href="#">
+                                            <a class="dropdown-item" asp-controller="Conta" asp-action="MeuPerfil">
                                                 <i class="icon-base ri ri-user-line icon-md me-3"></i>
                                                 <span>Meu Perfil</span>
                                             </a>
@@ -119,18 +111,9 @@
                                         @if (User.IsInRole("Administrador"))
                                         {
                                             <li>
-                                                <a class="dropdown-item" href="#">
+                                                <a class="dropdown-item" asp-controller="Admin" asp-action="Clientes">
                                                     <i class="icon-base ri ri-shield-keyhole-line icon-md me-3"></i>
                                                     <span>Painel Admin</span>
-                                                </a>
-                                            </li>
-                                        }
-                                        @if (User.IsInRole("Vendedor") || User.IsInRole("Administrador"))
-                                        {
-                                            <li>
-                                                <a class="dropdown-item" href="#">
-                                                    <i class="icon-base ri ri-store-line icon-md me-3"></i>
-                                                    <span>Meus Anúncios</span>
                                                 </a>
                                             </li>
                                         }
@@ -149,12 +132,12 @@
                             else
                             {
                                 <li class="nav-item me-2">
-                                    <a asp-controller="Conta" asp-action="Cadastro" class="btn btn-outline-primary btn-sm">
+                                    <a asp-controller="Conta" asp-action="Cadastro" class="btn btn-outline-success btn-sm">
                                         Cadastrar
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a asp-controller="Conta" asp-action="Login" class="btn btn-primary btn-sm">
+                                    <a asp-controller="Conta" asp-action="Login" class="btn btn-success btn-sm">
                                         <i class="ri ri-login-box-line me-1"></i>Entrar
                                     </a>
                                 </li>
@@ -171,32 +154,67 @@
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
 
-                    <!-- Menu horizontal -->
+                    <!-- Menu principal de navegação -->
                     <aside id="layout-menu" class="layout-menu-horizontal menu-horizontal menu flex-grow-0">
                         <div class="container-xxl d-flex h-100">
                             <ul class="menu-inner py-1">
-                                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                                <!-- Link Início -->
+                                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
                                     <a asp-controller="Home" asp-action="Index" class="menu-link">
                                         <i class="menu-icon icon-base ri ri-home-smile-line"></i>
+                                        <div>Início</div>
+                                    </a>
+                                </li>
+
+                                <!-- Link Vitrine -->
+                                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Produto" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                                    <a asp-controller="Produto" asp-action="Index" class="menu-link">
+                                        <i class="menu-icon icon-base ri ri-store-2-line"></i>
                                         <div>Vitrine</div>
                                     </a>
                                 </li>
-                                @if (User.IsInRole("Administrador"))
+
+                                <!-- Dropdown Cadastros (Visível para Vendedor e Admin na barra principal) -->
+                                @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Vendedor") || User.IsInRole("Administrador")))
                                 {
-                                    <li class="menu-item">
-                                        <a href="#" class="menu-link">
-                                            <i class="menu-icon icon-base ri ri-shield-keyhole-line"></i>
-                                            <div>Administração</div>
+                                    <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Produto" && (ViewContext.RouteData.Values["action"]?.ToString() == "MeusProdutos" || ViewContext.RouteData.Values["action"]?.ToString() == "Criar") ? "active" : "")">
+                                        <a href="javascript:void(0)" class="menu-link menu-toggle">
+                                            <i class="menu-icon icon-base ri ri-folder-add-line"></i>
+                                            <div>Cadastros</div>
                                         </a>
+                                        <ul class="menu-sub">
+                                            <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MeusProdutos" ? "active" : "")">
+                                                <a asp-controller="Produto" asp-action="MeusProdutos" class="menu-link">
+                                                    <i class="menu-icon icon-base ri ri-store-line me-2"></i>
+                                                    <div>Meus Produtos</div>
+                                                </a>
+                                            </li>
+                                            <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Criar" ? "active" : "")">
+                                                <a asp-controller="Produto" asp-action="Criar" class="menu-link">
+                                                    <i class="menu-icon icon-base ri ri-add-circle-line me-2"></i>
+                                                    <div>Novo Anúncio</div>
+                                                </a>
+                                            </li>
+                                        </ul>
                                     </li>
                                 }
-                                @if (User.IsInRole("Vendedor") || User.IsInRole("Administrador"))
+
+                                <!-- Dropdown Administrador (Restrito exclusivamente a perfil Administrador) -->
+                                @if (User.IsInRole("Administrador"))
                                 {
-                                    <li class="menu-item">
-                                        <a href="#" class="menu-link">
-                                            <i class="menu-icon icon-base ri ri-add-circle-line"></i>
-                                            <div>Anunciar</div>
+                                    <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")">
+                                        <a href="javascript:void(0)" class="menu-link menu-toggle">
+                                            <i class="menu-icon icon-base ri ri-shield-keyhole-line"></i>
+                                            <div>Administrador</div>
                                         </a>
+                                        <ul class="menu-sub">
+                                            <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Clientes" ? "active" : "")">
+                                                <a asp-controller="Admin" asp-action="Clientes" class="menu-link">
+                                                    <i class="menu-icon icon-base ri ri-user-settings-line me-2"></i>
+                                                    <div>Clientes (Vendedores)</div>
+                                                </a>
+                                            </li>
+                                        </ul>
                                     </li>
                                 }
                             </ul>
@@ -215,7 +233,7 @@
                         <div class="container-xxl">
                             <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
                                 <div class="mb-2 mb-md-0">
-                                    &copy; <script>document.write(new Date().getFullYear());</script> MercadoBonsai — Todos os direitos reservados.
+                                    &copy; <script>document.write(new Date().getFullYear());</script> <span style="color: #4A7C59; font-weight: 600;">Mercado Bonsai</span> — Todos os direitos reservados.
                                 </div>
                                 <div class="d-none d-lg-inline-block">
                                     <a asp-controller="Home" asp-action="Privacy" class="footer-link me-4">Privacidade</a>
@@ -248,6 +266,7 @@
     <script src="~/starter-kit/assets/vendor/libs/hammer/hammer.js"></script>
     <script src="~/starter-kit/assets/vendor/js/menu.js"></script>
     <script src="~/starter-kit/assets/js/main.js"></script>
+    <script src="~/starter-kit/assets/js/masks.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

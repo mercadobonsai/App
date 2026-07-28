@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "titulo": "Dica de Cultivo da Semana",
+    "subtitulo": "Cuidados Essenciais com a Rega",
+    "conteudo": "Sempre regue seu bonsai abundantemente até que a água escorra de forma uniforme pelos furos de drenagem do vaso. Evite regas nos horários de sol a pino para proteger as raízes do calor excessivo!",
+    "categoria": "Rega & Nutrição"
+  },
+  {
+    "id": 2,
+    "titulo": "Técnicas de Poda e Formação",
+    "subtitulo": "Poda de Manutenção em Primavera/Verão",
+    "conteudo": "Pinçar os brotos novos que saem do contorno da copa ajuda a manter o formato desejado e força o brotamento interno, aumentando a densidade das folhas e agulhas.",
+    "categoria": "Poda & Arramação"
+  },
+  {
+    "id": 3,
+    "titulo": "Escolha do Substrato Ideal",
+    "subtitulo": "Drenagem e Aeração com Akadama",
+    "conteudo": "Um bom substrato para bonsai deve garantir rápida drenagem e boa retenção de umidade. A mistura clássica de Akadama, Caco de Tijolo e Pedrisco vulcânico é altamente recomendada.",
+    "categoria": "Substrato & Transplante"
+  }
+]

@@ -1,7 +1,14 @@
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using MercadoBonsai.Web.Models;
+using MercadoBonsai.Domain.Entities;
+using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
 
 namespace MercadoBonsai.Web.Controllers;
@@ -9,16 +16,75 @@ namespace MercadoBonsai.Web.Controllers;
 public class HomeController : Controller
 {
     private readonly IProdutoRepository _produtoRepository;
+    private readonly IUsuarioRepository _usuarioRepository;
+    private readonly ILeilaoRepository _leilaoRepository;
+    private readonly IRifaRepository _rifaRepository;
+    private readonly IPatrocinioRepository _patrocinioRepository;
+    private readonly IDicaCultivoRepository _dicaCultivoRepository;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public HomeController(IProdutoRepository produtoRepository)
+    public HomeController(
+        IProdutoRepository produtoRepository,
+        IUsuarioRepository usuarioRepository,
+        ILeilaoRepository leilaoRepository,
+        IRifaRepository rifaRepository,
+        IPatrocinioRepository patrocinioRepository,
+        IDicaCultivoRepository dicaCultivoRepository,
+        IWebHostEnvironment webHostEnvironment)
     {
         _produtoRepository = produtoRepository;
+        _usuarioRepository = usuarioRepository;
+        _leilaoRepository = leilaoRepository;
+        _rifaRepository = rifaRepository;
+        _patrocinioRepository = patrocinioRepository;
+        _dicaCultivoRepository = dicaCultivoRepository;
+        _webHostEnvironment = webHostEnvironment;
     }
 
+    // GET: / (Home Oficial do Portal com Conexão ao Banco e JSON)
     public async Task<IActionResult> Index()
     {
-        var produtos = await _produtoRepository.ListarParaHomeAsync();
-        return View(produtos);
+        var todosProdutos = await _produtoRepository.ListarTodosAsync();
+        
+        // Garante a exclusão estrita de produtos vendidos (Status = 3) e seleciona até 6 para Destaques da Semana
+        var produtosDestaque = todosProdutos
+            .Where(p => p.Status != StatusProduto.Vendido)
+            .Take(6);
+
+        var viveirosDestaque = await _usuarioRepository.ListarViveirosEmDestaqueAsync();
+        var leilaoAtivo = await _leilaoRepository.ObterLeilaoAtivoRecenteAsync();
+        var rifaAtiva = await _rifaRepository.ObterRifaAtivaRecenteAsync();
+        var patrocinioDestaque = await _patrocinioRepository.ObterPatrocinioDestaqueAsync();
+
+        // Carregamento de Dicas de Cultivo a partir do arquivo JSON externo
+        DicaCultivo? dicaJson = null;
+        try
+        {
+            var jsonPath = Path.Combine(_webHostEnvironment.WebRootPath, "data", "dicas_cultivo.json");
+            if (System.IO.File.Exists(jsonPath))
+            {
+                using var stream = System.IO.File.OpenRead(jsonPath);
+                var listaDicas = await JsonSerializer.DeserializeAsync<List<DicaCultivo>>(stream, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                dicaJson = listaDicas?.FirstOrDefault();
+            }
+        }
+        catch
+        {
+            // Fallback para o banco se houver algum problema no arquivo JSON
+            dicaJson = await _dicaCultivoRepository.ObterDicaRecenteAsync();
+        }
+
+        var viewModel = new HomeEngajamentoViewModel
+        {
+            ProdutosDestaque = produtosDestaque,
+            ViveirosEmDestaque = viveirosDestaque,
+            LeilaoAtivo = leilaoAtivo,
+            RifaAtiva = rifaAtiva,
+            PatrocinioDestaque = patrocinioDestaque,
+            DicaCultivoSemana = dicaJson ?? await _dicaCultivoRepository.ObterDicaRecenteAsync()
+        };
+
+        return View(viewModel);
     }
 
     public IActionResult Privacy()
