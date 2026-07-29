@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,6 +21,13 @@ var options = new WebApplicationOptions
 };
 
 var builder = WebApplication.CreateBuilder(options);
+
+// Configura o Kestrel para escutar explicitamente na porta fornecida pelo Render (geralmente PORT=10000 ou 8080)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+builder.WebHost.ConfigureKestrel(kestrelOptions =>
+{
+    kestrelOptions.ListenAnyIP(int.Parse(port));
+});
 
 // Remove explicitamente qualquer provedor de arquivo padrão que tente usar watch/inotify
 builder.Configuration.Sources.Clear();
@@ -85,6 +93,4 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-// Força a aplicação a escutar na porta fornecida pelo Render (geralmente PORT=8080)
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Run($"http://0.0.0.0:{port}");
+app.Run();
