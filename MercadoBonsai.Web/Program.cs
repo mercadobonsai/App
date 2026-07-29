@@ -1,5 +1,9 @@
+using System.IO;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Dapper;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Infrastructure.Data;
@@ -16,7 +20,7 @@ var options = new WebApplicationOptions
 
 var builder = WebApplication.CreateBuilder(options);
 
-// Desativa o FileSystemWatcher para não estourar o limite de inotify no Docker do Render
+// Remove explicitamente qualquer provedor de arquivo padrão que tente usar watch/inotify
 builder.Configuration.Sources.Clear();
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
