@@ -1,11 +1,4 @@
-using System;
-using System.IO;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Dapper;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Infrastructure.Data;
@@ -14,35 +7,7 @@ using MercadoBonsai.Infrastructure.Repositories;
 // Registra TypeHandler para Dapper + Npgsql mapear UUID -> Guid corretamente
 SqlMapper.AddTypeHandler(GuidTypeHandler.Instance);
 
-var options = new WebApplicationOptions
-{
-    Args = args,
-    ContentRootPath = Directory.GetCurrentDirectory()
-};
-
-var builder = WebApplication.CreateBuilder(options);
-
-// Configura o Kestrel para escutar explicitamente na porta fornecida pelo Render (geralmente PORT=10000 ou 8080)
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-builder.WebHost.ConfigureKestrel(kestrelOptions =>
-{
-    kestrelOptions.ListenAnyIP(int.Parse(port));
-});
-
-// Remove explicitamente qualquer provedor de arquivo padrão que tente usar watch/inotify
-builder.Configuration.Sources.Clear();
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
-builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
-builder.Configuration.AddEnvironmentVariables();
-
-// Garantia absoluta: Força ReloadOnChange = false em qualquer FileConfigurationSource
-foreach (var source in builder.Configuration.Sources)
-{
-    if (source is FileConfigurationSource fileSource)
-    {
-        fileSource.ReloadOnChange = false;
-    }
-}
+var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
