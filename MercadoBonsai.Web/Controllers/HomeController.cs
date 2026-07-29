@@ -50,9 +50,20 @@ public class HomeController : Controller
     // GET: / (Home Oficial do Portal com Conexão ao Banco e JSON)
     public async Task<IActionResult> Index()
     {
+        // 1. Busca produtos principais
         var todosProdutos = await _produtoRepository.ListarTodosAsync();
-        var todosUsuarios = await _usuarioRepository.ListarTodosAsync(null, null);
-        var usuariosMap = todosUsuarios.ToDictionary(u => u.Id);
+
+        // Otimização de Performance: Buscar apenas os vendedores dos produtos carregados para a Home
+        var vendedorIds = todosProdutos.Select(p => p.VendedorId).Distinct().ToList();
+        var usuariosMap = new Dictionary<int, Usuario>();
+        foreach (var vendedorId in vendedorIds)
+        {
+            var seller = await _usuarioRepository.ObterPorIdAsync(vendedorId);
+            if (seller != null)
+            {
+                usuariosMap[seller.Id] = seller;
+            }
+        }
 
         // Regra de Negócio: Produtos do Plano Bronze (PlanoId = 1) NÃO aparecem nos Destaques da Semana da Home
         var produtosDestaque = todosProdutos
@@ -71,17 +82,22 @@ public class HomeController : Controller
             produtosDestaque = todosProdutos.Where(p => p.Status != StatusProduto.Vendido).Take(6);
         }
 
-        var viveirosDestaque = await _usuarioRepository.ListarViveirosEmDestaqueAsync();
-        var leilaoAtivo = await _leilaoRepository.ObterLeilaoAtivoRecenteAsync();
-        var leiloesAtivos = await _leilaoRepository.ListarAtivosAsync();
-        var rifaAtiva = await _rifaRepository.ObterRifaAtivaRecenteAsync();
-        var patrocinioDestaque = await _patrocinioRepository.ObterPatrocinioDestaqueAsync();
+        // 2. Executa em paralelo as demais consultas leves da Home para garantir tempo de resposta rápido e evitar Timeouts
+        var taskViveiros = _usuarioRepository.ListarViveirosEmDestaqueAsync();
+        var taskLeilaoAtivo = _leilaoRepository.ObterLeilaoAtivoRecenteAsync();
+        var taskLeiloesAtivos = _leilaoRepository.ListarAtivosAsync();
+        var taskRifaAtiva = _rifaRepository.ObterRifaAtivaRecenteAsync();
+        var taskPatrocinio = _patrocinioRepository.ObterPatrocinioDestaqueAsync();
 
-        // Propagandas Ativas por Categoria Visuall
-        var propagandasEconomico = await _propagandaRepository.ListarAtivasPorTipoAsync("Economico");
-        var propagandasBasico = await _propagandaRepository.ListarAtivasPorTipoAsync("Basico");
-        var propagandasIntermediario = await _propagandaRepository.ListarAtivasPorTipoAsync("Intermediario");
-        var propagandasAvancado = await _propagandaRepository.ListarAtivasPorTipoAsync("Avancado");
+        var taskPropEconomico = _propagandaRepository.ListarAtivasPorTipoAsync("Economico");
+        var taskPropBasico = _propagandaRepository.ListarAtivasPorTipoAsync("Basico");
+        var taskPropIntermediario = _propagandaRepository.ListarAtivasPorTipoAsync("Intermediario");
+        var taskPropAvancado = _propagandaRepository.ListarAtivasPorTipoAsync("Avancado");
+
+        await Task.WhenAll(
+            taskViveiros, taskLeilaoAtivo, taskLeiloesAtivos, taskRifaAtiva, taskPatrocinio,
+            taskPropEconomico, taskPropBasico, taskPropIntermediario, taskPropAvancado
+        );
 
         DicaCultivo? dicaJson = null;
         try
@@ -102,16 +118,16 @@ public class HomeController : Controller
         var viewModel = new HomeEngajamentoViewModel
         {
             ProdutosDestaque = produtosDestaque,
-            ViveirosEmDestaque = viveirosDestaque,
-            LeilaoAtivo = leilaoAtivo,
-            LeiloesAtivos = leiloesAtivos,
-            RifaAtiva = rifaAtiva,
-            PatrocinioDestaque = patrocinioDestaque,
+            ViveirosEmDestaque = await taskViveiros,
+            LeilaoAtivo = await taskLeilaoAtivo,
+            LeiloesAtivos = await taskLeiloesAtivos,
+            RifaAtiva = await taskRifaAtiva,
+            PatrocinioDestaque = await taskPatrocinio,
             DicaCultivoSemana = dicaJson ?? await _dicaCultivoRepository.ObterDicaRecenteAsync(),
-            PropagandasEconomico = propagandasEconomico,
-            PropagandasBasico = propagandasBasico,
-            PropagandasIntermediario = propagandasIntermediario,
-            PropagandasAvancado = propagandasAvancado
+            PropagandasEconomico = await taskPropEconomico,
+            PropagandasBasico = await taskPropBasico,
+            PropagandasIntermediario = await taskPropIntermediario,
+            PropagandasAvancado = await taskPropAvancado
         };
 
         return View(viewModel);

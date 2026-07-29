@@ -15,6 +15,14 @@ var options = new WebApplicationOptions
 
 var builder = WebApplication.CreateBuilder(options);
 
+// Configuração otimizada para contêineres Docker / Render:
+// Desabilita o reloadOnChange (FileSystemWatcher/inotify) para evitar estourar o limite de arquivos abertos no Linux (Status 139)
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables();
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
