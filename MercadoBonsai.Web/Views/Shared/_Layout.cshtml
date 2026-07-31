@@ -24,8 +24,9 @@
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="~/starter-kit/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
 
-    <!-- Helpers e Config Global -->
+    <!-- Helpers e Config Global do Template -->
     <script>
+            // Configuração global de cores e assets
             window.config = window.config || {
                 colors: {
                     primary: '#4A7C59',
@@ -41,28 +42,38 @@
                     headingColor: '#566a7f',
                     textMuted: '#a1acb8',
                     borderColor: '#eceef1'
-                }
+                },
+                colors_dark: {},
+                enableMenuLocalStorage: true
             };
 
-            // Inicializa o objeto Helpers com as propriedades padrão exigidas pelo script
-            window.Helpers = window.Helpers || {
-                settings: {
-                    skin: 'default',
-                    style: 'light',
-                    rtl: false,
-                    showDropdownOnHover: true
-                }
-            };
-
-            // Inicializa o templateCustomizer de forma segura para evitar erros de propriedade nula
+            // Mock estrutural do templateCustomizer para satisfazer o config.js na linha 15
             window.templateCustomizer = window.templateCustomizer || {
                 settings: {
-                    defaultTheme: 'light',
-                    theme: 'light'
+                    theme: 'theme-default',
+                    style: 'light',
+                    rtl: false,
+                    contentLayout: 'compact',
+                    showDropdownOnHover: true,
+                    layoutNavbar: 'fixed',
+                    layoutFooter: 'fixed',
+                    themes: {
+                        'theme-default': { title: 'Default' }
+                    }
                 },
-                _getSetting: function(settingName) {
-                    return document.getElementsByTagName('HTML')[0].getAttribute('data-bs-theme') || 'light';
-                }
+                _getSetting: function(setting) {
+                    return this.settings[setting] !== undefined ? this.settings[setting] : null;
+                },
+                _setSetting: function() { },
+                _updateTheme: function() { },
+                _updateStyle: function() { }
+            };
+
+            // Objeto Helpers base
+            window.Helpers = window.Helpers || {
+                settings: {},
+                rootElement: document.documentElement,
+                isLocalStorageSupported: function() { return true; }
             };
     </script>
     <script src="~/starter-kit/assets/vendor/js/helpers.js"></script>
