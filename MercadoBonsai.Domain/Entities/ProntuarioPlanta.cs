@@ -20,5 +20,11 @@ public class ProntuarioPlanta
     public DateTime? DataProximaManutencao { get; set; }
     public DateTime? DataUltimaAdubacao { get; set; }
     public DateTime? DataProximaAdubacao { get; set; }
+    
+    // Controle de Concorrência (Lock de Edição Simultânea)
+    public int? LockUsuarioId { get; set; }
+    public string? LockUsuarioNome { get; set; }
+    public DateTime? LockTimestamp { get; set; }
+
     public DateTime DataCriacao { get; set; } = DateTime.Now;
 }

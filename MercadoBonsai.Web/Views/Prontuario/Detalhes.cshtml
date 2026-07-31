@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = $"Prontuário - {Model.NomePopular}";
     bool modoDemonstracao = (bool)(ViewData["ModoDemonstracao"] ?? false);
+    bool somenteLeitura = (bool)(ViewData["SomenteLeitura"] ?? false);
+    string lockMensagem = (string)(ViewData["LockMensagem"] ?? string.Empty);
     bool planoPago = (bool)(ViewData["PlanoPago"] ?? false);
     var eventos = ViewData["Eventos"] as IEnumerable<MercadoBonsai.Domain.Entities.ProntuarioEvento> ?? new List<MercadoBonsai.Domain.Entities.ProntuarioEvento>();
 }
@@ -18,13 +20,32 @@
         <a asp-controller="Prontuario" asp-action="VenderPlanta" asp-route-id="@Model.Id" class="btn btn-success shadow-sm me-2">
             <i class="icon-base ri ri-store-2-line me-1"></i> Vender Esta Planta
         </a>
-        <button type="button" class="btn btn-outline-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
-            <i class="icon-base ri ri-add-line me-1"></i> Registrar Manutenção
-        </button>
+        @if (!somenteLeitura)
+        {
+            <button type="button" class="btn btn-outline-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
+                <i class="icon-base ri ri-add-line me-1"></i> Registrar Manutenção
+            </button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-secondary shadow-sm" disabled title="Edição bloqueada por concorrência">
+                <i class="icon-base ri ri-lock-line me-1"></i> Somente Leitura
+            </button>
+        }
     </div>
 </div>
 
-@if (modoDemonstracao)
+@if (somenteLeitura)
+{
+    <div class="alert alert-warning border-0 shadow-sm p-3 mb-4 d-flex align-items-center">
+        <i class="icon-base ri ri-lock-2-line fs-3 me-3 text-warning"></i>
+        <div class="flex-grow-1">
+            <h6 class="fw-bold mb-1 text-dark">Aviso de Edição Simultânea (Concorrência Ativa)</h6>
+            <span class="small text-dark">@lockMensagem</span>
+        </div>
+    </div>
+}
+else if (modoDemonstracao)
 {
     <div class="alert alert-warning border-0 shadow-sm p-3 mb-4 d-flex align-items-center">
         <i class="icon-base ri ri-alert-line fs-3 me-3 text-warning"></i>
@@ -105,9 +126,12 @@
                     <h5 class="fw-bold text-success mb-1"><i class="icon-base ri ri-history-line me-2"></i>Linha do Tempo & Histórico</h5>
                     <small class="text-muted">Manutenções, adubações e evoluções registradas</small>
                 </div>
-                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
-                    <i class="icon-base ri ri-add-line me-1"></i> Nova Ação
-                </button>
+                @if (!somenteLeitura)
+                {
+                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
+                        <i class="icon-base ri ri-add-line me-1"></i> Nova Ação
+                    </button>
+                }
             </div>
             <div class="card-body p-4">
                 @if (!eventos.Any())
@@ -116,9 +140,12 @@
                         <i class="icon-base ri ri-calendar-todo-line fs-1 text-muted d-block mb-3"></i>
                         <h6 class="fw-bold text-dark">Nenhum evento registrado ainda</h6>
                         <p class="text-muted small mb-3">Comece a registrar o histórico de podas, adubações e transplantes do seu bonsai!</p>
-                        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
-                            Registrar Primeiro Evento
-                        </button>
+                        @if (!somenteLeitura)
+                        {
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
+                                Registrar Primeiro Evento
+                            </button>
+                        }
                     </div>
                 }
                 else
@@ -168,68 +195,71 @@
 </div>
 
 <!-- Modal para Registrar Novo Evento de Manutenção -->
-<div class="modal fade" id="modalNovoEvento" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title fw-bold text-white"><i class="icon-base ri ri-add-circle-line me-2"></i>Registrar Nova Ação / Manutenção</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+@if (!somenteLeitura)
+{
+    <div class="modal fade" id="modalNovoEvento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold text-white"><i class="icon-base ri ri-add-circle-line me-2"></i>Registrar Nova Ação / Manutenção</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-controller="Prontuario" asp-action="AdicionarEvento" method="post" enctype="multipart/form-data">
+                    <div class="modal-body p-4">
+                        <input type="hidden" name="plantaId" value="@Model.Id" />
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Título do Evento *</label>
+                            <input type="text" name="titulo" class="form-control" placeholder="Ex: Poda de Seleção, Transplante, Adubação..." required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Data da Realização *</label>
+                            <input type="date" name="dataEvento" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Descrição / Observações *</label>
+                            <textarea name="descricao" class="form-control" rows="3" placeholder="Detalhes da intervenção realizada na planta..." required></textarea>
+                        </div>
+
+                        @if (planoPago)
+                        {
+                            <div class="p-3 bg-light rounded border mb-3">
+                                <h6 class="fw-bold text-success mb-2"><i class="icon-base ri ri-vip-crown-line me-1"></i> Recursos Liberados (Plano Pago)</h6>
+                                
+                                <div class="mb-2">
+                                    <label class="form-label small fw-semibold">Nome do Adubo Utilizado (Opcional)</label>
+                                    <input type="text" name="nomeAdubo" class="form-control form-control-sm" placeholder="Ex: Osmocote 15-9-12, Hanagokoro, Bokashi" />
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label small fw-semibold">Nome do Remédio / Defensivo Aplicado (Opcional)</label>
+                                    <input type="text" name="nomeRemedio" class="form-control form-control-sm" placeholder="Ex: Calda Sulfocálcica, Óleo de Neem" />
+                                </div>
+
+                                <div>
+                                    <label class="form-label small fw-semibold">Anexar 1 Foto do Evento (Opcional)</label>
+                                    <input type="file" name="fotoEvento" class="form-control form-control-sm" accept="image/*" />
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-secondary small mb-0">
+                                <i class="icon-base ri ri-lock-line me-1"></i>
+                                Anexo de foto, registro de adubos e defensivos são recursos exclusivos dos <strong>Planos Pagos (Bronze, Prata e Ouro)</strong>.
+                                <a asp-controller="Conta" asp-action="Assinatura" class="fw-bold text-success text-decoration-underline ms-1">Assinar Plano</a>
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success" @(modoDemonstracao ? "disabled" : "")>Salvar Evento</button>
+                    </div>
+                </form>
             </div>
-            <form asp-controller="Prontuario" asp-action="AdicionarEvento" method="post" enctype="multipart/form-data">
-                <div class="modal-body p-4">
-                    <input type="hidden" name="plantaId" value="@Model.Id" />
-                    @Html.AntiForgeryToken()
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Título do Evento *</label>
-                        <input type="text" name="titulo" class="form-control" placeholder="Ex: Poda de Seleção, Transplante, Adubação..." required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Data da Realização *</label>
-                        <input type="date" name="dataEvento" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Descrição / Observações *</label>
-                        <textarea name="descricao" class="form-control" rows="3" placeholder="Detalhes da intervenção realizada na planta..." required></textarea>
-                    </div>
-
-                    @if (planoPago)
-                    {
-                        <div class="p-3 bg-light rounded border mb-3">
-                            <h6 class="fw-bold text-success mb-2"><i class="icon-base ri ri-vip-crown-line me-1"></i> Recursos Liberados (Plano Pago)</h6>
-                            
-                            <div class="mb-2">
-                                <label class="form-label small fw-semibold">Nome do Adubo Utilizado (Opcional)</label>
-                                <input type="text" name="nomeAdubo" class="form-control form-control-sm" placeholder="Ex: Osmocote 15-9-12, Hanagokoro, Bokashi" />
-                            </div>
-
-                            <div class="mb-2">
-                                <label class="form-label small fw-semibold">Nome do Remédio / Defensivo Aplicado (Opcional)</label>
-                                <input type="text" name="nomeRemedio" class="form-control form-control-sm" placeholder="Ex: Calda Sulfocálcica, Óleo de Neem" />
-                            </div>
-
-                            <div>
-                                <label class="form-label small fw-semibold">Anexar 1 Foto do Evento (Opcional)</label>
-                                <input type="file" name="fotoEvento" class="form-control form-control-sm" accept="image/*" />
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="alert alert-secondary small mb-0">
-                            <i class="icon-base ri ri-lock-line me-1"></i>
-                            Anexo de foto, registro de adubos e defensivos são recursos exclusivos dos <strong>Planos Pagos (Bronze, Prata e Ouro)</strong>.
-                            <a asp-controller="Conta" asp-action="Assinatura" class="fw-bold text-success text-decoration-underline ms-1">Assinar Plano</a>
-                        </div>
-                    }
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success" @(modoDemonstracao ? "disabled" : "")>Salvar Evento</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
+}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dapper;
@@ -33,6 +34,9 @@ public class ProntuarioRepository : IProntuarioRepository
         dataproximamanutencao AS DataProximaManutencao,
         dataultimaadubacao AS DataUltimaAdubacao,
         dataproximaadubacao AS DataProximaAdubacao,
+        lockusuarioid AS LockUsuarioId,
+        lockusuarionome AS LockUsuarioNome,
+        locktimestamp AS LockTimestamp,
         datacriacao AS DataCriacao";
 
     private const string EventoSelectFields = @"
@@ -118,6 +122,34 @@ public class ProntuarioRepository : IProntuarioRepository
         const string sql = "DELETE FROM prontuarioplantas WHERE id = @Id;";
         using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(sql, new { Id = id });
+    }
+
+    public async Task AdquirirOuRenovarLockAsync(int plantaId, int usuarioId, string usuarioNome)
+    {
+        const string sql = @"
+            UPDATE prontuarioplantas
+            SET
+                lockusuarioid = @UsuarioId,
+                lockusuarionome = @UsuarioNome,
+                locktimestamp = @Now
+            WHERE id = @PlantaId;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, new { PlantaId = plantaId, UsuarioId = usuarioId, UsuarioNome = usuarioNome, Now = DateTime.Now });
+    }
+
+    public async Task LiberarLockAsync(int plantaId, int usuarioId)
+    {
+        const string sql = @"
+            UPDATE prontuarioplantas
+            SET
+                lockusuarioid = NULL,
+                lockusuarionome = NULL,
+                locktimestamp = NULL
+            WHERE id = @PlantaId AND lockusuarioid = @UsuarioId;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, new { PlantaId = plantaId, UsuarioId = usuarioId });
     }
 
     public async Task<int> InserirEventoAsync(ProntuarioEvento evento)

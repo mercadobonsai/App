@@ -32,14 +32,15 @@ public class ProntuarioController : Controller
     public async Task<IActionResult> Index()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        bool estaLogado = !string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId);
+        int userId = 0;
+        bool estaLogado = !string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out userId);
 
         IEnumerable<ProntuarioPlanta> plantas = new List<ProntuarioPlanta>();
         bool modoDemonstracao = false;
 
         if (estaLogado)
         {
-            plantas = await _prontuarioRepository.ListarPlantasPorUsuarioAsync(int.Parse(userIdClaim!));
+            plantas = await _prontuarioRepository.ListarPlantasPorUsuarioAsync(userId);
         }
 
         // Se o usuário não possui plantas (ou não está logado), ativa o Modo de Demonstração com JSON Fictício
@@ -62,6 +63,8 @@ public class ProntuarioController : Controller
         ProntuarioPlanta? planta = null;
         IEnumerable<ProntuarioEvento> eventos = new List<ProntuarioEvento>();
         bool modoDemonstracao = false;
+        bool somenteLeitura = false;
+        string? lockMensagem = null;
 
         if (id == 0 || id == 999) // ID da Planta Fictícia de Demonstração
         {
@@ -76,6 +79,28 @@ public class ProntuarioController : Controller
             {
                 return NotFound();
             }
+
+            // Controle de Concorrência: Verifica se a mesma planta está sob lock de edição por outro usuário há menos de 10 minutos
+            bool lockAtivoPorOutro = planta.LockUsuarioId.HasValue 
+                && planta.LockUsuarioId.Value != userId 
+                && planta.LockTimestamp.HasValue 
+                && planta.LockTimestamp.Value > DateTime.Now.AddMinutes(-10);
+
+            if (lockAtivoPorOutro)
+            {
+                somenteLeitura = true;
+                lockMensagem = $"Esta planta está sendo editada/atualizada pelo cultivador '{planta.LockUsuarioNome}' no momento. O acesso foi concedido em modo de Somente Leitura. Tente novamente mais tarde.";
+            }
+            else
+            {
+                // Registra ou renova o lock de edição para a sessão do usuário atual se ele estiver logado
+                if (userId > 0)
+                {
+                    var nomeUsuario = User.Identity?.Name ?? "Cultivador";
+                    await _prontuarioRepository.AdquirirOuRenovarLockAsync(id, userId, nomeUsuario);
+                }
+            }
+
             eventos = await _prontuarioRepository.ListarEventosPorPlantaAsync(id);
         }
 
@@ -83,6 +108,8 @@ public class ProntuarioController : Controller
         bool planoPago = (usuario?.PlanoId ?? 0) >= 1; // Plano Bronze (1), Prata (2) ou Ouro (3)
 
         ViewData["ModoDemonstracao"] = modoDemonstracao;
+        ViewData["SomenteLeitura"] = somenteLeitura;
+        ViewData["LockMensagem"] = lockMensagem;
         ViewData["PlanoPago"] = planoPago;
         ViewData["Eventos"] = eventos;
 
@@ -163,7 +190,7 @@ public class ProntuarioController : Controller
     // POST: /Prontuario/AdicionarEvento
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AdicionarEvento(int plantaId, string titulo, string descricao, DateTime dataEvento, string? nomeAdubo, string? nomeRemedio, IFormFile? fotoEvento)
+    public async Task<IActionResult> AdicionarEvento(int plantaId, string titulo, string descricao, DateTime dataEvento, string? nomeAdubo, string? nomeremedio, IFormFile? fotoEvento)
     {
         if (plantaId == 0 || plantaId == 999)
         {
@@ -178,9 +205,16 @@ public class ProntuarioController : Controller
         }
 
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId) || planta.UsuarioId != userId)
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
         {
             return Unauthorized();
+        }
+
+        // Valida se a planta está bloqueada por outro usuário
+        if (planta.LockUsuarioId.HasValue && planta.LockUsuarioId.Value != userId && planta.LockTimestamp.HasValue && planta.LockTimestamp.Value > DateTime.Now.AddMinutes(-10))
+        {
+            TempData["Erro"] = $"Esta planta está sendo editada/atualizada por outro cultivador ({planta.LockUsuarioNome}) no momento. Tente novamente mais tarde.";
+            return RedirectToAction("Detalhes", new { id = plantaId });
         }
 
         var usuario = await _usuarioRepository.ObterPorIdAsync(userId);
@@ -214,22 +248,37 @@ public class ProntuarioController : Controller
             DataEvento = dataEvento != default ? dataEvento : DateTime.Now,
             FotoUrl = fotoUrl,
             NomeAdubo = planoPago ? nomeAdubo : null,
-            NomeRemedio = planoPago ? nomeRemedio : null,
+            NomeRemedio = planoPago ? nomeremedio : null,
             DataCriacao = DateTime.Now
         };
 
         await _prontuarioRepository.InserirEventoAsync(evento);
 
-        // Atualizar datas na planta
+        // Atualizar datas na planta e renovar lock do usuário
         planta.DataUltimaManutencao = evento.DataEvento;
         if (!string.IsNullOrEmpty(nomeAdubo))
         {
             planta.DataUltimaAdubacao = evento.DataEvento;
         }
         await _prontuarioRepository.AtualizarPlantaAsync(planta);
+        await _prontuarioRepository.AdquirirOuRenovarLockAsync(plantaId, userId, User.Identity?.Name ?? "Cultivador");
 
         TempData["Sucesso"] = "Novo evento de manutenção registrado na linha do tempo com sucesso!";
         return RedirectToAction("Detalhes", new { id = plantaId });
+    }
+
+    // POST: /Prontuario/LiberarEdicao
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> LiberarEdicao(int id)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+        {
+            await _prontuarioRepository.LiberarLockAsync(id, userId);
+        }
+
+        return RedirectToAction("Detalhes", new { id = id });
     }
 
     // GET: /Prontuario/VenderPlanta/{id}
