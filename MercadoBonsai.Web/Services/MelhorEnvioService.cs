@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -30,70 +29,96 @@ public class MelhorEnvioService : IMelhorEnvioService
         var apiUrl = _configuration["MelhorEnvio:ApiUrl"] ?? "https://www.melhorenvio.com.br/api/v2/me/shipment/calculate";
         var userAgent = _configuration["MelhorEnvio:UserAgent"] ?? "suporte@mercadobonsai.com.br";
 
-        var cepOrigemLimpo = SomenteNumeros(request.CepOrigem);
-        var cepDestinoLimpo = SomenteNumeros(request.CepDestino);
+        // 1. Validação Obrigatória do Token Real
+        if (string.IsNullOrEmpty(token) || token == "seu_token_aqui")
+        {
+            throw new InvalidOperationException(
+                "O Token de acesso da API do Melhor Envio não está configurado. " +
+                "Por favor, insira um Token válido no arquivo appsettings.json ('MelhorEnvio:Token') para realizar cotações reais em tempo real."
+            );
+        }
 
+        // 2. Higienização e Validação do CEP do Vendedor (Origem)
+        var cepOrigemLimpo = SomenteNumeros(request.CepOrigem);
         if (string.IsNullOrWhiteSpace(cepOrigemLimpo) || cepOrigemLimpo.Length != 8)
         {
-            cepOrigemLimpo = "01001000"; // Fallback para CEP do centro de SP caso origem do vendedor seja nula
+            throw new InvalidOperationException("O CEP de origem do vendedor está incompleto ou inválido no perfil do usuário.");
         }
 
-        // Se houver um token configurado no appsettings, tenta a API real do Melhor Envio
-        if (!string.IsNullOrEmpty(token) && token != "seu_token_aqui")
+        // 3. Higienização e Validação do CEP do Comprador (Destino)
+        var cepDestinoLimpo = SomenteNumeros(request.CepDestino);
+        if (string.IsNullOrWhiteSpace(cepDestinoLimpo) || cepDestinoLimpo.Length != 8)
         {
-            try
-            {
-                var payload = new
-                {
-                    from = new { postal_code = cepOrigemLimpo },
-                    to = new { postal_code = cepDestinoLimpo },
-                    products = new[]
-                    {
-                        new
-                        {
-                            id = request.ProdutoId.ToString(),
-                            width = request.Largura,
-                            height = request.Altura,
-                            length = request.Comprimento,
-                            weight = request.Peso,
-                            insurance_value = request.Preco,
-                            quantity = 1
-                        }
-                    }
-                };
-
-                var jsonPayload = JsonSerializer.Serialize(payload);
-                var httpRequest = new HttpRequestMessage(HttpMethod.Post, apiUrl)
-                {
-                    Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
-                };
-
-                httpRequest.Headers.Add("User-Agent", userAgent);
-                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                var response = await _httpClient.SendAsync(httpRequest);
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseJson = await response.Content.ReadAsStringAsync();
-                    var opcoesApi = ParseResponseApi(responseJson);
-                    if (opcoesApi != null && opcoesApi.Count > 0)
-                    {
-                        return opcoesApi;
-                    }
-                }
-                else
-                {
-                    _logger.LogWarning("API Melhor Envio retornou StatusCode {StatusCode}", response.StatusCode);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao conectar com a API do Melhor Envio. Utilizando calculador fallback.");
-            }
+            throw new InvalidOperationException("O CEP de destino digitado deve conter exatamente 8 dígitos válidos.");
         }
 
-        // Fallback simulado caso o token não esteja configurado ou a API esteja off-line
-        return GerarOpcoesSimuladasFallback(request);
+        // 4. Montagem do Payload Dinâmico com Dimensões da Planta e Seguro (Preço)
+        var payload = new
+        {
+            from = new { postal_code = cepOrigemLimpo },
+            to = new { postal_code = cepDestinoLimpo },
+            products = new[]
+            {
+                new
+                {
+                    id = request.ProdutoId.ToString(),
+                    width = request.Largura,
+                    height = request.Altura,
+                    length = request.Comprimento,
+                    weight = request.Peso,
+                    insurance_value = request.Preco,
+                    quantity = 1
+                }
+            }
+        };
+
+        var jsonPayload = JsonSerializer.Serialize(payload);
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+        {
+            Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
+        };
+
+        httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        httpRequest.Headers.Add("User-Agent", userAgent);
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        _logger.LogInformation("Enviando requisição de cotação para API do Melhor Envio. Origem: {Origem}, Destino: {Destino}", cepOrigemLimpo, cepDestinoLimpo);
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(httpRequest);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro de conectividade ao enviar chamada HTTP para o Melhor Envio.");
+            throw new InvalidOperationException("Não foi possível conectar aos servidores do Melhor Envio. Verifique a conexão com a internet ou tente novamente em instantes.", ex);
+        }
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        // 5. Tratamento de Respostas de Erro da API
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("API Melhor Envio retornou HTTP {StatusCode}: {ResponseBody}", response.StatusCode, responseBody);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                throw new UnauthorizedAccessException("A autenticação com a API do Melhor Envio falhou. Verifique se o Token Bearer no appsettings.json está correto e ativo.");
+            }
+
+            var mensagemErro = ExtrairMensagemErroJson(responseBody);
+            throw new InvalidOperationException($"A API do Melhor Envio recusou a cotação (HTTP {(int)response.StatusCode}): {mensagemErro}");
+        }
+
+        // 6. Deserialização dos Resultados Reais Retornados
+        var opcoes = ParseResponseApi(responseBody);
+        if (opcoes == null || !opcoes.Count.Equals(0) == false)
+        {
+            _logger.LogInformation("API do Melhor Envio processada com sucesso. Total de modalidades: {Count}", opcoes.Count);
+        }
+
+        return opcoes;
     }
 
     private List<OpcaoFreteResult> ParseResponseApi(string json)
@@ -106,12 +131,21 @@ public class MelhorEnvioService : IMelhorEnvioService
         {
             try
             {
-                int id = element.TryGetProperty("id", out var idProp) ? idProp.GetInt32() : 0;
-                string nomeServico = element.TryGetProperty("name", out var nameProp) ? nameProp.GetString() ?? "" : "";
+                int id = element.TryGetProperty("id", out var idProp) && idProp.ValueKind == JsonValueKind.Number ? idProp.GetInt32() : 0;
+                string nomeServico = element.TryGetProperty("name", out var nameProp) && nameProp.ValueKind == JsonValueKind.String ? nameProp.GetString() ?? "" : "";
                 
-                string erro = element.TryGetProperty("error", out var errProp) && errProp.ValueKind == JsonValueKind.String 
-                    ? errProp.GetString() 
-                    : null;
+                string? erro = null;
+                if (element.TryGetProperty("error", out var errProp))
+                {
+                    if (errProp.ValueKind == JsonValueKind.String)
+                    {
+                        erro = errProp.GetString();
+                    }
+                    else if (errProp.ValueKind == JsonValueKind.Object && errProp.TryGetProperty("message", out var msgProp) && msgProp.ValueKind == JsonValueKind.String)
+                    {
+                        erro = msgProp.GetString();
+                    }
+                }
 
                 decimal preco = 0;
                 if (element.TryGetProperty("custom_price", out var cpProp) && cpProp.ValueKind == JsonValueKind.Number)
@@ -123,20 +157,26 @@ public class MelhorEnvioService : IMelhorEnvioService
                     preco = pProp.GetDecimal();
                 }
 
-                int prazo = element.TryGetProperty("delivery_time", out var dtProp) && dtProp.ValueKind == JsonValueKind.Number 
-                    ? dtProp.GetInt32() 
-                    : 0;
+                int prazo = 0;
+                if (element.TryGetProperty("delivery_time", out var dtProp) && dtProp.ValueKind == JsonValueKind.Number)
+                {
+                    prazo = dtProp.GetInt32();
+                }
+                else if (element.TryGetProperty("custom_delivery_time", out var cdtProp) && cdtProp.ValueKind == JsonValueKind.Number)
+                {
+                    prazo = cdtProp.GetInt32();
+                }
 
                 string transportadoraNome = "Transportadora";
-                string transportadoraLogo = "/starter-kit/assets/img/correios.png";
+                string transportadoraLogo = "https://www.melhorenvio.com.br/images/shipping-companies/correios.png";
 
                 if (element.TryGetProperty("company", out var companyProp) && companyProp.ValueKind == JsonValueKind.Object)
                 {
-                    if (companyProp.TryGetProperty("name", out var cNameProp))
+                    if (companyProp.TryGetProperty("name", out var cNameProp) && cNameProp.ValueKind == JsonValueKind.String)
                     {
                         transportadoraNome = cNameProp.GetString() ?? "Transportadora";
                     }
-                    if (companyProp.TryGetProperty("picture", out var cPicProp))
+                    if (companyProp.TryGetProperty("picture", out var cPicProp) && cPicProp.ValueKind == JsonValueKind.String)
                     {
                         transportadoraLogo = cPicProp.GetString() ?? "";
                     }
@@ -162,69 +202,27 @@ public class MelhorEnvioService : IMelhorEnvioService
         return resultados;
     }
 
-    private IEnumerable<OpcaoFreteResult> GerarOpcoesSimuladasFallback(CalculoFreteRequest req)
+    private static string ExtrairMensagemErroJson(string responseBody)
     {
-        // Cálculo de tarifa estimado com base em peso volumétrico e seguro
-        decimal pesoVolumetrico = (req.Altura * req.Largura * req.Comprimento) / 6000m;
-        decimal pesoEfetivo = Math.Max(req.Peso, pesoVolumetrico);
-        decimal seguroAdicional = req.Preco * 0.0075m; // 0.75% seguro ad valorem
-
-        // Se dimensões excederem limite de transportadora pequena
-        bool excedeMedidas = req.Altura > 105 || req.Largura > 105 || req.Comprimento > 105 || (req.Altura + req.Largura + req.Comprimento) > 200;
-
-        return new List<OpcaoFreteResult>
+        if (string.IsNullOrWhiteSpace(responseBody)) return "Sem detalhes adicionais da API.";
+        try
         {
-            new OpcaoFreteResult
+            using var doc = JsonDocument.Parse(responseBody);
+            if (doc.RootElement.TryGetProperty("message", out var msgProp) && msgProp.ValueKind == JsonValueKind.String)
             {
-                Id = 1,
-                NomeServico = "PAC Correios",
-                NomeTransportadora = "Correios",
-                LogoTransportadora = "https://www.melhorenvio.com.br/images/shipping-companies/correios.png",
-                Preco = Math.Round(22.50m + (pesoEfetivo * 4.20m) + seguroAdicional, 2),
-                PrazoDias = 6,
-                Erro = null
-            },
-            new OpcaoFreteResult
-            {
-                Id = 2,
-                NomeServico = "SEDEX Express",
-                NomeTransportadora = "Correios",
-                LogoTransportadora = "https://www.melhorenvio.com.br/images/shipping-companies/correios.png",
-                Preco = Math.Round(38.90m + (pesoEfetivo * 7.50m) + seguroAdicional, 2),
-                PrazoDias = 2,
-                Erro = null
-            },
-            new OpcaoFreteResult
-            {
-                Id = 3,
-                NomeServico = "Jadlog .Package",
-                NomeTransportadora = "Jadlog",
-                LogoTransportadora = "https://www.melhorenvio.com.br/images/shipping-companies/jadlog.png",
-                Preco = Math.Round(19.80m + (pesoEfetivo * 3.90m) + seguroAdicional, 2),
-                PrazoDias = 4,
-                Erro = null
-            },
-            new OpcaoFreteResult
-            {
-                Id = 4,
-                NomeServico = "Jadlog .Com",
-                NomeTransportadora = "Jadlog",
-                LogoTransportadora = "https://www.melhorenvio.com.br/images/shipping-companies/jadlog.png",
-                Preco = Math.Round(32.40m + (pesoEfetivo * 6.20m) + seguroAdicional, 2),
-                PrazoDias = 3,
-                Erro = null
-            },
-            new OpcaoFreteResult
-            {
-                Id = 5,
-                NomeServico = "Azul Cargo Express",
-                NomeTransportadora = "Azul Cargo",
-                LogoTransportadora = "https://www.melhorenvio.com.br/images/shipping-companies/azul-cargo.png",
-                Preco = excedeMedidas ? 0 : Math.Round(45.00m + (pesoEfetivo * 8.90m) + seguroAdicional, 2),
-                PrazoDias = 2,
-                Erro = excedeMedidas ? "As dimensões desta planta ultrapassam o limite máximo para a modalidade aérea da transportadora." : null
+                return msgProp.GetString() ?? responseBody;
             }
-        };
+            if (doc.RootElement.TryGetProperty("error", out var errProp) && errProp.ValueKind == JsonValueKind.String)
+            {
+                return errProp.GetString() ?? responseBody;
+            }
+        }
+        catch
+        {
+            // Ignora erro de parse se o corpo não for um objeto JSON padrão
+        }
+
+        return responseBody.Length > 250 ? responseBody.Substring(0, 250) + "..." : responseBody;
     }
 
     private static string SomenteNumeros(string? input)

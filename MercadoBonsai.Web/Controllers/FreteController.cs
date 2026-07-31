@@ -93,13 +93,23 @@ public class FreteController : Controller
             Preco = produto.Preco // seguro enviado no payload (Requirement 4)
         };
 
-        var resultados = await _melhorEnvioService.CalcularFreteAsync(req);
+        try
+        {
+            var resultados = await _melhorEnvioService.CalcularFreteAsync(req);
 
-        return Json(new {
-            success = true,
-            cepDestino = FormatarCep(cepDestinoLimpo),
-            opcoes = resultados
-        });
+            return Json(new {
+                success = true,
+                cepDestino = FormatarCep(cepDestinoLimpo),
+                opcoes = resultados
+            });
+        }
+        catch (System.Exception ex)
+        {
+            return Json(new {
+                success = false,
+                message = ex.Message
+            });
+        }
     }
 
     private static string SomenteNumeros(string? input)
