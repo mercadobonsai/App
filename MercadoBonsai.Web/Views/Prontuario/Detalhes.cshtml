@@ -23,7 +23,7 @@
         @if (!somenteLeitura)
         {
             <button type="button" class="btn btn-outline-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
-                <i class="icon-base ri ri-add-line me-1"></i> Registrar Manutenção
+                <i class="icon-base ri ri-add-line me-1"></i> Nova Ação
             </button>
         }
         else
@@ -143,44 +143,55 @@ else if (modoDemonstracao)
                         @if (!somenteLeitura)
                         {
                             <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
-                                Registrar Primeiro Evento
+                                Registrar Primeira Ação
                             </button>
                         }
                     </div>
                 }
                 else
                 {
-                    <div class="timeline position-relative border-start border-2 border-success ms-3 ps-4 my-2">
+                    <!-- REQUIREMENT 2: Ajuste de Espaçamento com respiro visual amplo na Timeline -->
+                    <div class="timeline position-relative border-start border-3 border-success ms-4 ps-4 ps-md-5 my-3">
                         @foreach (var ev in eventos)
                         {
                             <div class="mb-4 position-relative">
-                                <div class="position-absolute top-0 start-0 translate-middle-x rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; left: -25px; top: 10px;">
-                                    <i class="icon-base ri ri-check-line small"></i>
+                                <!-- Ícone de Check posicionado perfeitamente sobre a linha vertical -->
+                                <div class="position-absolute rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px; left: -41px; top: 10px; z-index: 2;">
+                                    <i class="icon-base ri ri-check-line fs-6"></i>
                                 </div>
-                                <div class="card border border-light shadow-none bg-light p-3 rounded">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="fw-bold text-success mb-0">@ev.Titulo</h6>
-                                        <span class="badge bg-white text-dark border small">@ev.DataEvento.ToString("dd/MM/yyyy")</span>
+                                
+                                <!-- Card do Evento com margem lateral ms-3 para amplo respiro visual -->
+                                <div class="card border border-light shadow-sm bg-light p-3 p-md-4 rounded ms-3 ms-md-4">
+                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-2 gap-2">
+                                        <h6 class="fw-bold text-success mb-0 fs-6">@ev.Titulo</h6>
+                                        <span class="badge bg-white text-dark border shadow-xs px-3 py-2 small">
+                                            <i class="icon-base ri ri-calendar-line text-success me-1"></i> @ev.DataEvento.ToString("dd/MM/yyyy")
+                                        </span>
                                     </div>
-                                    <p class="text-dark small mb-2">@ev.Descricao</p>
+                                    <p class="text-dark small mb-3" style="white-space: pre-line;">@ev.Descricao</p>
 
+                                    <!-- Badges destacados de Adubo e Defensivo/Remédio -->
                                     @if (!string.IsNullOrEmpty(ev.NomeAdubo) || !string.IsNullOrEmpty(ev.NomeRemedio))
                                     {
-                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <div class="d-flex flex-wrap gap-2 mb-3">
                                             @if (!string.IsNullOrEmpty(ev.NomeAdubo))
                                             {
-                                                <span class="badge bg-warning text-dark"><i class="icon-base ri ri-leaf-line me-1"></i> Adubo: @ev.NomeAdubo</span>
+                                                <span class="badge bg-warning text-dark px-3 py-2 fs-7 shadow-xs">
+                                                    <i class="icon-base ri ri-leaf-line me-1"></i> <strong>Adubo:</strong> @ev.NomeAdubo
+                                                </span>
                                             }
                                             @if (!string.IsNullOrEmpty(ev.NomeRemedio))
                                             {
-                                                <span class="badge bg-info text-white"><i class="icon-base ri ri-capsule-line me-1"></i> Defensivo/Remédio: @ev.NomeRemedio</span>
+                                                <span class="badge bg-info text-white px-3 py-2 fs-7 shadow-xs">
+                                                    <i class="icon-base ri ri-capsule-line me-1"></i> <strong>Defensivo / Remédio:</strong> @ev.NomeRemedio
+                                                </span>
                                             }
                                         </div>
                                     }
 
                                     @if (!string.IsNullOrEmpty(ev.FotoUrl))
                                     {
-                                        <div class="mt-2 rounded overflow-hidden" style="max-width: 320px; height: 180px;">
+                                        <div class="mt-2 rounded overflow-hidden shadow-xs border" style="max-width: 360px; height: 200px;">
                                             <img src="@ev.FotoUrl" class="w-100 h-100" style="object-fit: cover;" alt="Foto do evento" />
                                         </div>
                                     }
@@ -194,11 +205,11 @@ else if (modoDemonstracao)
     </div>
 </div>
 
-<!-- Modal para Registrar Novo Evento de Manutenção -->
+<!-- REQUIREMENT 1: Modal de Ação / Evento com Campos de Adubo e Defensivo -->
 @if (!somenteLeitura)
 {
     <div class="modal fade" id="modalNovoEvento" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title fw-bold text-white"><i class="icon-base ri ri-add-circle-line me-2"></i>Registrar Nova Ação / Manutenção</h5>
@@ -209,54 +220,68 @@ else if (modoDemonstracao)
                         <input type="hidden" name="plantaId" value="@Model.Id" />
                         @Html.AntiForgeryToken()
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Título do Evento *</label>
-                            <input type="text" name="titulo" class="form-control" placeholder="Ex: Poda de Seleção, Transplante, Adubação..." required />
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold text-dark">Título da Ação / Evento *</label>
+                                <input type="text" name="titulo" class="form-control" placeholder="Ex: Poda de Seleção, Transplante, Adubação..." required />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-dark">Data da Realização *</label>
+                                <input type="date" name="dataEvento" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Data da Realização *</label>
-                            <input type="date" name="dataEvento" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-dark">Descrição / Observações *</label>
+                            <textarea name="descricao" class="form-control" rows="3" placeholder="Detalhes da intervenção realizada no bonsai..." required></textarea>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Descrição / Observações *</label>
-                            <textarea name="descricao" class="form-control" rows="3" placeholder="Detalhes da intervenção realizada na planta..." required></textarea>
-                        </div>
-
-                        @if (planoPago)
-                        {
-                            <div class="p-3 bg-light rounded border mb-3">
-                                <h6 class="fw-bold text-success mb-2"><i class="icon-base ri ri-vip-crown-line me-1"></i> Recursos Liberados (Plano Pago)</h6>
-                                
-                                <div class="mb-2">
-                                    <label class="form-label small fw-semibold">Nome do Adubo Utilizado (Opcional)</label>
-                                    <input type="text" name="nomeAdubo" class="form-control form-control-sm" placeholder="Ex: Osmocote 15-9-12, Hanagokoro, Bokashi" />
+                        <!-- Inclusão dos Campos de Adubo e Defensivo no Formulário de Ação -->
+                        <div class="p-3 bg-light rounded border mb-3">
+                            <h6 class="fw-bold text-success mb-3 d-flex align-items-center">
+                                <i class="icon-base ri ri-flask-line me-2 fs-5"></i> Insumos & Tratamentos Aplicados
+                            </h6>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">
+                                        <i class="icon-base ri ri-leaf-line text-warning me-1"></i> Nome do Adubo Utilizado (Opcional)
+                                    </label>
+                                    <input type="text" name="nomeAdubo" class="form-control" placeholder="Ex: Osmocote 15-9-12, Hanagokoro, Bokashi Orgânico" />
                                 </div>
 
-                                <div class="mb-2">
-                                    <label class="form-label small fw-semibold">Nome do Remédio / Defensivo Aplicado (Opcional)</label>
-                                    <input type="text" name="nomeRemedio" class="form-control form-control-sm" placeholder="Ex: Calda Sulfocálcica, Óleo de Neem" />
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">
+                                        <i class="icon-base ri ri-capsule-line text-info me-1"></i> Nome do Defensivo / Remédio Aplicado (Opcional)
+                                    </label>
+                                    <input type="text" name="nomeRemedio" class="form-control" placeholder="Ex: Calda Sulfocálcica, Óleo de Neem, Manzate" />
                                 </div>
+                            </div>
 
+                            @if (planoPago)
+                            {
                                 <div>
-                                    <label class="form-label small fw-semibold">Anexar 1 Foto do Evento (Opcional)</label>
-                                    <input type="file" name="fotoEvento" class="form-control form-control-sm" accept="image/*" />
+                                    <label class="form-label small fw-semibold text-dark">
+                                        <i class="icon-base ri ri-image-add-line text-success me-1"></i> Anexar 1 Foto do Evento (Plano Pago Liberado)
+                                    </label>
+                                    <input type="file" name="fotoEvento" class="form-control" accept="image/*" />
                                 </div>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="alert alert-secondary small mb-0">
-                                <i class="icon-base ri ri-lock-line me-1"></i>
-                                Anexo de foto, registro de adubos e defensivos são recursos exclusivos dos <strong>Planos Pagos (Bronze, Prata e Ouro)</strong>.
-                                <a asp-controller="Conta" asp-action="Assinatura" class="fw-bold text-success text-decoration-underline ms-1">Assinar Plano</a>
-                            </div>
-                        }
+                            }
+                            else
+                            {
+                                <div class="alert alert-secondary small mb-0 p-2">
+                                    <i class="icon-base ri ri-lock-line me-1"></i>
+                                    O anexo de foto do evento é um recurso exclusivo dos <strong>Planos Pagos (Bronze, Prata e Ouro)</strong>.
+                                    <a asp-controller="Conta" asp-action="Assinatura" class="fw-bold text-success text-decoration-underline ms-1">Assinar Plano</a>
+                                </div>
+                            }
+                        </div>
                     </div>
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success" @(modoDemonstracao ? "disabled" : "")>Salvar Evento</button>
+                        <button type="submit" class="btn btn-success" @(modoDemonstracao ? "disabled" : "")>
+                            <i class="icon-base ri ri-save-line me-1"></i> Salvar Ação
+                        </button>
                     </div>
                 </form>
             </div>

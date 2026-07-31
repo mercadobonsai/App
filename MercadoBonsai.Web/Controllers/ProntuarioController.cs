@@ -190,7 +190,15 @@ public class ProntuarioController : Controller
     // POST: /Prontuario/AdicionarEvento
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AdicionarEvento(int plantaId, string titulo, string descricao, DateTime dataEvento, string? nomeAdubo, string? nomeremedio, IFormFile? fotoEvento)
+    public async Task<IActionResult> AdicionarEvento(
+        int plantaId, 
+        string titulo, 
+        string descricao, 
+        DateTime dataEvento, 
+        string? nomeAdubo, 
+        string? nomeRemedio, 
+        string? nomeremedio, 
+        IFormFile? fotoEvento)
     {
         if (plantaId == 0 || plantaId == 999)
         {
@@ -240,6 +248,8 @@ public class ProntuarioController : Controller
             fotoUrl = $"/uploads/prontuario/{uniqueFileName}";
         }
 
+        string? remedioFinal = !string.IsNullOrWhiteSpace(nomeRemedio) ? nomeRemedio : nomeremedio;
+
         var evento = new ProntuarioEvento
         {
             PlantaId = plantaId,
@@ -247,8 +257,8 @@ public class ProntuarioController : Controller
             Descricao = descricao,
             DataEvento = dataEvento != default ? dataEvento : DateTime.Now,
             FotoUrl = fotoUrl,
-            NomeAdubo = planoPago ? nomeAdubo : null,
-            NomeRemedio = planoPago ? nomeremedio : null,
+            NomeAdubo = string.IsNullOrWhiteSpace(nomeAdubo) ? null : nomeAdubo.Trim(),
+            NomeRemedio = string.IsNullOrWhiteSpace(remedioFinal) ? null : remedioFinal.Trim(),
             DataCriacao = DateTime.Now
         };
 
@@ -256,7 +266,7 @@ public class ProntuarioController : Controller
 
         // Atualizar datas na planta e renovar lock do usuário
         planta.DataUltimaManutencao = evento.DataEvento;
-        if (!string.IsNullOrEmpty(nomeAdubo))
+        if (!string.IsNullOrEmpty(evento.NomeAdubo))
         {
             planta.DataUltimaAdubacao = evento.DataEvento;
         }
