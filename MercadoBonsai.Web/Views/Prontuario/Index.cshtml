@@ -1,0 +1,92 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.ProntuarioPlanta>
+@{
+    ViewData["Title"] = "Prontuário do Bonsai";
+    bool modoDemonstracao = (bool)(ViewData["ModoDemonstracao"] ?? false);
+}
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-8">
+        <h4 class="fw-bold mb-1" style="color: #4A7C59;">
+            <i class="icon-base ri ri-plant-line me-2"></i>Prontuário do Bonsai & Gestão de Cultivo
+        </h4>
+        <p class="text-muted mb-0">
+            Acompanhe o histórico de saúdes, podas, transplantes, aramações e adubações dos seus exemplares.
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a asp-controller="Prontuario" asp-action="Criar" class="btn btn-success shadow-sm">
+            <i class="icon-base ri ri-add-circle-line me-1"></i> Cadastrar Nova Planta
+        </a>
+    </div>
+</div>
+
+@if (modoDemonstracao)
+{
+    <div class="alert alert-info border-0 shadow-sm p-3 mb-4 d-flex align-items-center">
+        <i class="icon-base ri ri-lightbulb-line fs-3 me-3 text-info"></i>
+        <div>
+            <h6 class="fw-bold mb-1 text-info">Modo de Demonstração (Exemplo Fictício)</h6>
+            <span class="small">
+                Você está visualizando uma planta de demonstração para conhecer a interface do Prontuário. 
+                <a asp-controller="Conta" asp-action="Cadastro" class="fw-bold text-decoration-underline text-info">Crie sua conta</a> ou 
+                <a asp-controller="Prontuario" asp-action="Criar" class="fw-bold text-decoration-underline text-info">cadastre sua primeira planta</a> para salvar dados reais!
+            </span>
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    @foreach (var p in Model)
+    {
+        <div class="col-md-4 col-sm-6">
+            <div class="card h-100 border-0 shadow-sm hover-top transition overflow-hidden">
+                <div class="position-relative overflow-hidden bg-light" style="height: 220px;">
+                    <img src="@(string.IsNullOrEmpty(p.FotoPrincipalUrl) ? "/starter-kit/assets/img/shimpaku_leilao.png" : p.FotoPrincipalUrl)" class="card-img-top w-100 h-100" style="object-fit: cover;" alt="@p.NomePopular" />
+                    <span class="badge bg-success position-absolute top-0 end-0 m-3 shadow-sm px-3 py-2">
+                        @p.Especie
+                    </span>
+                    @if (modoDemonstracao)
+                    {
+                        <span class="badge bg-info position-absolute bottom-0 start-0 m-3 shadow-sm">
+                            Demonstração
+                        </span>
+                    }
+                </div>
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="fw-bold mb-1 text-success">@p.NomePopular</h5>
+                        <small class="text-muted fst-italic d-block mb-3">@(string.IsNullOrEmpty(p.NomeCientifico) ? p.Especie : p.NomeCientifico)</small>
+
+                        <div class="p-3 bg-light rounded mb-3 small">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Dimensões:</span>
+                                <strong>@p.Altura.ToString("N2")cm x @p.Largura.ToString("N2")cm</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Peso Registrado:</span>
+                                <strong>@p.Peso.ToString("N3") kg</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Última Manutenção:</span>
+                                <strong>@(p.DataUltimaManutencao?.ToString("dd/MM/yyyy") ?? "Não registrada")</strong>
+                            </div>
+                        </div>
+
+                        <p class="text-muted small text-truncate-2 mb-3">
+                            @(string.IsNullOrWhiteSpace(p.DescricaoLivre) ? "Sem descrição cadastrada." : p.DescricaoLivre)
+                        </p>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Prontuario" asp-action="Detalhes" asp-route-id="@p.Id" class="btn btn-outline-success btn-sm">
+                            <i class="icon-base ri ri-history-line me-1"></i> Linha do Tempo & Saúde
+                        </a>
+                        <a asp-controller="Prontuario" asp-action="VenderPlanta" asp-route-id="@p.Id" class="btn btn-success btn-sm">
+                            <i class="icon-base ri ri-store-2-line me-1"></i> Vender Esta Planta
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

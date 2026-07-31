@@ -67,6 +67,8 @@ public class AdminController : Controller
             Conta = usuario.Conta,
             DescricaoViveiro = usuario.DescricaoViveiro,
             LogotipoUrl = usuario.LogotipoUrl,
+            PlanoId = usuario.PlanoId,
+            IsentoCobranca = usuario.IsentoCobranca,
             DataUltimaAlteracao = usuario.DataUltimaAlteracao,
             UsuarioAlteracaoNome = usuario.UsuarioAlteracaoNome
         };
@@ -130,17 +132,18 @@ public class AdminController : Controller
         usuario.Agencia = model.Agencia;
         usuario.Conta = model.Conta;
         usuario.DescricaoViveiro = model.DescricaoViveiro;
+        usuario.IsentoCobranca = model.IsentoCobranca;
         usuario.DataUltimaAlteracao = DateTime.UtcNow;
         usuario.UsuarioAlteracaoId = adminId;
         usuario.UsuarioAlteracaoNome = User.Identity?.Name ?? "Administrador";
 
         await _usuarioRepository.AtualizarAsync(usuario);
 
-        TempData["Sucesso"] = $"Cadastro do cliente/vendedor '{usuario.Nome}' atualizado com sucesso!";
+        TempData["Sucesso"] = $"Cadastro do cliente '{usuario.Nome}' atualizado com sucesso!";
         return RedirectToAction("Clientes");
     }
 
-    // GET: /Admin/Planos (Configuração de Planos de Assinatura)
+    // GET: /Admin/Planos
     [HttpGet]
     public async Task<IActionResult> Planos()
     {
@@ -153,25 +156,22 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SalvarPlano(Plano plano)
     {
-        var existente = await _planoRepository.ObterPorIdAsync(plano.Id);
-        if (existente == null) return NotFound();
+        if (!ModelState.IsValid)
+        {
+            var planos = await _planoRepository.ListarTodosAsync();
+            return View("Planos", planos);
+        }
 
-        existente.Nome = plano.Nome;
-        existente.Preco = plano.Preco;
-        existente.PercentualComissao = plano.PercentualComissao;
-        existente.LimiteRifas30Dias = plano.LimiteRifas30Dias;
-        existente.LimiteLeiloes30Dias = plano.LimiteLeiloes30Dias;
-        existente.LimiteAnuncios = plano.LimiteAnuncios;
-        existente.LimiteFotos = plano.LimiteFotos;
-        existente.DestaquesHome = plano.DestaquesHome;
+        var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(adminIdClaim, out int adminId);
 
-        await _planoRepository.AtualizarAsync(existente);
+        await _planoRepository.AtualizarAsync(plano);
 
-        TempData["Sucesso"] = $"Configurações do Plano '{existente.Nome}' salvas com sucesso!";
+        TempData["Sucesso"] = $"Configurações do Plano '{plano.Nome}' atualizadas com sucesso!";
         return RedirectToAction("Planos");
     }
 
-    // GET: /Admin/Propagandas (Auditoria, Validade e Ativação de Anúncios)
+    // GET: /Admin/Propagandas
     [HttpGet]
     public async Task<IActionResult> Propagandas()
     {
@@ -182,18 +182,21 @@ public class AdminController : Controller
     // POST: /Admin/AprovarPropaganda
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AprovarPropaganda(int id, DateTime dataExpiracao)
+    public async Task<IActionResult> AprovarPropaganda(int id)
     {
-        var ad = await _propagandaRepository.ObterPorIdAsync(id);
-        if (ad == null) return NotFound();
+        var prop = await _propagandaRepository.ObterPorIdAsync(id);
+        if (prop == null)
+        {
+            return NotFound();
+        }
 
-        ad.DataInicio = DateTime.UtcNow;
-        ad.DataExpiracao = dataExpiracao > DateTime.UtcNow ? dataExpiracao : DateTime.UtcNow.AddDays(30);
-        ad.Status = "Ativo";
+        prop.Status = "Ativo";
+        prop.DataInicio = DateTime.Now;
+        prop.DataExpiracao = DateTime.Now.AddDays(30);
 
-        await _propagandaRepository.AtualizarAsync(ad);
+        await _propagandaRepository.AtualizarAsync(prop);
 
-        TempData["Sucesso"] = $"Propaganda #{ad.Id} ({ad.TipoEspaco}) de {ad.UsuarioNome} aprovada com sucesso! Válida até {ad.DataExpiracao:dd/MM/yyyy}.";
+        TempData["Sucesso"] = $"Propaganda #{id} de {prop.UsuarioNome} aprovada e ativada no portal com sucesso!";
         return RedirectToAction("Propagandas");
     }
 
@@ -202,13 +205,16 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RejeitarPropaganda(int id)
     {
-        var ad = await _propagandaRepository.ObterPorIdAsync(id);
-        if (ad == null) return NotFound();
+        var prop = await _propagandaRepository.ObterPorIdAsync(id);
+        if (prop == null)
+        {
+            return NotFound();
+        }
 
-        ad.Status = "Rejeitado";
-        await _propagandaRepository.AtualizarAsync(ad);
+        prop.Status = "Rejeitado";
+        await _propagandaRepository.AtualizarAsync(prop);
 
-        TempData["Sucesso"] = $"Propaganda #{ad.Id} foi rejeitada.";
+        TempData["Sucesso"] = $"Solicitação de propaganda #{id} de {prop.UsuarioNome} foi rejeitada.";
         return RedirectToAction("Propagandas");
     }
 }

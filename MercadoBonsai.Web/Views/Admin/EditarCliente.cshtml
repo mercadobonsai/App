@@ -50,6 +50,19 @@
                                 <label asp-for="Perfil" class="form-label fw-semibold"></label>
                                 <select asp-for="Perfil" class="form-select" asp-items="Html.GetEnumSelectList<PerfilUsuario>()"></select>
                             </div>
+
+                            <!-- Flag Isento de Cobrança / Não cobrar -->
+                            <div class="col-12 mt-3 pt-3 border-top">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsentoCobranca" id="switchIsentoCobranca">
+                                    <label class="form-check-label fw-bold text-success" for="switchIsentoCobranca">
+                                        <i class="icon-base ri ri-price-tag-3-line me-1"></i> Isento de Cobrança / Não cobrar (Parceiro Comercial)
+                                    </label>
+                                    <div class="form-text text-muted">
+                                        Isenta totalmente a geração de faturas e cobranças para este parceiro comercial selecionado em planos pagos.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -112,8 +125,7 @@
                     <div class="card-body p-4">
                         <div class="mb-3">
                             <label asp-for="DescricaoViveiro" class="form-label fw-semibold"></label>
-                            <textarea asp-for="DescricaoViveiro" class="form-control" rows="4" placeholder="Escreva uma breve apresentação do seu viveiro, espécies cultivadas, tempo de experiência e especialidades..."></textarea>
-                            <small class="text-muted">Esta descrição poderá ser exibida no card de patrocinadores/destaque da Home.</small>
+                            <textarea asp-for="DescricaoViveiro" class="form-control" rows="4" placeholder="Escreva uma breve apresentação do viveiro..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -127,7 +139,7 @@
 
             </div>
 
-            <!-- Coluna Lateral (Logotipo & Log de Alteração) -->
+            <!-- Coluna Lateral (Logotipo & Auditoria) -->
             <div class="col-lg-4">
                 
                 <!-- Card: Logotipo do Viveiro -->
@@ -157,16 +169,16 @@
                     </div>
                 </div>
 
-                <!-- Card: Log de Auditoria -->
+                <!-- Card: Histórico de Alteração -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-history-line me-2"></i>Log de Auditoria</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-history-line me-2"></i>Auditoria de Alteração</h6>
                     </div>
                     <div class="card-body p-3">
                         <div class="small">
                             <div class="mb-2">
-                                <span class="text-muted">Última Alteração:</span><br />
-                                <strong>@(Model.DataUltimaAlteracao.HasValue ? Model.DataUltimaAlteracao.Value.ToString("dd/MM/yyyy HH:mm:ss") : "Nenhuma alteração recente")</strong>
+                                <span class="text-muted">Última Atualização:</span><br />
+                                <strong>@(Model.DataUltimaAlteracao.HasValue ? Model.DataUltimaAlteracao.Value.ToString("dd/MM/yyyy HH:mm:ss") : "Nenhuma alteração registrada")</strong>
                             </div>
                             <div>
                                 <span class="text-muted">Alterado por:</span><br />

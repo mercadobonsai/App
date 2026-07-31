@@ -1,0 +1,89 @@
+@model MercadoBonsai.Domain.Entities.ProntuarioPlanta
+@{
+    ViewData["Title"] = "Cadastrar Planta no Prontuário";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <a asp-controller="Prontuario" asp-action="Index" class="text-success text-decoration-none small mb-3 d-inline-block">
+            <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar ao Prontuário
+        </a>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom p-4">
+                <h4 class="fw-bold text-success mb-1">
+                    <i class="icon-base ri ri-add-circle-line me-2"></i>Cadastrar Nova Planta no Prontuário
+                </h4>
+                <p class="text-muted mb-0 small">Preencha os atributos da sua planta para iniciar a gestão de saúde e histórico de cultivo.</p>
+            </div>
+            <div class="card-body p-4">
+                <form asp-controller="Prontuario" asp-action="Criar" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nome Popular da Planta *</label>
+                            <input type="text" asp-for="NomePopular" class="form-control" placeholder="Ex: Pinus Negro Kuromatsu, Shimpaku Itoigawa" required />
+                            <span asp-validation-for="NomePopular" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nome Científico (Opcional)</label>
+                            <input type="text" asp-for="NomeCientifico" class="form-control" placeholder="Ex: Juniperus chinensis 'Itoigawa'" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Espécie / Categoria *</label>
+                            <input type="text" asp-for="Especie" class="form-control" placeholder="Ex: Pinus, Conífera, Caducifólia, Perene" required />
+                            <span asp-validation-for="Especie" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Data de Início / Adquisição *</label>
+                            <input type="date" asp-for="DataInicial" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Dimensões & Peso (Padrão dos Produtos)</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3 col-6">
+                            <label class="form-label fw-semibold">Altura (cm)</label>
+                            <input type="number" step="0.01" asp-for="Altura" class="form-control" placeholder="0.00" value="30.00" />
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label fw-semibold">Largura (cm)</label>
+                            <input type="number" step="0.01" asp-for="Largura" class="form-control" placeholder="0.00" value="25.00" />
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label fw-semibold">Comprimento (cm)</label>
+                            <input type="number" step="0.01" asp-for="Comprimento" class="form-control" placeholder="0.00" value="25.00" />
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label fw-semibold">Peso (kg)</label>
+                            <input type="number" step="0.001" asp-for="Peso" class="form-control" placeholder="0.000" value="2.500" />
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Foto & Observações Livre</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Foto Principal da Planta</label>
+                        <input type="file" name="fotoArquivo" class="form-control" accept="image/*" />
+                        <span class="small text-muted d-block mt-1">Envie uma foto nítida e bem iluminada do seu bonsai.</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Descrição Libre / Histórico de Origem</label>
+                        <textarea asp-for="DescricaoLivre" class="form-control" rows="4" placeholder="Descreva a origem da planta, estilo (Moyogi, Kengai, Chokkan...), tipo de vaso e substrato utilizado..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                        <a asp-controller="Prontuario" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="icon-base ri ri-check-line me-1"></i> Salvar no Prontuário
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

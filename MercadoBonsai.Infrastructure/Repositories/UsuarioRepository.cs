@@ -36,6 +36,7 @@ public class UsuarioRepository : IUsuarioRepository
         logotipourl AS LogotipoUrl,
         planoid AS PlanoId,
         reputacao AS Reputacao,
+        isentocobranca AS IsentoCobranca,
         dataultimaalteracao AS DataUltimaAlteracao,
         usuarioalteracaoid AS UsuarioAlteracaoId,
         usuarioalteracaonome AS UsuarioAlteracaoNome";
@@ -67,11 +68,11 @@ public class UsuarioRepository : IUsuarioRepository
         const string sql = @"
             INSERT INTO usuarios (
                 nome, email, senhahash, telefone, perfil, datacadastro,
-                razaosocial, cpfcnpj, inscricaoestadual, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao
+                razaosocial, cpfcnpj, inscricaoestadual, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca
             )
             VALUES (
                 @Nome, LOWER(TRIM(@Email)), @SenhaHash, @Telefone, @Perfil, @DataCadastro,
-                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao
+                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca
             )
             RETURNING id;";
 
@@ -99,6 +100,7 @@ public class UsuarioRepository : IUsuarioRepository
                 logotipourl = @LogotipoUrl,
                 planoid = @PlanoId,
                 reputacao = @Reputacao,
+                isentocobranca = @IsentoCobranca,
                 dataultimaalteracao = @DataUltimaAlteracao,
                 usuarioalteracaoid = @UsuarioAlteracaoId,
                 usuarioalteracaonome = @UsuarioAlteracaoNome

@@ -32,6 +32,9 @@ public class Usuario
     public int PlanoId { get; set; } = 1;
     public int Reputacao { get; set; } = 100;
 
+    // Expansão Fase 8: Flag "Não cobrar" (Isento de Cobrança para parceiros selecionados)
+    public bool IsentoCobranca { get; set; } = false;
+
     // Expansão: Auditoria de Alteração
     public DateTime? DataUltimaAlteracao { get; set; }
     public int? UsuarioAlteracaoId { get; set; }

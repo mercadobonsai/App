@@ -19,6 +19,81 @@
         </div>
     }
 
+    <!-- Card Especial: Cartão de Visitas Digital & Links Diretos (Plano Prata+) -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-white"><i class="icon-base ri ri-qr-code-line me-2"></i>Cartão de Visitas Digital & Links Diretos (Plano Prata & Ouro)</h6>
+            <span class="badge bg-white text-success fw-bold">Plano Atual: @Model.NomePlano</span>
+        </div>
+        <div class="card-body p-4">
+            @if (Model.LiberarCartaoVisitas)
+            {
+                <p class="text-muted small mb-3">
+                    Seus links diretos são gerados com criptografia para compartilhar sua vitrine e produtos nas redes sociais com máxima segurança:
+                </p>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="fw-bold text-success mb-1"><i class="icon-base ri ri-store-2-line me-1"></i> Minha Vitrine</h6>
+                                <small class="text-muted d-block mb-3">Todos os seus bonsais ativos no portal</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="copiarLink('@Model.LinkVitrineCartao', 'Vitrine Geral')">
+                                <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar Link Vitrine
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="fw-bold text-success mb-1"><i class="icon-base ri ri-tools-line me-1"></i> Meus Insumos</h6>
+                                <small class="text-muted d-block mb-3">Ferramentas e adubos do seu estoque</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="copiarLink('@Model.LinkInsumosCartao', 'Seção de Insumos')">
+                                <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar Link Insumos
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="fw-bold text-success mb-1"><i class="icon-base ri ri-cup-line me-1"></i> Meus Vasos</h6>
+                                <small class="text-muted d-block mb-3">Vasos e cerâmicas do seu viveiro</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="copiarLink('@Model.LinkVasosCartao', 'Seção de Vasos')">
+                                <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar Link Vasos
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="fw-bold text-success mb-1"><i class="icon-base ri ri-auction-line me-1"></i> Leilões & Rifas</h6>
+                                <small class="text-muted d-block mb-3">Suas ações e leilões ativos</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="copiarLink('@Model.LinkEngajamentoCartao', 'Leilões e Ações')">
+                                <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar Link Leilões
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex align-items-center">
+                    <i class="icon-base ri ri-vip-crown-line fs-2 text-warning me-3"></i>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1">Recurso Exclusivo a partir do Plano Prata</h6>
+                        <p class="text-muted small mb-0">
+                            A geração de Cartão de Visitas Digital com links criptografados e endpoints dedicados é exclusiva dos <strong>Planos Prata e Ouro</strong>. 
+                            <a asp-controller="Conta" asp-action="Assinatura" class="fw-bold text-success text-decoration-underline ms-1">Fazer Upgrade do Plano</a>
+                        </p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
     <form asp-action="MeuPerfil" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="Id" />
@@ -187,4 +262,20 @@
 
 @section Scripts {
     <script src="~/starter-kit/assets/js/masks.js"></script>
+    <script>
+        function copiarLink(url, secao) {
+            if (!url) return;
+            navigator.clipboard.writeText(url).then(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Link Copiado!',
+                    text: 'O link criptografado da ' + secao + ' foi copiado para a área de transferência.',
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            }).catch(function(err) {
+                prompt("Copie seu link direto:", url);
+            });
+        }
+    </script>
 }

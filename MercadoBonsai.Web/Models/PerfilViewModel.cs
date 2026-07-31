@@ -54,6 +54,19 @@ public class PerfilViewModel
     [Display(Name = "Alterar Logotipo do Viveiro")]
     public IFormFile? LogotipoArquivo { get; set; }
 
+    // Expansão: Plano Pago & Cartão de Visitas Digital
+    public int PlanoId { get; set; } = 1;
+    public string NomePlano { get; set; } = "Bronze";
+    public bool LiberarCartaoVisitas { get; set; } = false;
+
+    [Display(Name = "Isento de Cobrança (Não cobrar)")]
+    public bool IsentoCobranca { get; set; } = false;
+
+    public string? LinkVitrineCartao { get; set; }
+    public string? LinkInsumosCartao { get; set; }
+    public string? LinkVasosCartao { get; set; }
+    public string? LinkEngajamentoCartao { get; set; }
+
     // Auditoria
     public DateTime? DataUltimaAlteracao { get; set; }
     public string? UsuarioAlteracaoNome { get; set; }

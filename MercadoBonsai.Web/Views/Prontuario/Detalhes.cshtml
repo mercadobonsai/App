@@ -1,0 +1,235 @@
+@model MercadoBonsai.Domain.Entities.ProntuarioPlanta
+@{
+    ViewData["Title"] = $"Prontuário - {Model.NomePopular}";
+    bool modoDemonstracao = (bool)(ViewData["ModoDemonstracao"] ?? false);
+    bool planoPago = (bool)(ViewData["PlanoPago"] ?? false);
+    var eventos = ViewData["Eventos"] as IEnumerable<MercadoBonsai.Domain.Entities.ProntuarioEvento> ?? new List<MercadoBonsai.Domain.Entities.ProntuarioEvento>();
+}
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-7">
+        <a asp-controller="Prontuario" asp-action="Index" class="text-success text-decoration-none small mb-2 d-inline-block">
+            <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar ao Prontuário
+        </a>
+        <h4 class="fw-bold mb-1" style="color: #4A7C59;">@Model.NomePopular</h4>
+        <p class="text-muted mb-0">@(string.IsNullOrEmpty(Model.NomeCientifico) ? Model.Especie : Model.NomeCientifico) • Registrada em @Model.DataInicial.ToString("dd/MM/yyyy")</p>
+    </div>
+    <div class="col-md-5 text-md-end mt-3 mt-md-0">
+        <a asp-controller="Prontuario" asp-action="VenderPlanta" asp-route-id="@Model.Id" class="btn btn-success shadow-sm me-2">
+            <i class="icon-base ri ri-store-2-line me-1"></i> Vender Esta Planta
+        </a>
+        <button type="button" class="btn btn-outline-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
+            <i class="icon-base ri ri-add-line me-1"></i> Registrar Manutenção
+        </button>
+    </div>
+</div>
+
+@if (modoDemonstracao)
+{
+    <div class="alert alert-warning border-0 shadow-sm p-3 mb-4 d-flex align-items-center">
+        <i class="icon-base ri ri-alert-line fs-3 me-3 text-warning"></i>
+        <div>
+            <h6 class="fw-bold mb-1 text-dark">Visualização de Exemplo Fictício</h6>
+            <span class="small text-dark">
+                Esta tela demonstra a linha do tempo completa do bonsai. O salvamento de alterações e novos eventos está bloqueado neste exemplo.
+            </span>
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <!-- Coluna Esquerda: Ficha Técnica da Planta -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="overflow-hidden bg-light position-relative rounded-top" style="height: 280px;">
+                <img src="@(string.IsNullOrEmpty(Model.FotoPrincipalUrl) ? "/starter-kit/assets/img/shimpaku_leilao.png" : Model.FotoPrincipalUrl)" class="w-100 h-100" style="object-fit: cover;" alt="@Model.NomePopular" />
+                <span class="badge bg-success position-absolute top-0 end-0 m-3 px-3 py-2 shadow-sm">
+                    @Model.Especie
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="fw-bold text-success mb-3">Ficha Técnica de Cultivo</h5>
+                
+                <div class="bg-light p-3 rounded mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Altura:</span>
+                        <strong>@Model.Altura.ToString("N2") cm</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Largura:</span>
+                        <strong>@Model.Largura.ToString("N2") cm</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Comprimento:</span>
+                        <strong>@Model.Comprimento.ToString("N2") cm</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Peso do Conjunto:</span>
+                        <strong>@Model.Peso.ToString("N3") kg</strong>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-dark mb-2">Calendário de Cuidados</h6>
+                <ul class="list-group list-group-flush mb-3 small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        <span class="text-muted">Última Manutenção:</span>
+                        <span class="badge bg-label-success">@(Model.DataUltimaManutencao?.ToString("dd/MM/yyyy") ?? "Pendente")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        <span class="text-muted">Próxima Manutenção:</span>
+                        <span class="badge bg-label-info">@(Model.DataProximaManutencao?.ToString("dd/MM/yyyy") ?? "Não agendada")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        <span class="text-muted">Última Adubação:</span>
+                        <span class="badge bg-label-warning text-dark">@(Model.DataUltimaAdubacao?.ToString("dd/MM/yyyy") ?? "Pendente")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        <span class="text-muted">Próxima Adubação:</span>
+                        <span class="badge bg-label-primary">@(Model.DataProximaAdubacao?.ToString("dd/MM/yyyy") ?? "Não agendada")</span>
+                    </li>
+                </ul>
+
+                <h6 class="fw-bold text-dark mb-1">Notas do Cultivador</h6>
+                <p class="text-muted small mb-0">
+                    @(string.IsNullOrWhiteSpace(Model.DescricaoLivre) ? "Nenhuma observação registrada." : Model.DescricaoLivre)
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Direita: Feed / Timeline de Manutenções -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold text-success mb-1"><i class="icon-base ri ri-history-line me-2"></i>Linha do Tempo & Histórico</h5>
+                    <small class="text-muted">Manutenções, adubações e evoluções registradas</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
+                    <i class="icon-base ri ri-add-line me-1"></i> Nova Ação
+                </button>
+            </div>
+            <div class="card-body p-4">
+                @if (!eventos.Any())
+                {
+                    <div class="text-center py-5">
+                        <i class="icon-base ri ri-calendar-todo-line fs-1 text-muted d-block mb-3"></i>
+                        <h6 class="fw-bold text-dark">Nenhum evento registrado ainda</h6>
+                        <p class="text-muted small mb-3">Comece a registrar o histórico de podas, adubações e transplantes do seu bonsai!</p>
+                        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
+                            Registrar Primeiro Evento
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="timeline position-relative border-start border-2 border-success ms-3 ps-4 my-2">
+                        @foreach (var ev in eventos)
+                        {
+                            <div class="mb-4 position-relative">
+                                <div class="position-absolute top-0 start-0 translate-middle-x rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; left: -25px; top: 10px;">
+                                    <i class="icon-base ri ri-check-line small"></i>
+                                </div>
+                                <div class="card border border-light shadow-none bg-light p-3 rounded">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-success mb-0">@ev.Titulo</h6>
+                                        <span class="badge bg-white text-dark border small">@ev.DataEvento.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <p class="text-dark small mb-2">@ev.Descricao</p>
+
+                                    @if (!string.IsNullOrEmpty(ev.NomeAdubo) || !string.IsNullOrEmpty(ev.NomeRemedio))
+                                    {
+                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                            @if (!string.IsNullOrEmpty(ev.NomeAdubo))
+                                            {
+                                                <span class="badge bg-warning text-dark"><i class="icon-base ri ri-leaf-line me-1"></i> Adubo: @ev.NomeAdubo</span>
+                                            }
+                                            @if (!string.IsNullOrEmpty(ev.NomeRemedio))
+                                            {
+                                                <span class="badge bg-info text-white"><i class="icon-base ri ri-capsule-line me-1"></i> Defensivo/Remédio: @ev.NomeRemedio</span>
+                                            }
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(ev.FotoUrl))
+                                    {
+                                        <div class="mt-2 rounded overflow-hidden" style="max-width: 320px; height: 180px;">
+                                            <img src="@ev.FotoUrl" class="w-100 h-100" style="object-fit: cover;" alt="Foto do evento" />
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Registrar Novo Evento de Manutenção -->
+<div class="modal fade" id="modalNovoEvento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold text-white"><i class="icon-base ri ri-add-circle-line me-2"></i>Registrar Nova Ação / Manutenção</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Prontuario" asp-action="AdicionarEvento" method="post" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="plantaId" value="@Model.Id" />
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Título do Evento *</label>
+                        <input type="text" name="titulo" class="form-control" placeholder="Ex: Poda de Seleção, Transplante, Adubação..." required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Data da Realização *</label>
+                        <input type="date" name="dataEvento" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Descrição / Observações *</label>
+                        <textarea name="descricao" class="form-control" rows="3" placeholder="Detalhes da intervenção realizada na planta..." required></textarea>
+                    </div>
+
+                    @if (planoPago)
+                    {
+                        <div class="p-3 bg-light rounded border mb-3">
+                            <h6 class="fw-bold text-success mb-2"><i class="icon-base ri ri-vip-crown-line me-1"></i> Recursos Liberados (Plano Pago)</h6>
+                            
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Nome do Adubo Utilizado (Opcional)</label>
+                                <input type="text" name="nomeAdubo" class="form-control form-control-sm" placeholder="Ex: Osmocote 15-9-12, Hanagokoro, Bokashi" />
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Nome do Remédio / Defensivo Aplicado (Opcional)</label>
+                                <input type="text" name="nomeRemedio" class="form-control form-control-sm" placeholder="Ex: Calda Sulfocálcica, Óleo de Neem" />
+                            </div>
+
+                            <div>
+                                <label class="form-label small fw-semibold">Anexar 1 Foto do Evento (Opcional)</label>
+                                <input type="file" name="fotoEvento" class="form-control form-control-sm" accept="image/*" />
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-secondary small mb-0">
+                            <i class="icon-base ri ri-lock-line me-1"></i>
+                            Anexo de foto, registro de adubos e defensivos são recursos exclusivos dos <strong>Planos Pagos (Bronze, Prata e Ouro)</strong>.
+                            <a asp-controller="Conta" asp-action="Assinatura" class="fw-bold text-success text-decoration-underline ms-1">Assinar Plano</a>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success" @(modoDemonstracao ? "disabled" : "")>Salvar Evento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

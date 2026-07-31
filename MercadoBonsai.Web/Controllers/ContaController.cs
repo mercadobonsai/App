@@ -8,6 +8,7 @@ using MercadoBonsai.Domain.Entities;
 using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Web.Models;
+using MercadoBonsai.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -21,15 +22,18 @@ public class ContaController : Controller
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPlanoRepository _planoRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly VendedorTokenService _vendedorTokenService;
 
     public ContaController(
         IUsuarioRepository usuarioRepository, 
         IPlanoRepository planoRepository, 
-        IWebHostEnvironment webHostEnvironment)
+        IWebHostEnvironment webHostEnvironment,
+        VendedorTokenService vendedorTokenService)
     {
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
         _webHostEnvironment = webHostEnvironment;
+        _vendedorTokenService = vendedorTokenService;
     }
 
     // GET: /Conta/Login
@@ -53,21 +57,10 @@ public class ContaController : Controller
 
         var usuario = await _usuarioRepository.ObterPorEmailAsync(model.Email?.Trim() ?? string.Empty);
 
-        if (usuario == null)
+        // Ajuste de Segurança: Resposta unificada genérica "Dados de acesso inválidos" para evitar enumaracao/exposicao
+        if (usuario == null || string.IsNullOrEmpty(usuario.SenhaHash) || !BCrypt.Net.BCrypt.Verify(model.Senha, usuario.SenhaHash))
         {
-            ModelState.AddModelError(string.Empty, $"Usuário não encontrado com o e-mail '{model.Email}'. Verifique se o cadastro foi realizado com sucesso.");
-            return View(model);
-        }
-
-        if (string.IsNullOrEmpty(usuario.SenhaHash))
-        {
-            ModelState.AddModelError(string.Empty, "Erro: A senha gravada no banco para este usuário está vazia.");
-            return View(model);
-        }
-
-        if (!BCrypt.Net.BCrypt.Verify(model.Senha, usuario.SenhaHash))
-        {
-            ModelState.AddModelError(string.Empty, "Senha incorreta para este usuário.");
+            ModelState.AddModelError(string.Empty, "Dados de acesso inválidos");
             return View(model);
         }
 
@@ -113,32 +106,30 @@ public class ContaController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        if (model.Perfil == PerfilUsuario.Administrador)
+        var existe = await _usuarioRepository.ObterPorEmailAsync(model.Email);
+        if (existe != null)
         {
-            ModelState.AddModelError("Perfil", "O perfil Administrador não pode ser selecionado.");
+            ModelState.AddModelError("Email", "Já existe um usuário cadastrado com este e-mail.");
             return View(model);
         }
 
-        var existente = await _usuarioRepository.ObterPorEmailAsync(model.Email);
-        if (existente != null)
-        {
-            ModelState.AddModelError("Email", "Este e-mail já está cadastrado.");
-            return View(model);
-        }
+        var senhaHash = BCrypt.Net.BCrypt.HashPassword(model.Senha);
 
-        var usuario = new Usuario
+        var novoUsuario = new Usuario
         {
-            Nome = model.Nome,
-            Email = model.Email,
-            SenhaHash = BCrypt.Net.BCrypt.HashPassword(model.Senha),
+            Nome = model.Nome.Trim(),
+            Email = model.Email.Trim().ToLower(),
+            SenhaHash = senhaHash,
             Telefone = string.Empty,
             Perfil = model.Perfil,
-            DataCadastro = DateTime.UtcNow
+            DataCadastro = DateTime.UtcNow,
+            PlanoId = 1, // Plano Padrão Pago (Bronze)
+            Reputacao = 100
         };
 
-        await _usuarioRepository.InserirAsync(usuario);
+        await _usuarioRepository.InserirAsync(novoUsuario);
 
-        TempData["Sucesso"] = "Conta criada com sucesso! Faça o login para continuar.";
+        TempData["Sucesso"] = "Cadastro realizado com sucesso! Faça seu login para continuar.";
         return RedirectToAction("Login");
     }
 
@@ -159,6 +150,10 @@ public class ContaController : Controller
             return NotFound();
         }
 
+        var plano = await _planoRepository.ObterPorIdAsync(usuario.PlanoId);
+        var nomePlano = plano?.Nome ?? (usuario.PlanoId == 1 ? "Bronze" : usuario.PlanoId == 2 ? "Prata" : usuario.PlanoId == 3 ? "Ouro" : "Free");
+        bool liberarCartao = usuario.PlanoId >= 2;
+
         var model = new PerfilViewModel
         {
             Id = usuario.Id,
@@ -175,9 +170,20 @@ public class ContaController : Controller
             Conta = usuario.Conta,
             DescricaoViveiro = usuario.DescricaoViveiro,
             LogotipoUrl = usuario.LogotipoUrl,
+            PlanoId = usuario.PlanoId,
+            NomePlano = nomePlano,
+            LiberarCartaoVisitas = liberarCartao,
             DataUltimaAlteracao = usuario.DataUltimaAlteracao,
             UsuarioAlteracaoNome = usuario.UsuarioAlteracaoNome
         };
+
+        if (liberarCartao)
+        {
+            model.LinkVitrineCartao = Url.Action("Vitrine", "Cartao", new { token = _vendedorTokenService.GerarToken(usuario.Id, "vitrine") }, Request.Scheme);
+            model.LinkInsumosCartao = Url.Action("Insumos", "Cartao", new { token = _vendedorTokenService.GerarToken(usuario.Id, "insumos") }, Request.Scheme);
+            model.LinkVasosCartao = Url.Action("Vasos", "Cartao", new { token = _vendedorTokenService.GerarToken(usuario.Id, "vasos") }, Request.Scheme);
+            model.LinkEngajamentoCartao = Url.Action("Engajamento", "Cartao", new { token = _vendedorTokenService.GerarToken(usuario.Id, "engajamento") }, Request.Scheme);
+        }
 
         return View(model);
     }
