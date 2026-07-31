@@ -3,6 +3,9 @@
 @{
     ViewData["Title"] = $"{Model.Nome} - Mercado Bonsai";
     var isIndisponivel = Model.Status == StatusProduto.Indisponivel;
+    bool vendedorValido = (bool)(ViewData["VendedorValido"] ?? true);
+    bool especificacoesCompletas = (bool)(ViewData["EspecificacoesCompletas"] ?? true);
+    bool eOpcaoRetirar = string.Equals(Model.FormaEnvio, "A retirar", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -48,7 +51,7 @@
                     <h2 class="fw-bold mb-2 text-dark">@Model.Nome</h2>
                     <h3 class="fw-bold mb-4 @(isIndisponivel ? "text-muted" : "text-success")">R$ @Model.Preco.ToString("N2")</h3>
 
-                    <!-- Especificações Físicas & Medidas (2 casas decimais para Altura/Largura/Comprimento e 3 para Peso) -->
+                    <!-- Especificações Físicas & Medidas -->
                     <div class="card bg-light border-0 p-3 mb-4">
                         <h6 class="fw-bold mb-3 text-dark d-flex align-items-center">
                             <i class="icon-base ri ri-ruler-line text-success me-2 fs-5"></i>Especificações Físicas & Dimensões
@@ -74,13 +77,46 @@
                     </div>
 
                     <!-- Forma de Envio -->
-                    <div class="p-3 bg-label-success rounded mb-4 d-flex align-items-center">
+                    <div class="p-3 bg-label-success rounded mb-3 d-flex align-items-center">
                         <i class="icon-base ri ri-truck-line text-success fs-3 me-3"></i>
                         <div>
                             <small class="text-muted d-block">Forma de Envio Combinada:</small>
                             <strong class="text-success fs-6">@(string.IsNullOrWhiteSpace(Model.FormaEnvio) ? "Frete por conta do comprador" : Model.FormaEnvio)</strong>
                         </div>
                     </div>
+
+                    <!-- REQUIREMENT 1 & 2: Bloco Destacado em Laranja para Pré-cálculo de Frete (Melhor Envio) -->
+                    @if (!eOpcaoRetirar)
+                    {
+                        <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%); border-left: 5px solid #FF9800 !important;">
+                            <div class="card-body p-3 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 44px; height: 44px; background-color: #FF9800; color: white;">
+                                        <i class="icon-base ri ri-map-pin-2-line fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1 text-dark">Simular Frete & Prazo de Entrega</h6>
+                                        <small class="text-muted d-block">Pré-cálculo via Correios, Jadlog e transportadoras (Melhor Envio)</small>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn text-white fw-bold shadow-sm" style="background-color: #FF9800; border-color: #FF9800;" onclick="abrirModalFrete()">
+                                        <i class="icon-base ri ri-calculator-line me-1"></i> Calcular Frete e Prazo
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Alertas Inline de Validação Próvia -->
+                            <div id="alertaVendedorIncompleto" class="alert alert-danger mx-3 mb-3 d-none border-0 shadow-sm">
+                                <i class="icon-base ri ri-error-warning-line me-2"></i>
+                                <strong>Dados do Vendedor Incompletos:</strong> O vendedor responsável por este anúncio precisa cadastrar o telefone e os dados fiscais (CPF/CNPJ) no perfil para habilitar o cálculo de frete por transportadora.
+                            </div>
+                            <div id="alertaEspecificacoesIncompletas" class="alert alert-warning mx-3 mb-3 d-none border-0 shadow-sm text-dark">
+                                <i class="icon-base ri ri-ruler-2-line me-2"></i>
+                                <strong>Especificações Físicas Incompletas:</strong> Este produto está com especificações físicas (dimensões e/ou peso) incompletas para o cálculo de frete. Fale com o vendedor para mais detalhes.
+                            </div>
+                        </div>
+                    }
 
                     <!-- Descrição -->
                     <div class="mb-4">
@@ -107,3 +143,183 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para Simulação do Pré-Cálculo de Frete (Melhor Envio API) -->
+<div class="modal fade" id="modalFreteMelhorEnvio" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header text-white" style="background-color: #FF9800;">
+                <h5 class="modal-title fw-bold text-white"><i class="icon-base ri ri-truck-line me-2"></i>Pré-Cálculo de Frete & Transportadoras</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-dark">Digite o CEP de Destino *</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="icon-base ri ri-map-pin-line text-warning"></i></span>
+                        <input type="text" id="inputCepDestino" class="form-control form-control-lg" placeholder="00000-000" maxlength="9" />
+                        <button type="button" class="btn btn-warning text-dark fw-bold px-4" onclick="executarCalculoFrete()">
+                            <i class="icon-base ri ri-search-line me-1"></i> Calcular
+                        </button>
+                    </div>
+                    <small class="text-muted mt-1 d-block">Informe apenas o CEP do local de entrega.</small>
+                </div>
+
+                <!-- Container do Spinner de Carregamento -->
+                <div id="loaderFrete" class="text-center py-5 d-none">
+                    <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Calculando...</span>
+                    </div>
+                    <p class="text-muted mt-3 mb-0 fw-semibold">Consultando cotações nas transportadoras via Melhor Envio...</p>
+                </div>
+
+                <!-- Container do Erro -->
+                <div id="containerErroFrete" class="alert alert-danger border-0 shadow-sm d-none">
+                    <i class="icon-base ri ri-error-warning-line me-2 fs-5"></i>
+                    <span id="textoErroFrete"></span>
+                </div>
+
+                <!-- Container de Exibição dos Resultados (Requirement 6) -->
+                <div id="containerResultadosFrete" class="d-none">
+                    <h6 class="fw-bold text-dark mb-3">Opções de Frete Encontradas para o CEP <span id="spanCepResultado" class="text-warning"></span>:</h6>
+                    
+                    <div id="listaOpcoesFrete" class="d-flex flex-column gap-3 mb-4">
+                        <!-- Itens renderizados dinamicamente via JS -->
+                    </div>
+
+                    <!-- REQUIREMENT 7: Textos e Avisos Explicativos Obrigatórios -->
+                    <div class="alert alert-warning border-0 bg-light p-3 rounded mb-0 text-dark small" style="border-left: 4px solid #FF9800 !important;">
+                        <h6 class="fw-bold mb-2 text-warning d-flex align-items-center">
+                            <i class="icon-base ri ri-information-line me-2 fs-5"></i>Informações Importantes sobre este Pré-Cálculo:
+                        </h6>
+                        <ul class="mb-0 ps-3">
+                            <li class="mb-1">Esta consulta trata-se de um <strong>pré-cálculo de frete</strong>, estimado com base nas dimensões e distância informadas entre o vendedor e o destino.</li>
+                            <li class="mb-1">Pode haver <strong>variação nos valores finais e prazos</strong>, principalmente se o vendedor optar por utilizar outra transportadora parceira ou método de empacotamento especial para o bonsai.</li>
+                            <li>O comprador será <strong>notificado com o valor real e final do frete</strong> assim que o vendedor aceitar o pedido e confirmar o despacho na sequência da esteira de compras.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const vendedorValido = @(vendedorValido ? "true" : "false");
+        const especificacoesCompletas = @(especificacoesCompletas ? "true" : "false");
+
+        function abrirModalFrete() {
+            // Oculta alertas anteriores
+            document.getElementById('alertaVendedorIncompleto').classList.add('d-none');
+            document.getElementById('alertaEspecificacoesIncompletas').classList.add('d-none');
+
+            if (!vendedorValido) {
+                document.getElementById('alertaVendedorIncompleto').classList.remove('d-none');
+                return;
+            }
+
+            if (!especificacoesCompletas) {
+                document.getElementById('alertaEspecificacoesIncompletas').classList.remove('d-none');
+                return;
+            }
+
+            // Abre o modal
+            const modal = new bootstrap.Modal(document.getElementById('modalFreteMelhorEnvio'));
+            modal.show();
+        }
+
+        async function executarCalculoFrete() {
+            const cep = document.getElementById('inputCepDestino').value.trim();
+            const containerErro = document.getElementById('containerErroFrete');
+            const textoErro = document.getElementById('textoErroFrete');
+            const containerResultados = document.getElementById('containerResultadosFrete');
+            const loader = document.getElementById('loaderFrete');
+            const lista = document.getElementById('listaOpcoesFrete');
+
+            containerErro.classList.add('d-none');
+            containerResultados.classList.add('d-none');
+
+            if (!cep || cep.replace(/\D/g, '').length !== 8) {
+                textoErro.innerText = "Por favor, informe um CEP de destino válido com 8 dígitos (ex: 01001-000).";
+                containerErro.classList.remove('d-none');
+                return;
+            }
+
+            loader.classList.remove('d-none');
+
+            try {
+                const response = await fetch('/Frete/Calcular', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `produtoId=@Model.Id&cepDestino=${encodeURIComponent(cep)}`
+                });
+
+                const data = await response.json();
+                loader.classList.add('d-none');
+
+                if (!data.success) {
+                    textoErro.innerText = data.message || "Não foi possível calcular o frete para este CEP.";
+                    containerErro.classList.remove('d-none');
+                    return;
+                }
+
+                document.getElementById('spanCepResultado').innerText = data.cepDestino;
+                lista.innerHTML = '';
+
+                if (!data.opcoes || data.opcoes.length === 0) {
+                    lista.innerHTML = '<div class="alert alert-secondary mb-0">Nenhuma opção de transportadora disponível para este trecho.</div>';
+                } else {
+                    data.opcoes.forEach(op => {
+                        const itemHtml = document.createElement('div');
+                        itemHtml.className = 'card border shadow-none p-3 rounded';
+
+                        if (op.temErro) {
+                            itemHtml.innerHTML = `
+                                <div class="d-flex align-items-center justify-content-between text-muted">
+                                    <div class="d-flex align-items-center">
+                                        <img src="${op.logoTransportadora}" alt="${op.nomeTransportadora}" class="me-3 rounded" style="width: 48px; height: 32px; object-fit: contain;" />
+                                        <div>
+                                            <strong class="d-block text-dark">${op.nomeTransportadora} - ${op.nomeServico}</strong>
+                                            <small class="text-danger"><i class="icon-base ri ri-close-circle-line me-1"></i> ${op.erro}</small>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-label-secondary">Indisponível</span>
+                                </div>
+                            `;
+                        } else {
+                            const precoFormatado = op.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                            itemHtml.innerHTML = `
+                                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
+                                    <div class="d-flex align-items-center">
+                                        <img src="${op.logoTransportadora}" alt="${op.nomeTransportadora}" class="me-3 rounded bg-light p-1" style="width: 52px; height: 36px; object-fit: contain;" />
+                                        <div>
+                                            <strong class="d-block text-dark fs-6">${op.nomeTransportadora} (${op.nomeServico})</strong>
+                                            <small class="text-muted"><i class="icon-base ri ri-time-line me-1"></i> Prazo estimado: <strong>${op.prazoDias} ${op.prazoDias === 1 ? 'dia útil' : 'dias úteis'}</strong></small>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm-end">
+                                        <span class="fs-5 fw-bold text-success d-block">${precoFormatado}</span>
+                                        <small class="badge bg-label-success">Com Seguro Incluso</small>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        lista.appendChild(itemHtml);
+                    });
+                }
+
+                containerResultados.classList.remove('d-none');
+            } catch (err) {
+                loader.classList.add('d-none');
+                textoErro.innerText = "Ocorreu uma falha de conexão ao consultar o frete. Tente novamente.";
+                containerErro.classList.remove('d-none');
+            }
+        }
+    </script>
+}

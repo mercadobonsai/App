@@ -16,11 +16,16 @@ namespace MercadoBonsai.Web.Controllers;
 public class ProdutoController : Controller
 {
     private readonly IProdutoRepository _produtoRepository;
+    private readonly IUsuarioRepository _usuarioRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public ProdutoController(IProdutoRepository produtoRepository, IWebHostEnvironment webHostEnvironment)
+    public ProdutoController(
+        IProdutoRepository produtoRepository, 
+        IUsuarioRepository usuarioRepository,
+        IWebHostEnvironment webHostEnvironment)
     {
         _produtoRepository = produtoRepository;
+        _usuarioRepository = usuarioRepository;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -72,6 +77,21 @@ public class ProdutoController : Controller
             TempData["Erro"] = "Este produto está indisponível para visualização pública.";
             return RedirectToAction("Index");
         }
+
+        // Obtém o vendedor responsável para validações prévias do frete Melhor Envio
+        var vendedor = await _usuarioRepository.ObterPorIdAsync(produto.VendedorId);
+        bool vendedorValido = vendedor != null 
+            && !string.IsNullOrWhiteSpace(vendedor.Telefone) 
+            && !string.IsNullOrWhiteSpace(vendedor.CpfCnpj);
+
+        bool especificacoesCompletas = produto.Altura > 0 
+            && produto.Largura > 0 
+            && produto.Comprimento > 0 
+            && produto.Peso > 0;
+
+        ViewData["VendedorValido"] = vendedorValido;
+        ViewData["EspecificacoesCompletas"] = especificacoesCompletas;
+        ViewData["VendedorNome"] = vendedor?.Nome ?? "Vendedor";
 
         return View(produto);
     }

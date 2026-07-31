@@ -18,6 +18,12 @@ public class Usuario
     public string? CpfCnpj { get; set; }
     public string? InscricaoEstadual { get; set; }
 
+    // Expansão: Endereço & CEP para Cálculo de Frete
+    public string? Cep { get; set; }
+    public string? Endereco { get; set; }
+    public string? Cidade { get; set; }
+    public string? Estado { get; set; }
+
     // Expansão: Dados Financeiros para Repasses
     public string? ChavePix { get; set; }
     public string? Banco { get; set; }

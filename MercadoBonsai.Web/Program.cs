@@ -25,6 +25,7 @@ builder.Services.AddScoped<IDicaCultivoRepository, DicaCultivoRepository>();
 builder.Services.AddScoped<IPlanoRepository, PlanoRepository>();
 builder.Services.AddScoped<IPropagandaRepository, PropagandaRepository>();
 builder.Services.AddScoped<IProntuarioRepository, ProntuarioRepository>();
+builder.Services.AddHttpClient<IMelhorEnvioService, MelhorEnvioService>();
 
 // Autenticação por Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
