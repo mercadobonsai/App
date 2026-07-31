@@ -79,7 +79,7 @@ public class MelhorEnvioService : IMelhorEnvioService
         };
 
         httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        httpRequest.Headers.Add("User-Agent", userAgent);
+        httpRequest.Headers.TryAddWithoutValidation("User-Agent", string.IsNullOrWhiteSpace(userAgent) ? "MercadoBonsai (suporte@mercadobonsai.com.br)" : userAgent);
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         _logger.LogInformation("Enviando requisição de cotação para API do Melhor Envio. Origem: {Origem}, Destino: {Destino}", cepOrigemLimpo, cepDestinoLimpo);
