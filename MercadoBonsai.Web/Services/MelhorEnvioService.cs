@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -27,7 +28,7 @@ public class MelhorEnvioService : IMelhorEnvioService
     {
         var token = _configuration["MelhorEnvio:Token"]?.Trim();
         var apiUrl = _configuration["MelhorEnvio:ApiUrl"] ?? "https://www.melhorenvio.com.br/api/v2/me/shipment/calculate";
-        var userAgent = _configuration["MelhorEnvio:UserAgent"] ?? "suporte@mercadobonsai.com.br";
+        var userAgent = _configuration["MelhorEnvio:UserAgent"] ?? "MercadoBonsai (suporte@mercadobonsai.com.br)";
 
         // 1. Validação Obrigatória do Token Real
         if (string.IsNullOrEmpty(token) || token == "seu_token_aqui")
@@ -113,10 +114,7 @@ public class MelhorEnvioService : IMelhorEnvioService
 
         // 6. Deserialização dos Resultados Reais Retornados
         var opcoes = ParseResponseApi(responseBody);
-        if (opcoes == null || !opcoes.Count.Equals(0) == false)
-        {
-            _logger.LogInformation("API do Melhor Envio processada com sucesso. Total de modalidades: {Count}", opcoes.Count);
-        }
+        _logger.LogInformation("API do Melhor Envio processada com sucesso. Total de modalidades: {Count}", opcoes.Count);
 
         return opcoes;
     }
@@ -131,7 +129,7 @@ public class MelhorEnvioService : IMelhorEnvioService
         {
             try
             {
-                int id = element.TryGetProperty("id", out var idProp) && idProp.ValueKind == JsonValueKind.Number ? idProp.GetInt32() : 0;
+                int id = ParseIntProperty(element, "id");
                 string nomeServico = element.TryGetProperty("name", out var nameProp) && nameProp.ValueKind == JsonValueKind.String ? nameProp.GetString() ?? "" : "";
                 
                 string? erro = null;
@@ -147,24 +145,17 @@ public class MelhorEnvioService : IMelhorEnvioService
                     }
                 }
 
-                decimal preco = 0;
-                if (element.TryGetProperty("custom_price", out var cpProp) && cpProp.ValueKind == JsonValueKind.Number)
+                // O Melhor Envio retorna 'price' e 'custom_price' como Strings no JSON (ex: "22.08")
+                decimal preco = ParseDecimalProperty(element, "price");
+                if (preco == 0m)
                 {
-                    preco = cpProp.GetDecimal();
-                }
-                else if (element.TryGetProperty("price", out var pProp) && pProp.ValueKind == JsonValueKind.Number)
-                {
-                    preco = pProp.GetDecimal();
+                    preco = ParseDecimalProperty(element, "custom_price");
                 }
 
-                int prazo = 0;
-                if (element.TryGetProperty("delivery_time", out var dtProp) && dtProp.ValueKind == JsonValueKind.Number)
+                int prazo = ParseIntProperty(element, "delivery_time");
+                if (prazo == 0)
                 {
-                    prazo = dtProp.GetInt32();
-                }
-                else if (element.TryGetProperty("custom_delivery_time", out var cdtProp) && cdtProp.ValueKind == JsonValueKind.Number)
-                {
-                    prazo = cdtProp.GetInt32();
+                    prazo = ParseIntProperty(element, "custom_delivery_time");
                 }
 
                 string transportadoraNome = "Transportadora";
@@ -200,6 +191,53 @@ public class MelhorEnvioService : IMelhorEnvioService
         }
 
         return resultados;
+    }
+
+    private static decimal ParseDecimalProperty(JsonElement element, string propName)
+    {
+        if (element.TryGetProperty(propName, out var prop))
+        {
+            if (prop.ValueKind == JsonValueKind.Number)
+            {
+                return prop.GetDecimal();
+            }
+            if (prop.ValueKind == JsonValueKind.String)
+            {
+                var str = prop.GetString();
+                if (!string.IsNullOrWhiteSpace(str))
+                {
+                    if (decimal.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal valInvar))
+                    {
+                        return valInvar;
+                    }
+                    if (decimal.TryParse(str, NumberStyles.Any, CultureInfo.CurrentCulture, out decimal valLocal))
+                    {
+                        return valLocal;
+                    }
+                }
+            }
+        }
+        return 0m;
+    }
+
+    private static int ParseIntProperty(JsonElement element, string propName)
+    {
+        if (element.TryGetProperty(propName, out var prop))
+        {
+            if (prop.ValueKind == JsonValueKind.Number)
+            {
+                return prop.GetInt32();
+            }
+            if (prop.ValueKind == JsonValueKind.String)
+            {
+                var str = prop.GetString();
+                if (!string.IsNullOrWhiteSpace(str) && int.TryParse(str, out int val))
+                {
+                    return val;
+                }
+            }
+        }
+        return 0;
     }
 
     private static string ExtrairMensagemErroJson(string responseBody)
