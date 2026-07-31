@@ -14,6 +14,9 @@ public class CadastroViewModel
     [Display(Name = "E-mail")]
     public string Email { get; set; } = string.Empty;
 
+    [Display(Name = "Telefone de Contato / WhatsApp")]
+    public string? Telefone { get; set; }
+
     [Required(ErrorMessage = "A senha é obrigatória.")]
     [MinLength(6, ErrorMessage = "A senha deve ter pelo menos 6 caracteres.")]
     [DataType(DataType.Password)]

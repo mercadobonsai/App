@@ -29,7 +29,10 @@ public class UsuarioRepository : IUsuarioRepository
         cpfcnpj AS CpfCnpj,
         inscricaoestadual AS InscricaoEstadual,
         cep AS Cep,
-        endereco AS Endereco,
+        logradouro AS Logradouro,
+        numero AS Numero,
+        complemento AS Complemento,
+        bairro AS Bairro,
         cidade AS Cidade,
         estado AS Estado,
         chavepix AS ChavePix,
@@ -72,11 +75,11 @@ public class UsuarioRepository : IUsuarioRepository
         const string sql = @"
             INSERT INTO usuarios (
                 nome, email, senhahash, telefone, perfil, datacadastro,
-                razaosocial, cpfcnpj, inscricaoestadual, cep, endereco, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca
+                razaosocial, cpfcnpj, inscricaoestadual, cep, logradouro, numero, complemento, bairro, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca
             )
             VALUES (
                 @Nome, LOWER(TRIM(@Email)), @SenhaHash, @Telefone, @Perfil, @DataCadastro,
-                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @Cep, @Endereco, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca
+                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @Cep, @Logradouro, @Numero, @Complemento, @Bairro, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca
             )
             RETURNING id;";
 
@@ -97,7 +100,10 @@ public class UsuarioRepository : IUsuarioRepository
                 cpfcnpj = @CpfCnpj,
                 inscricaoestadual = @InscricaoEstadual,
                 cep = @Cep,
-                endereco = @Endereco,
+                logradouro = @Logradouro,
+                numero = @Numero,
+                complemento = @Complemento,
+                bairro = @Bairro,
                 cidade = @Cidade,
                 estado = @Estado,
                 chavepix = @ChavePix,

@@ -82,7 +82,8 @@ public class ProdutoController : Controller
         var vendedor = await _usuarioRepository.ObterPorIdAsync(produto.VendedorId);
         bool vendedorValido = vendedor != null 
             && !string.IsNullOrWhiteSpace(vendedor.Telefone) 
-            && !string.IsNullOrWhiteSpace(vendedor.CpfCnpj);
+            && !string.IsNullOrWhiteSpace(vendedor.CpfCnpj)
+            && !string.IsNullOrWhiteSpace(vendedor.Cep);
 
         bool especificacoesCompletas = produto.Altura > 0 
             && produto.Largura > 0 

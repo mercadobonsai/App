@@ -1,0 +1,15 @@
+-- ============================================================
+-- SCRIPT DE MIGRACAO FASE 9 - ENDERECO COMPLETO E DADOS FISCAIS
+-- MercadoBonsai (PostgreSQL / Supabase)
+-- ============================================================
+
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS cpfcnpj VARCHAR(20) NULL;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS inscricaoestadual VARCHAR(30) NULL;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS cep VARCHAR(10) NULL;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS logradouro VARCHAR(150) NULL;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS numero VARCHAR(20) NULL;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS complemento VARCHAR(100) NULL;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS bairro VARCHAR(100) NULL;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS cidade VARCHAR(100) NULL;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS estado VARCHAR(2) NULL;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefone VARCHAR(20) NULL;

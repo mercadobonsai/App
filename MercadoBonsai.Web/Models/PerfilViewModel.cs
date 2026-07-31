@@ -17,13 +17,13 @@ public class PerfilViewModel
     [EmailAddress(ErrorMessage = "Informe um e-mail válido.")]
     public string Email { get; set; } = string.Empty;
 
-    [Display(Name = "Telefone")]
+    [Display(Name = "Telefone de Contato / WhatsApp")]
     public string? Telefone { get; set; }
 
     public PerfilUsuario Perfil { get; set; }
 
     // Dados Fiscais
-    [Display(Name = "Razão Social")]
+    [Display(Name = "Razão Social / Nome Fantasia")]
     public string? RazaoSocial { get; set; }
 
     [Display(Name = "CPF / CNPJ")]
@@ -31,6 +31,28 @@ public class PerfilViewModel
 
     [Display(Name = "Inscrição Estadual")]
     public string? InscricaoEstadual { get; set; }
+
+    // Endereço Completo & Origem do Envio (Melhor Envio)
+    [Display(Name = "CEP de Origem / Envio")]
+    public string? Cep { get; set; }
+
+    [Display(Name = "Logradouro / Endereço")]
+    public string? Logradouro { get; set; }
+
+    [Display(Name = "Número")]
+    public string? Numero { get; set; }
+
+    [Display(Name = "Complemento")]
+    public string? Complemento { get; set; }
+
+    [Display(Name = "Bairro")]
+    public string? Bairro { get; set; }
+
+    [Display(Name = "Cidade")]
+    public string? Cidade { get; set; }
+
+    [Display(Name = "Estado (UF)")]
+    public string? Estado { get; set; }
 
     // Dados Financeiros
     [Display(Name = "Chave PIX")]

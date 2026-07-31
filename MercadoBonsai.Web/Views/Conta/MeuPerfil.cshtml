@@ -7,14 +7,14 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold mb-1" style="color: #4A7C59;"><i class="icon-base ri ri-user-line me-2"></i>Meu Perfil & Gestão do Viveiro</h3>
-            <p class="text-muted mb-0">Mantenha seus dados cadastrais, fiscais, bancários e a apresentação do seu viveiro sempre atualizados</p>
+            <p class="text-muted mb-0">Mantenha seus dados cadastrais, fiscais, endereço de envio e apresentação do viveiro atualizados</p>
         </div>
     </div>
 
     @if (TempData["Sucesso"] != null)
     {
         <div class="alert alert-success alert-dismissible mb-4" role="alert">
-            @TempData["Sucesso"]
+            <i class="icon-base ri ri-checkbox-circle-line me-2 fs-5"></i> @TempData["Sucesso"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
@@ -102,10 +102,10 @@
             <!-- Coluna Principal (Formulários) -->
             <div class="col-lg-8">
 
-                <!-- Card 1: Dados Cadastrais -->
+                <!-- REQUIREMENT 3.1: Dados Pessoais e Contato -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-user-line me-2"></i>Dados Pessoais</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-user-line me-2"></i>1. Dados Pessoais & Contato</h6>
                     </div>
                     <div class="card-body p-4">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
@@ -113,17 +113,18 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label asp-for="Nome" class="form-label fw-semibold"></label>
-                                <input asp-for="Nome" class="form-control" />
+                                <input asp-for="Nome" class="form-control" placeholder="Seu nome completo" />
                                 <span asp-validation-for="Nome" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Email" class="form-label fw-semibold"></label>
                                 <input asp-for="Email" class="form-control" readonly />
-                                <small class="text-muted">O e-mail de acesso não pode ser alterado diretamente.</small>
+                                <small class="text-muted">O e-mail de acesso não pode ser alterado.</small>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Telefone" class="form-label fw-semibold"></label>
-                                <input asp-for="Telefone" class="form-control" placeholder="(00) 00000-0000" />
+                                <input asp-for="Telefone" id="inputTelefone" class="form-control" placeholder="(00) 00000-0000" />
+                                <small class="text-muted">Obrigatório para cálculo de frete por transportadora.</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Perfil de Acesso</label>
@@ -133,10 +134,11 @@
                     </div>
                 </div>
 
-                <!-- Card 2: Dados Fiscais -->
+                <!-- REQUIREMENT 3.2: Dados Fiscais -->
                 <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-file-text-line me-2"></i>Dados Fiscais</h6>
+                    <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-file-text-line me-2"></i>2. Dados Fiscais (Exigidos para Envio e Emissão)</h6>
+                        <span class="badge bg-label-info">Obrigatório para Vendedores</span>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
@@ -146,20 +148,67 @@
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="CpfCnpj" class="form-label fw-semibold"></label>
-                                <input asp-for="CpfCnpj" class="form-control" placeholder="CPF ou CNPJ" />
+                                <input asp-for="CpfCnpj" id="inputCpfCnpj" class="form-control" placeholder="CPF ou CNPJ (somente números)" />
+                                <small class="text-muted">Obrigatório para o cálculo de frete (Melhor Envio).</small>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="InscricaoEstadual" class="form-label fw-semibold"></label>
-                                <input asp-for="InscricaoEstadual" class="form-control" placeholder="I.E. se houver" />
+                                <input asp-for="InscricaoEstadual" class="form-control" placeholder="I.E. se houver (ou Isento)" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 3: Dados Financeiros (Repasses) -->
+                <!-- REQUIREMENT 3.3: Endereço Completo de Origem do Envio (Melhor Envio) -->
+                <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #4A7C59 !important;">
+                    <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-map-pin-user-line me-2 text-success"></i>3. Endereço Completo de Origem do Envio (Cálculo de Frete)</h6>
+                        <span class="badge bg-success">Melhor Envio</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label asp-for="Cep" class="form-label fw-semibold"></label>
+                                <div class="input-group">
+                                    <input asp-for="Cep" id="inputCepOrigem" class="form-control" placeholder="00000-000" maxlength="9" onblur="consultarViaCep(this.value)" />
+                                    <button type="button" class="btn btn-outline-secondary" onclick="consultarViaCep(document.getElementById('inputCepOrigem').value)">
+                                        <i class="icon-base ri ri-search-line"></i>
+                                    </button>
+                                </div>
+                                <small id="lblCepStatus" class="text-muted d-block mt-1">Busca automática via CEP.</small>
+                            </div>
+                            <div class="col-md-8">
+                                <label asp-for="Logradouro" class="form-label fw-semibold"></label>
+                                <input asp-for="Logradouro" id="inputLogradouro" class="form-control" placeholder="Rua, Avenida, Alameda..." />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Numero" class="form-label fw-semibold"></label>
+                                <input asp-for="Numero" class="form-control" placeholder="Ex: 123" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Complemento" class="form-label fw-semibold"></label>
+                                <input asp-for="Complemento" class="form-control" placeholder="Bloco, Apto, Sala..." />
+                            </div>
+                            <div class="col-md-5">
+                                <label asp-for="Bairro" class="form-label fw-semibold"></label>
+                                <input asp-for="Bairro" id="inputBairro" class="form-control" placeholder="Bairro" />
+                            </div>
+                            <div class="col-md-8">
+                                <label asp-for="Cidade" class="form-label fw-semibold"></label>
+                                <input asp-for="Cidade" id="inputCidade" class="form-control" placeholder="Nome da cidade" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Estado" class="form-label fw-semibold"></label>
+                                <input asp-for="Estado" id="inputEstado" class="form-control text-uppercase" placeholder="UF (Ex: SP)" maxlength="2" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Dados Financeiros (Repasses) -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-bank-card-line me-2"></i>Dados Financeiros para Recebimento / Repasses</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-bank-card-line me-2"></i>4. Dados Financeiros para Recebimento / Repasses</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
@@ -183,10 +232,10 @@
                     </div>
                 </div>
 
-                <!-- Card 4: Apresentação do Viveiro -->
+                <!-- Card 5: Apresentação do Viveiro -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-landscape-line me-2"></i>Apresentação do Viveiro</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-landscape-line me-2"></i>5. Apresentação do Viveiro</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="mb-3">
@@ -198,10 +247,10 @@
                 </div>
 
                 <div class="d-flex gap-3">
-                    <button type="submit" class="btn btn-success px-4">
-                        <i class="icon-base ri ri-save-line me-1"></i> Salvar Meu Perfil
+                    <button type="submit" class="btn btn-success px-4 btn-lg shadow-sm">
+                        <i class="icon-base ri ri-save-line me-1"></i> Salvar Perfil Completo
                     </button>
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg">Cancelar</a>
                 </div>
 
             </div>
@@ -212,7 +261,7 @@
                 <!-- Card: Logotipo do Viveiro -->
                 <div class="card border-0 shadow-sm mb-4 text-center">
                     <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-image-edit-line me-2"></i>Logotipo do Viveiro</h5>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-image-edit-line me-2"></i>Logotipo do Viveiro</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="mb-3">
@@ -276,6 +325,37 @@
             }).catch(function(err) {
                 prompt("Copie seu link direto:", url);
             });
+        }
+
+        async function consultarViaCep(cepInput) {
+            if (!cepInput) return;
+            const cep = cepInput.replace(/\D/g, '');
+            const lblStatus = document.getElementById('lblCepStatus');
+            
+            if (cep.length !== 8) {
+                lblStatus.innerHTML = '<span class="text-danger">CEP inválido (deve ter 8 dígitos).</span>';
+                return;
+            }
+
+            lblStatus.innerHTML = '<span class="text-info"><i class="spinner-border spinner-border-sm me-1"></i> Buscando endereço via ViaCEP...</span>';
+
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+
+                if (data.erro) {
+                    lblStatus.innerHTML = '<span class="text-danger">CEP não encontrado base do ViaCEP.</span>';
+                    return;
+                }
+
+                document.getElementById('inputLogradouro').value = data.logradouro || '';
+                document.getElementById('inputBairro').value = data.bairro || '';
+                document.getElementById('inputCidade').value = data.localidade || '';
+                document.getElementById('inputEstado').value = data.uf || '';
+                lblStatus.innerHTML = '<span class="text-success"><i class="icon-base ri ri-check-line me-1"></i> Endereço preenchido automaticamente!</span>';
+            } catch (err) {
+                lblStatus.innerHTML = '<span class="text-muted">Falha na consulta automática. Preencha manualmente.</span>';
+            }
         }
     </script>
 }

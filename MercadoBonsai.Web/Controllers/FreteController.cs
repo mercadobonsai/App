@@ -45,17 +45,18 @@ public class FreteController : Controller
             return Json(new { success = false, message = "Este produto está disponível exclusivamente para a modalidade 'A retirar'. Não há opção de envio por transportadora." });
         }
 
-        // Validação Próvia de Dados do Vendedor (Telefone + CPF/CNPJ)
+        // Validação Próvia de Dados do Vendedor (Telefone + CPF/CNPJ + CEP de Origem)
         var vendedor = await _usuarioRepository.ObterPorIdAsync(produto.VendedorId);
         bool vendedorValido = vendedor != null 
             && !string.IsNullOrWhiteSpace(vendedor.Telefone) 
-            && !string.IsNullOrWhiteSpace(vendedor.CpfCnpj);
+            && !string.IsNullOrWhiteSpace(vendedor.CpfCnpj)
+            && !string.IsNullOrWhiteSpace(vendedor.Cep);
 
         if (!vendedorValido)
         {
             return Json(new { 
                 success = false, 
-                message = "O vendedor responsável por este anúncio precisa cadastrar o telefone e os dados fiscais (CPF/CNPJ) no perfil para habilitar o cálculo de frete por transportadora." 
+                message = "O vendedor responsável por este anúncio precisa cadastrar o telefone, os dados fiscais (CPF/CNPJ) e o CEP de origem no perfil para habilitar o cálculo de frete por transportadora." 
             });
         }
 

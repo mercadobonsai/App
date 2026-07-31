@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BCrypt.Net;
 using MercadoBonsai.Domain.Entities;
-using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Web.Models;
 using MercadoBonsai.Web.Services;
@@ -21,28 +19,25 @@ public class ContaController : Controller
 {
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPlanoRepository _planoRepository;
-    private readonly IWebHostEnvironment _webHostEnvironment;
     private readonly VendedorTokenService _vendedorTokenService;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
     public ContaController(
-        IUsuarioRepository usuarioRepository, 
-        IPlanoRepository planoRepository, 
-        IWebHostEnvironment webHostEnvironment,
-        VendedorTokenService vendedorTokenService)
+        IUsuarioRepository usuarioRepository,
+        IPlanoRepository planoRepository,
+        VendedorTokenService vendedorTokenService,
+        IWebHostEnvironment webHostEnvironment)
     {
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
-        _webHostEnvironment = webHostEnvironment;
         _vendedorTokenService = vendedorTokenService;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     // GET: /Conta/Login
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
-        if (User.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Home");
-
         ViewData["ReturnUrl"] = returnUrl;
         return View();
     }
@@ -52,15 +47,18 @@ public class ContaController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
+        ViewData["ReturnUrl"] = returnUrl;
+
         if (!ModelState.IsValid)
-            return View(model);
-
-        var usuario = await _usuarioRepository.ObterPorEmailAsync(model.Email?.Trim() ?? string.Empty);
-
-        // Ajuste de Segurança: Resposta unificada genérica "Dados de acesso inválidos" para evitar enumaracao/exposicao
-        if (usuario == null || string.IsNullOrEmpty(usuario.SenhaHash) || !BCrypt.Net.BCrypt.Verify(model.Senha, usuario.SenhaHash))
         {
-            ModelState.AddModelError(string.Empty, "Dados de acesso inválidos");
+            return View(model);
+        }
+
+        var usuario = await _usuarioRepository.ObterPorEmailAsync(model.Email);
+        if (usuario == null || !BCrypt.Net.BCrypt.Verify(model.Senha, usuario.SenhaHash))
+        {
+            // Ajuste de Segurança (Fase 8): Resposta genérica unificada para evitar enumeração de usuários
+            ModelState.AddModelError(string.Empty, "Dados de acesso inválidos.");
             return View(model);
         }
 
@@ -74,16 +72,13 @@ public class ContaController : Controller
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
-        var authProps = new AuthenticationProperties
-        {
-            IsPersistent = model.LembrarMe,
-            ExpiresUtc = model.LembrarMe ? DateTimeOffset.UtcNow.AddDays(30) : null
-        };
 
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProps);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
             return Redirect(returnUrl);
+        }
 
         return RedirectToAction("Index", "Home");
     }
@@ -92,9 +87,6 @@ public class ContaController : Controller
     [HttpGet]
     public IActionResult Cadastro()
     {
-        if (User.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Home");
-
         return View();
     }
 
@@ -104,33 +96,43 @@ public class ContaController : Controller
     public async Task<IActionResult> Cadastro(CadastroViewModel model)
     {
         if (!ModelState.IsValid)
-            return View(model);
-
-        var existe = await _usuarioRepository.ObterPorEmailAsync(model.Email);
-        if (existe != null)
         {
-            ModelState.AddModelError("Email", "Já existe um usuário cadastrado com este e-mail.");
+            return View(model);
+        }
+
+        var usuarioExistente = await _usuarioRepository.ObterPorEmailAsync(model.Email);
+        if (usuarioExistente != null)
+        {
+            ModelState.AddModelError("Email", "Este e-mail já está cadastrado na plataforma.");
             return View(model);
         }
 
         var senhaHash = BCrypt.Net.BCrypt.HashPassword(model.Senha);
 
-        var novoUsuario = new Usuario
+        var usuario = new Usuario
         {
-            Nome = model.Nome.Trim(),
-            Email = model.Email.Trim().ToLower(),
+            Nome = model.Nome,
+            Email = model.Email,
             SenhaHash = senhaHash,
-            Telefone = string.Empty,
+            Telefone = model.Telefone ?? string.Empty,
             Perfil = model.Perfil,
-            DataCadastro = DateTime.UtcNow,
-            PlanoId = 1, // Plano Padrão Pago (Bronze)
-            Reputacao = 100
+            PlanoId = 1, // Bronze por padrão
+            Reputacao = 100,
+            DataCadastro = DateTime.UtcNow
         };
 
-        await _usuarioRepository.InserirAsync(novoUsuario);
+        await _usuarioRepository.InserirAsync(usuario);
 
-        TempData["Sucesso"] = "Cadastro realizado com sucesso! Faça seu login para continuar.";
+        TempData["Sucesso"] = "Cadastro efetuado com sucesso! Efetue login para acessar sua conta.";
         return RedirectToAction("Login");
+    }
+
+    // GET: /Conta/Logout
+    [HttpGet]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Index", "Home");
     }
 
     // GET: /Conta/MeuPerfil
@@ -164,6 +166,13 @@ public class ContaController : Controller
             RazaoSocial = usuario.RazaoSocial,
             CpfCnpj = usuario.CpfCnpj,
             InscricaoEstadual = usuario.InscricaoEstadual,
+            Cep = usuario.Cep,
+            Logradouro = usuario.Logradouro,
+            Numero = usuario.Numero,
+            Complemento = usuario.Complemento,
+            Bairro = usuario.Bairro,
+            Cidade = usuario.Cidade,
+            Estado = usuario.Estado,
             ChavePix = usuario.ChavePix,
             Banco = usuario.Banco,
             Agencia = usuario.Agencia,
@@ -173,6 +182,7 @@ public class ContaController : Controller
             PlanoId = usuario.PlanoId,
             NomePlano = nomePlano,
             LiberarCartaoVisitas = liberarCartao,
+            IsentoCobranca = usuario.IsentoCobranca,
             DataUltimaAlteracao = usuario.DataUltimaAlteracao,
             UsuarioAlteracaoNome = usuario.UsuarioAlteracaoNome
         };
@@ -236,6 +246,13 @@ public class ContaController : Controller
         usuario.RazaoSocial = model.RazaoSocial;
         usuario.CpfCnpj = model.CpfCnpj;
         usuario.InscricaoEstadual = model.InscricaoEstadual;
+        usuario.Cep = model.Cep;
+        usuario.Logradouro = model.Logradouro;
+        usuario.Numero = model.Numero;
+        usuario.Complemento = model.Complemento;
+        usuario.Bairro = model.Bairro;
+        usuario.Cidade = model.Cidade;
+        usuario.Estado = model.Estado;
         usuario.ChavePix = model.ChavePix;
         usuario.Banco = model.Banco;
         usuario.Agencia = model.Agencia;
@@ -247,11 +264,11 @@ public class ContaController : Controller
 
         await _usuarioRepository.AtualizarAsync(usuario);
 
-        TempData["Sucesso"] = "Seus dados de perfil e viveiro foram atualizados com sucesso!";
+        TempData["Sucesso"] = "Seus dados de perfil, endereço de origem e dados fiscais foram atualizados com sucesso!";
         return RedirectToAction("MeuPerfil");
     }
 
-    // GET: /Conta/Assinatura (Planos e Assinatura do Vendedor)
+    // GET: /Conta/Assinatura
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> Assinatura()
@@ -266,45 +283,7 @@ public class ContaController : Controller
         var planos = await _planoRepository.ListarTodosAsync();
 
         ViewData["PlanoAtualId"] = usuario?.PlanoId ?? 1;
+        ViewData["IsentoCobranca"] = usuario?.IsentoCobranca ?? false;
         return View(planos);
-    }
-
-    // POST: /Conta/TrocarPlano
-    [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> TrocarPlano(int planoId)
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-        {
-            return Unauthorized();
-        }
-
-        var usuario = await _usuarioRepository.ObterPorIdAsync(userId);
-        var plano = await _planoRepository.ObterPorIdAsync(planoId);
-
-        if (usuario == null || plano == null)
-        {
-            return NotFound();
-        }
-
-        usuario.PlanoId = plano.Id;
-        usuario.DataUltimaAlteracao = DateTime.UtcNow;
-        usuario.UsuarioAlteracaoId = userId;
-        usuario.UsuarioAlteracaoNome = usuario.Nome;
-
-        await _usuarioRepository.AtualizarAsync(usuario);
-
-        TempData["Sucesso"] = $"Parabéns! Sua assinatura foi atualizada com sucesso para o Plano {plano.Nome}.";
-        return RedirectToAction("Assinatura");
-    }
-
-    // GET: /Conta/Logout
-    [HttpGet]
-    public async Task<IActionResult> Logout()
-    {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction("Index", "Home");
     }
 }
