@@ -15,15 +15,18 @@ namespace MercadoBonsai.Web.Controllers;
 public class AsaasWebhookController : ControllerBase
 {
     private readonly IPedidoRepository _pedidoRepository;
+    private readonly IProdutoRepository _produtoRepository;
     private readonly IEvendasWebhookService _evendasWebhookService;
     private readonly ILogger<AsaasWebhookController> _logger;
 
     public AsaasWebhookController(
         IPedidoRepository pedidoRepository,
+        IProdutoRepository produtoRepository,
         IEvendasWebhookService evendasWebhookService,
         ILogger<AsaasWebhookController> logger)
     {
         _pedidoRepository = pedidoRepository;
+        _produtoRepository = produtoRepository;
         _evendasWebhookService = evendasWebhookService;
         _logger = logger;
     }
@@ -83,7 +86,10 @@ public class AsaasWebhookController : ControllerBase
                     pedido.DataPagamento = DateTime.Now;
                     await _pedidoRepository.AtualizarAsync(pedido);
 
-                    _logger.LogInformation("Pedido #{Numero} atualizado para PAGO via Webhook Asaas!", pedido.Numero);
+                    // Regra de Negócio: Marca o produto como VENDIDO no estoque/vitrine (Status 3 = Vendido, Estoque = 0)
+                    await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Vendido, 0);
+
+                    _logger.LogInformation("Pedido #{Numero} atualizado para PAGO e produto #{ProdutoId} marcado como VENDIDO!", pedido.Numero, pedido.ProdutoId);
 
                     // Notifica imediatamente o e-vendas sobre a transição para 'Pago'
                     await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);

@@ -68,7 +68,7 @@ public class ProdutoRepository : IProdutoRepository
         var sql = $@"
             SELECT {SelectFields}
             FROM produtos 
-            WHERE status != 3
+            WHERE status = 1 AND quantidadeestoque > 0
             ORDER BY datacriacao DESC;";
 
         using var connection = _connectionFactory.CreateConnection();
@@ -95,7 +95,7 @@ public class ProdutoRepository : IProdutoRepository
         var sql = $@"
             SELECT {SelectFields}
             FROM produtos 
-            WHERE status != 3 AND LOWER(categoria) = ANY(@Categorias)
+            WHERE status = 1 AND quantidadeestoque > 0 AND LOWER(categoria) = ANY(@Categorias)
             ORDER BY datacriacao DESC;";
 
         var categoriasArray = categorias.Select(c => c.Trim().ToLower()).ToArray();

@@ -67,7 +67,7 @@ public class HomeController : Controller
 
         // Regra de Negócio: Produtos do Plano Bronze (PlanoId = 1) NÃO aparecem nos Destaques da Semana da Home
         var produtosDestaque = todosProdutos
-            .Where(p => p.Status != StatusProduto.Vendido)
+            .Where(p => p.Status == StatusProduto.Disponivel && p.QuantidadeEstoque > 0)
             .Where(p => {
                 if (usuariosMap.TryGetValue(p.VendedorId, out var vendedor))
                 {
@@ -79,7 +79,7 @@ public class HomeController : Controller
 
         if (!produtosDestaque.Any())
         {
-            produtosDestaque = todosProdutos.Where(p => p.Status != StatusProduto.Vendido).Take(6);
+            produtosDestaque = todosProdutos.Where(p => p.Status == StatusProduto.Disponivel && p.QuantidadeEstoque > 0).Take(6);
         }
 
         // 2. Executa em paralelo as demais consultas leves da Home para garantir tempo de resposta rápido e evitar Timeouts

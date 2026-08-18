@@ -310,6 +310,9 @@ public class PedidoController : Controller
         pedido.StatusPedido = StatusPedido.EmDespacho;
         await _pedidoRepository.AtualizarStatusAsync(pedido.Id, StatusPedido.EmDespacho);
 
+        // Marca produto como Vendido no estoque/vitrine
+        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Vendido, 0);
+
         // Dispara Webhook e-vendas
         await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
 
