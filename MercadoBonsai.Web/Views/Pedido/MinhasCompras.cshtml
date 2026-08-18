@@ -37,17 +37,17 @@ else
         {
             string badgeClass = pedido.StatusPedido switch
             {
-                "Criado" => "bg-secondary",
-                "Aguardando Aceite" => "bg-warning text-dark",
-                "Recusado" => "bg-danger",
-                "Aguardando Pagamento" => "bg-info text-dark",
-                "Pago" => "bg-success",
-                "Em Despacho" => "bg-primary",
-                "Em Transito" => "bg-primary",
-                "Entregue" => "bg-info",
-                "Conferido" => "bg-success",
-                "Finalizado" => "bg-dark",
-                _ => "bg-secondary"
+                "Criado" => "bg-secondary text-white",
+                "Aguardando Aceite" => "bg-warning text-white",
+                "Recusado" => "bg-danger text-white",
+                "Aguardando Pagamento" => "bg-info text-white",
+                "Pago" => "bg-success text-white",
+                "Em Despacho" => "bg-primary text-white",
+                "Em Transito" => "bg-primary text-white",
+                "Entregue" => "bg-info text-white",
+                "Conferido" => "bg-success text-white",
+                "Finalizado" => "bg-dark text-white",
+                _ => "bg-secondary text-white"
             };
 
             <div class="col-12 mb-4">

@@ -53,17 +53,17 @@ else
         {
             string badgeClass = pedido.StatusPedido switch
             {
-                "Criado" => "bg-secondary",
-                "Aguardando Aceite" => "bg-warning text-dark",
-                "Recusado" => "bg-danger",
-                "Aguardando Pagamento" => "bg-info text-dark",
-                "Pago" => "bg-success",
-                "Em Despacho" => "bg-primary",
-                "Em Transito" => "bg-primary",
-                "Entregue" => "bg-info",
-                "Conferido" => "bg-success",
-                "Finalizado" => "bg-dark",
-                _ => "bg-secondary"
+                "Criado" => "bg-secondary text-white",
+                "Aguardando Aceite" => "bg-warning text-white",
+                "Recusado" => "bg-danger text-white",
+                "Aguardando Pagamento" => "bg-info text-white",
+                "Pago" => "bg-success text-white",
+                "Em Despacho" => "bg-primary text-white",
+                "Em Transito" => "bg-primary text-white",
+                "Entregue" => "bg-info text-white",
+                "Conferido" => "bg-success text-white",
+                "Finalizado" => "bg-dark text-white",
+                _ => "bg-secondary text-white"
             };
 
             // Regra 3: Ocultacao de contato do comprador ate o status 'Pago' ou superior
@@ -83,7 +83,7 @@ else
                             <small class="text-muted d-block fs-7">Comprador: <strong>@pedido.CompradorNome</strong></small>
                         </div>
                         <div>
-                            <span class="badge @badgeClass fs-7 px-3 py-2">
+                            <span class="badge @badgeClass fs-7 px-3 py-2 fw-semibold">
                                 <i class="icon-base ri ri-checkbox-blank-circle-fill me-1 fs-8"></i>@pedido.StatusPedido
                             </span>
                         </div>
@@ -124,13 +124,6 @@ else
                             <strong class="text-success fs-6">Total: R$ @pedido.ValorTotal.ToString("N2")</strong>
                         </div>
 
-                        @if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Recusado && !string.IsNullOrEmpty(pedido.Observacao))
-                        {
-                            <div class="alert alert-danger mb-0 mt-2 p-2 small border-0 shadow-sm">
-                                <i class="icon-base ri ri-error-warning-line me-1"></i> <strong>Motivo da Recusa:</strong> @pedido.Observacao
-                            </div>
-                        }
-
                         @if (!string.IsNullOrEmpty(pedido.CodigoRastreio))
                         {
                             <div class="mt-2 text-muted small">
@@ -139,7 +132,7 @@ else
                         }
                     </div>
 
-                    <!-- Rodapé do Card: Botões de Ação da Esteira de Vendas -->
+                    <!-- Rodapé do Card: Botões de Ação ou Motivo da Recusa em Vermelho -->
                     <div class="card-footer bg-light border-top p-3 mt-auto">
                         @if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Criado || pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.AguardandoAceite)
                         {
@@ -175,6 +168,12 @@ else
                                     <i class="icon-base ri ri-checkbox-circle-line me-1"></i> Confirmar Entrega Realizada
                                 </button>
                             </form>
+                        }
+                        else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Recusado)
+                        {
+                            <div class="alert alert-danger mb-0 p-2 small border-0 text-start shadow-sm">
+                                <i class="icon-base ri ri-error-warning-line me-1"></i> <strong>Motivo da Recusa:</strong> @(string.IsNullOrWhiteSpace(pedido.Observacao) ? "Venda recusada pelo vendedor." : pedido.Observacao)
+                            </div>
                         }
                         else
                         {
