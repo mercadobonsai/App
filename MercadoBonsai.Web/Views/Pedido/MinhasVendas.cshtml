@@ -74,106 +74,112 @@ else
                 || pedido.StatusPedido == "Conferido" 
                 || pedido.StatusPedido == "Finalizado";
 
-            <div class="col-12 mb-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light d-flex flex-wrap align-items-center justify-content-between py-3">
+            <div class="col-12 col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm h-100 d-flex flex-column">
+                    <!-- Cabeçalho do Card: Número do Pedido, Nome do Comprador e Badge de Status -->
+                    <div class="card-header bg-light d-flex align-items-center justify-content-between py-3 border-0">
                         <div>
                             <span class="fw-bold text-dark fs-5">Pedido #@pedido.Numero</span>
-                            <span class="text-muted ms-2 fs-7">
-                                Comprador: <strong>@pedido.CompradorNome</strong>
-                                @if (contatoVisivel)
-                                {
-                                    <span class="badge bg-success ms-1"><i class="icon-base ri ri-phone-line me-1"></i>@pedido.CompradorTelefone</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary ms-1"><i class="icon-base ri ri-lock-line me-1"></i>Contato protegido até o pagamento</span>
-                                }
-                            </span>
+                            <small class="text-muted d-block fs-7">Comprador: <strong>@pedido.CompradorNome</strong></small>
                         </div>
                         <div>
-                            <span class="badge @badgeClass fs-6 px-3 py-2">
+                            <span class="badge @badgeClass fs-7 px-3 py-2">
                                 <i class="icon-base ri ri-checkbox-blank-circle-fill me-1 fs-8"></i>@pedido.StatusPedido
                             </span>
                         </div>
                     </div>
-                    <div class="card-body py-4">
-                        <div class="row align-items-center">
-                            <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
-                                @if (!string.IsNullOrEmpty(pedido.ProdutoImagemUrl))
-                                {
-                                    <img src="@pedido.ProdutoImagemUrl" class="img-fluid rounded border" style="max-height: 90px; object-fit: cover;" alt="@pedido.ProdutoNome" />
-                                }
-                                else
-                                {
-                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center" style="height: 90px; width: 90px;">
-                                        <i class="icon-base ri ri-plant-line fs-2 text-muted"></i>
-                                    </div>
-                                }
-                            </div>
-                            <div class="col-md-5 mb-3 mb-md-0">
-                                <h5 class="fw-bold mb-1">@pedido.ProdutoNome</h5>
-                                <p class="text-muted small mb-1">Endereço de Envio: <strong>@pedido.CompradorEndereco</strong></p>
+
+                    <!-- Corpo do Card: Foto, Produto, Endereço, Contatos Protegidos e Preço -->
+                    <div class="card-body py-3 flex-grow-1">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            @if (!string.IsNullOrEmpty(pedido.ProdutoImagemUrl))
+                            {
+                                <img src="@pedido.ProdutoImagemUrl" class="img-fluid rounded border flex-shrink-0" style="width: 75px; height: 75px; object-fit: cover;" alt="@pedido.ProdutoNome" />
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded border d-flex align-items-center justify-content-center flex-shrink-0" style="width: 75px; height: 75px;">
+                                    <i class="icon-base ri ri-plant-line fs-3 text-muted"></i>
+                                </div>
+                            }
+                            <div class="flex-grow-1 min-w-0">
+                                <h6 class="fw-bold text-dark mb-1 text-truncate">@pedido.ProdutoNome</h6>
+                                <small class="text-muted d-block mb-1 text-truncate"><i class="icon-base ri ri-map-pin-line me-1"></i>@pedido.CompradorEndereco</small>
                                 @if (contatoVisivel)
                                 {
-                                    <p class="text-muted small mb-0"><i class="icon-base ri ri-mail-line me-1"></i>E-mail Comprador: <strong>@pedido.CompradorEmail</strong></p>
+                                    <small class="text-success d-block fw-semibold text-truncate">
+                                        <i class="icon-base ri ri-phone-line me-1"></i>@pedido.CompradorTelefone | <i class="icon-base ri ri-mail-line me-1"></i>@pedido.CompradorEmail
+                                    </small>
                                 }
                                 else
                                 {
-                                    <p class="text-muted small mb-0 text-secondary"><i class="icon-base ri ri-shield-user-line me-1"></i>E-mail e telefone do comprador serão liberados após a confirmação do pagamento.</p>
-                                }
-                            </div>
-                            <div class="col-md-2 text-md-end mb-3 mb-md-0">
-                                <small class="text-muted d-block">Produto: R$ @pedido.ValorPedido.ToString("N2")</small>
-                                <small class="text-muted d-block">Frete: R$ @((pedido.ValorFrete ?? 0.00m).ToString("N2"))</small>
-                                <strong class="fs-5 text-success d-block mt-1">Total: R$ @pedido.ValorTotal.ToString("N2")</strong>
-                            </div>
-                            <div class="col-md-3 text-md-end">
-                                @if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Criado || pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.AguardandoAceite)
-                                {
-                                    <button type="button" class="btn btn-success btn-sm w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalAceitar_@pedido.Id">
-                                        <i class="icon-base ri ri-check-line me-1"></i> Aceitar Pedido & Inserir Frete
-                                    </button>
-                                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#modalRecusar_@pedido.Id">
-                                        <i class="icon-base ri ri-close-line me-1"></i> Recusar Venda
-                                    </button>
-                                }
-                                else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Pago)
-                                {
-                                    <form asp-controller="Pedido" asp-action="IniciarDespacho" method="post">
-                                        <input type="hidden" name="id" value="@pedido.Id" />
-                                        <button type="submit" class="btn btn-primary btn-sm w-100">
-                                            <i class="icon-base ri ri-box-3-line me-1"></i> Iniciar Despacho / Embalagem
-                                        </button>
-                                    </form>
-                                }
-                                else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.EmDespacho)
-                                {
-                                    <button type="button" class="btn btn-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#modalRastreio_@pedido.Id">
-                                        <i class="icon-base ri ri-truck-line me-1"></i> Informar Rastreio
-                                    </button>
-                                }
-                                else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.EmTransito)
-                                {
-                                    <form asp-controller="Pedido" asp-action="ConfirmarEntrega" method="post">
-                                        <input type="hidden" name="id" value="@pedido.Id" />
-                                        <button type="submit" class="btn btn-info text-white btn-sm w-100">
-                                            <i class="icon-base ri ri-checkbox-circle-line me-1"></i> Confirmar Entrega Realizada
-                                        </button>
-                                    </form>
-                                }
-
-                                @if (!string.IsNullOrEmpty(pedido.CodigoRastreio))
-                                {
-                                    <small class="text-muted d-block mt-2">Rastreio: <strong>@pedido.CodigoRastreio</strong></small>
+                                    <small class="text-muted d-block"><i class="icon-base ri ri-lock-line me-1"></i>Contatos liberados pós-pagamento</small>
                                 }
                             </div>
                         </div>
 
+                        <!-- Resumo Financeiro -->
+                        <div class="bg-light p-2 rounded d-flex justify-content-between align-items-center small">
+                            <span class="text-muted">Item: R$ @pedido.ValorPedido.ToString("N2") | Frete: R$ @((pedido.ValorFrete ?? 0.00m).ToString("N2"))</span>
+                            <strong class="text-success fs-6">Total: R$ @pedido.ValorTotal.ToString("N2")</strong>
+                        </div>
+
                         @if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Recusado && !string.IsNullOrEmpty(pedido.Observacao))
                         {
-                            <div class="alert alert-danger mb-0 mt-3 border-0 shadow-sm">
-                                <i class="icon-base ri ri-error-warning-line me-1"></i> <strong>Justificativa da Recusa:</strong> @pedido.Observacao
+                            <div class="alert alert-danger mb-0 mt-2 p-2 small border-0 shadow-sm">
+                                <i class="icon-base ri ri-error-warning-line me-1"></i> <strong>Motivo da Recusa:</strong> @pedido.Observacao
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(pedido.CodigoRastreio))
+                        {
+                            <div class="mt-2 text-muted small">
+                                <i class="icon-base ri ri-truck-line me-1"></i>Rastreio: <strong>@pedido.CodigoRastreio</strong>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Rodapé do Card: Botões de Ação da Esteira de Vendas -->
+                    <div class="card-footer bg-light border-top p-3 mt-auto">
+                        @if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Criado || pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.AguardandoAceite)
+                        {
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-success btn-sm flex-fill fw-bold" data-bs-toggle="modal" data-bs-target="#modalAceitar_@pedido.Id">
+                                    <i class="icon-base ri ri-check-line me-1"></i> Aceitar & Frete
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm flex-fill" data-bs-toggle="modal" data-bs-target="#modalRecusar_@pedido.Id">
+                                    <i class="icon-base ri ri-close-line me-1"></i> Recusar
+                                </button>
+                            </div>
+                        }
+                        else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Pago)
+                        {
+                            <form asp-controller="Pedido" asp-action="IniciarDespacho" method="post">
+                                <input type="hidden" name="id" value="@pedido.Id" />
+                                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
+                                    <i class="icon-base ri ri-box-3-line me-1"></i> Iniciar Despacho / Embalagem
+                                </button>
+                            </form>
+                        }
+                        else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.EmDespacho)
+                        {
+                            <button type="button" class="btn btn-primary btn-sm w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#modalRastreio_@pedido.Id">
+                                <i class="icon-base ri ri-truck-line me-1"></i> Informar Rastreio
+                            </button>
+                        }
+                        else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.EmTransito)
+                        {
+                            <form asp-controller="Pedido" asp-action="ConfirmarEntrega" method="post">
+                                <input type="hidden" name="id" value="@pedido.Id" />
+                                <button type="submit" class="btn btn-info text-white btn-sm w-100 fw-bold">
+                                    <i class="icon-base ri ri-checkbox-circle-line me-1"></i> Confirmar Entrega Realizada
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted small py-1">
+                                <i class="icon-base ri ri-information-line me-1"></i>Aguardando ação do comprador
                             </div>
                         }
                     </div>
