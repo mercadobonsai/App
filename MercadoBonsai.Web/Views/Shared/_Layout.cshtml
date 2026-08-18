@@ -225,15 +225,32 @@
                                     </a>
                                 </li>
 
+                                <!-- Link Meus Pedidos (Esteira do Comprador) -->
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Pedido" && ViewContext.RouteData.Values["action"]?.ToString() == "MinhasCompras" ? "active" : "")">
+                                        <a asp-controller="Pedido" asp-action="MinhasCompras" class="menu-link">
+                                            <i class="menu-icon icon-base ri ri-shopping-bag-3-line"></i>
+                                            <div>Meus Pedidos</div>
+                                        </a>
+                                    </li>
+                                }
+
                                 <!-- Dropdown Cadastros (Visível para Vendedor e Admin) -->
                                 @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Vendedor") || User.IsInRole("Administrador")))
                                 {
-                                    <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Produto" && (ViewContext.RouteData.Values["action"]?.ToString() == "MeusProdutos" || ViewContext.RouteData.Values["action"]?.ToString() == "Criar") || ViewContext.RouteData.Values["controller"]?.ToString() == "Leilao" && ViewContext.RouteData.Values["action"]?.ToString() == "MeusLeiloes" || ViewContext.RouteData.Values["controller"]?.ToString() == "Rifa" || ViewContext.RouteData.Values["controller"]?.ToString() == "Propaganda" ? "active" : "")">
+                                    <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Pedido" && ViewContext.RouteData.Values["action"]?.ToString() == "MinhasVendas" || ViewContext.RouteData.Values["controller"]?.ToString() == "Produto" && (ViewContext.RouteData.Values["action"]?.ToString() == "MeusProdutos" || ViewContext.RouteData.Values["action"]?.ToString() == "Criar") || ViewContext.RouteData.Values["controller"]?.ToString() == "Leilao" && ViewContext.RouteData.Values["action"]?.ToString() == "MeusLeiloes" || ViewContext.RouteData.Values["controller"]?.ToString() == "Rifa" || ViewContext.RouteData.Values["controller"]?.ToString() == "Propaganda" ? "active" : "")">
                                         <a href="javascript:void(0)" class="menu-link menu-toggle">
                                             <i class="menu-icon icon-base ri ri-folder-add-line"></i>
                                             <div>Cadastros</div>
                                         </a>
                                         <ul class="menu-sub">
+                                            <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Pedido" && ViewContext.RouteData.Values["action"]?.ToString() == "MinhasVendas" ? "active" : "")">
+                                                <a asp-controller="Pedido" asp-action="MinhasVendas" class="menu-link">
+                                                    <i class="menu-icon icon-base ri ri-shopping-bag-line me-2"></i>
+                                                    <div>Gerenciar Vendas</div>
+                                                </a>
+                                            </li>
                                             <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MeusProdutos" ? "active" : "")">
                                                 <a asp-controller="Produto" asp-action="MeusProdutos" class="menu-link">
                                                     <i class="menu-icon icon-base ri ri-store-line me-2"></i>

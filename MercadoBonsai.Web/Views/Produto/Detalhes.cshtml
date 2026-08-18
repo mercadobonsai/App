@@ -134,9 +134,12 @@
                     }
                     else
                     {
-                        <button class="btn btn-success btn-lg w-100 shadow-sm" onclick="alert('Funcionalidade de compra em breve!')">
-                            <i class="icon-base ri ri-shopping-cart-2-line me-2"></i> Comprar Agora (Estoque: @Model.QuantidadeEstoque)
-                        </button>
+                        <form asp-controller="Pedido" asp-action="Criar" method="post">
+                            <input type="hidden" name="produtoId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-success btn-lg w-100 shadow-sm">
+                                <i class="icon-base ri ri-shopping-cart-2-line me-2"></i> Comprar Agora (Estoque: @Model.QuantidadeEstoque)
+                            </button>
+                        </form>
                     }
                 </div>
             </div>

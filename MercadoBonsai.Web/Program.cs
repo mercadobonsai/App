@@ -25,7 +25,10 @@ builder.Services.AddScoped<IDicaCultivoRepository, DicaCultivoRepository>();
 builder.Services.AddScoped<IPlanoRepository, PlanoRepository>();
 builder.Services.AddScoped<IPropagandaRepository, PropagandaRepository>();
 builder.Services.AddScoped<IProntuarioRepository, ProntuarioRepository>();
+builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
 builder.Services.AddHttpClient<IMelhorEnvioService, MelhorEnvioService>();
+builder.Services.AddHttpClient<IEvendasWebhookService, EvendasWebhookService>();
+builder.Services.AddHttpClient<IAsaasService, AsaasService>();
 
 // Autenticação por Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

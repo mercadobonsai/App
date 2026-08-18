@@ -1,0 +1,242 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Pedido>
+@{
+    ViewData["Title"] = "Gerenciar Vendas";
+    string? statusFiltro = ViewBag.StatusFiltro as string;
+}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+    <div>
+        <h3 class="fw-bold mb-1" style="color: #4A7C59;">
+            <i class="icon-base ri ri-store-line me-2"></i>Gerenciar Vendas
+        </h3>
+        <p class="text-muted mb-0">Painel do Viveirista para controle do ciclo de entrega dos seus Bonsais e Insumos.</p>
+    </div>
+    <div class="mt-2 mt-md-0">
+        <a asp-controller="Produto" asp-action="MeusProdutos" class="btn btn-outline-success">
+            <i class="icon-base ri ri-folder-line me-1"></i> Meus Anúncios
+        </a>
+    </div>
+</div>
+
+<!-- Filtros de Status -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-2">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="fw-bold text-muted me-2"><i class="icon-base ri ri-filter-3-line me-1"></i>Filtro:</span>
+            <a asp-controller="Pedido" asp-action="MinhasVendas" class="btn btn-sm @(string.IsNullOrEmpty(statusFiltro) ? "btn-success" : "btn-outline-secondary")">
+                Todos (@Model.Count())
+            </a>
+            @foreach (var st in MercadoBonsai.Domain.Enums.StatusPedido.Todos)
+            {
+                <a asp-controller="Pedido" asp-action="MinhasVendas" asp-route-statusFiltro="@st" class="btn btn-sm @(string.Equals(statusFiltro, st, StringComparison.OrdinalIgnoreCase) ? "btn-success" : "btn-outline-secondary")">
+                    @st
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card border-0 shadow-sm text-center py-5">
+        <div class="card-body py-5">
+            <i class="icon-base ri ri-inbox-line fs-1 text-muted mb-3 d-block"></i>
+            <h5 class="fw-bold text-dark">Nenhuma venda encontrada para este filtro</h5>
+            <p class="text-muted mb-0">Novas compras realizadas pelos clientes aparecerão aqui automaticamente.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var pedido in Model)
+        {
+            string badgeClass = pedido.StatusPedido switch
+            {
+                "Criado" => "bg-secondary",
+                "Aguardando Aceite" => "bg-warning text-dark",
+                "Recusado" => "bg-danger",
+                "Aguardando Pagamento" => "bg-info text-dark",
+                "Pago" => "bg-success",
+                "Em Despacho" => "bg-primary",
+                "Em Transito" => "bg-primary",
+                "Entregue" => "bg-info",
+                "Conferido" => "bg-success",
+                "Finalizado" => "bg-dark",
+                _ => "bg-secondary"
+            };
+
+            <div class="col-12 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light d-flex flex-wrap align-items-center justify-content-between py-3">
+                        <div>
+                            <span class="fw-bold text-dark fs-5">Pedido #@pedido.Numero</span>
+                            <span class="text-muted ms-2 fs-7">Comprador: <strong>@pedido.CompradorNome</strong> (@pedido.CompradorTelefone)</span>
+                        </div>
+                        <div>
+                            <span class="badge @badgeClass fs-6 px-3 py-2">
+                                <i class="icon-base ri ri-checkbox-blank-circle-fill me-1 fs-8"></i>@pedido.StatusPedido
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body py-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
+                                @if (!string.IsNullOrEmpty(pedido.ProdutoImagemUrl))
+                                {
+                                    <img src="@pedido.ProdutoImagemUrl" class="img-fluid rounded border" style="max-height: 90px; object-fit: cover;" alt="@pedido.ProdutoNome" />
+                                }
+                                else
+                                {
+                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center" style="height: 90px; width: 90px;">
+                                        <i class="icon-base ri ri-plant-line fs-2 text-muted"></i>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-md-5 mb-3 mb-md-0">
+                                <h5 class="fw-bold mb-1">@pedido.ProdutoNome</h5>
+                                <p class="text-muted small mb-1">Endereço de Envio: <strong>@pedido.CompradorEndereco</strong></p>
+                                <p class="text-muted small mb-0">E-mail Comprador: @pedido.CompradorEmail</p>
+                            </div>
+                            <div class="col-md-2 text-md-end mb-3 mb-md-0">
+                                <small class="text-muted d-block">Produto: R$ @pedido.ValorPedido.ToString("N2")</small>
+                                <small class="text-muted d-block">Frete: R$ @((pedido.ValorFrete ?? 0.00m).ToString("N2"))</small>
+                                <strong class="fs-5 text-success d-block mt-1">Total: R$ @pedido.ValorTotal.ToString("N2")</strong>
+                            </div>
+                            <div class="col-md-3 text-md-end">
+                                @if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Criado || pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.AguardandoAceite)
+                                {
+                                    <button type="button" class="btn btn-success btn-sm w-100 mb-2" data-bs-toggle="modal" data-bs-target="#modalAceitar_@pedido.Id">
+                                        <i class="icon-base ri ri-check-line me-1"></i> Aceitar Pedido & Inserir Frete
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#modalRecusar_@pedido.Id">
+                                        <i class="icon-base ri ri-close-line me-1"></i> Recusar Venda
+                                    </button>
+                                }
+                                else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Pago)
+                                {
+                                    <form asp-controller="Pedido" asp-action="IniciarDespacho" method="post">
+                                        <input type="hidden" name="id" value="@pedido.Id" />
+                                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                                            <i class="icon-base ri ri-box-3-line me-1"></i> Iniciar Despacho / Embalagem
+                                        </button>
+                                    </form>
+                                }
+                                else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.EmDespacho)
+                                {
+                                    <button type="button" class="btn btn-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#modalRastreio_@pedido.Id">
+                                        <i class="icon-base ri ri-truck-line me-1"></i> Informar Rastreio
+                                    </button>
+                                }
+                                else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.EmTransito)
+                                {
+                                    <form asp-controller="Pedido" asp-action="ConfirmarEntrega" method="post">
+                                        <input type="hidden" name="id" value="@pedido.Id" />
+                                        <button type="submit" class="btn btn-info text-white btn-sm w-100">
+                                            <i class="icon-base ri ri-checkbox-circle-line me-1"></i> Confirmar Entrega Realizada
+                                        </button>
+                                    </form>
+                                }
+
+                                @if (!string.IsNullOrEmpty(pedido.CodigoRastreio))
+                                {
+                                    <small class="text-muted d-block mt-2">Rastreio: <strong>@pedido.CodigoRastreio</strong></small>
+                                }
+                            </div>
+                        </div>
+
+                        @if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Recusado && !string.IsNullOrEmpty(pedido.Observacao))
+                        {
+                            <div class="alert alert-danger mb-0 mt-3 border-0 shadow-sm">
+                                <i class="icon-base ri ri-error-warning-line me-1"></i> <strong>Justificativa da Recusa:</strong> @pedido.Observacao
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Aceitar Pedido -->
+            <div class="modal fade" id="modalAceitar_@pedido.Id" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form asp-controller="Pedido" asp-action="AceitarPedido" method="post">
+                            <input type="hidden" name="id" value="@pedido.Id" />
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title text-white fw-bold"><i class="icon-base ri ri-check-line me-1"></i> Aceitar Pedido #@pedido.Numero</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-start">
+                                <p class="text-muted mb-3">Informe o valor real do frete para o envio por transportadora. O valor será somado ao total da venda e a cobrança será emitida para o comprador.</p>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Valor do Frete (R$):</label>
+                                    <input type="number" step="0.01" min="0" name="valorFrete" class="form-control" value="@(pedido.ValorFrete ?? 0.00m)" required />
+                                </div>
+                                <div class="alert alert-info border-0 mb-0">
+                                    <i class="icon-base ri ri-information-line me-1"></i> O link de cobrança do Asaas será gerado automaticamente.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-success fw-bold">Confirmar Aceite & Gerar Cobrança</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Recusar Pedido -->
+            <div class="modal fade" id="modalRecusar_@pedido.Id" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form asp-controller="Pedido" asp-action="RecusarPedido" method="post">
+                            <input type="hidden" name="id" value="@pedido.Id" />
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title text-white fw-bold"><i class="icon-base ri ri-close-line me-1"></i> Recusar Venda #@pedido.Numero</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-start">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Motivo da Recusa (Obrigatório):</label>
+                                    <textarea name="observacao" class="form-control" rows="3" placeholder="Ex: Produto fora de estoque no viveiro ou indisponibilidade de entrega para esta região." required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-danger fw-bold">Confirmar Recusa</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Informar Rastreio -->
+            <div class="modal fade" id="modalRastreio_@pedido.Id" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form asp-controller="Pedido" asp-action="InformarRastreio" method="post">
+                            <input type="hidden" name="id" value="@pedido.Id" />
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title text-white fw-bold"><i class="icon-base ri ri-truck-line me-1"></i> Informar Código de Rastreio #@pedido.Numero</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-start">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Código de Rastreamento:</label>
+                                    <input type="text" name="codigoRastreio" class="form-control" placeholder="Ex: AA123456789BR" required />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Link Direto de Rastreamento (Opcional):</label>
+                                    <input type="url" name="urlRastreio" class="form-control" placeholder="https://..." />
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary fw-bold">Salvar & Alterar para 'Em Transito'</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

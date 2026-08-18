@@ -44,6 +44,8 @@ public class UsuarioRepository : IUsuarioRepository
         planoid AS PlanoId,
         reputacao AS Reputacao,
         isentocobranca AS IsentoCobranca,
+        asaas_account_id AS AsaasAccountId,
+        asaas_customer_id AS AsaasCustomerId,
         dataultimaalteracao AS DataUltimaAlteracao,
         usuarioalteracaoid AS UsuarioAlteracaoId,
         usuarioalteracaonome AS UsuarioAlteracaoNome";
@@ -75,11 +77,11 @@ public class UsuarioRepository : IUsuarioRepository
         const string sql = @"
             INSERT INTO usuarios (
                 nome, email, senhahash, telefone, perfil, datacadastro,
-                razaosocial, cpfcnpj, inscricaoestadual, cep, logradouro, numero, complemento, bairro, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca
+                razaosocial, cpfcnpj, inscricaoestadual, cep, logradouro, numero, complemento, bairro, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca, asaas_account_id, asaas_customer_id
             )
             VALUES (
                 @Nome, LOWER(TRIM(@Email)), @SenhaHash, @Telefone, @Perfil, @DataCadastro,
-                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @Cep, @Logradouro, @Numero, @Complemento, @Bairro, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca
+                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @Cep, @Logradouro, @Numero, @Complemento, @Bairro, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca, @AsaasAccountId, @AsaasCustomerId
             )
             RETURNING id;";
 
@@ -115,6 +117,8 @@ public class UsuarioRepository : IUsuarioRepository
                 planoid = @PlanoId,
                 reputacao = @Reputacao,
                 isentocobranca = @IsentoCobranca,
+                asaas_account_id = @AsaasAccountId,
+                asaas_customer_id = @AsaasCustomerId,
                 dataultimaalteracao = @DataUltimaAlteracao,
                 usuarioalteracaoid = @UsuarioAlteracaoId,
                 usuarioalteracaonome = @UsuarioAlteracaoNome

@@ -26963,7 +26963,7 @@ html:not(.layout-footer-fixed) .content-wrapper {
   }
   .layout-menu-fixed:not(.layout-navbar-hidden) .layout-horizontal .layout-page .menu-horizontal + [class*=container-],
   .layout-menu-fixed-offcanvas:not(.layout-navbar-hidden) .layout-horizontal .layout-page .menu-horizontal + [class*=container-] {
-    padding-block-start: 9.25rem !important;
+    padding-block-start: 5.25rem !important;
   }
   /* Layout fixed not off-canvas - Menu collapsed */
   .layout-navbar-fixed.layout-menu-collapsed:not(.layout-menu-offcanvas, .layout-menu-fixed-offcanvas) .layout-content-navbar .layout-navbar,

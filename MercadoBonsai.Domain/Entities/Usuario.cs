@@ -44,6 +44,10 @@ public class Usuario
     // Expansão Fase 8: Flag "Não cobrar" (Isento de Cobrança para parceiros selecionados)
     public bool IsentoCobranca { get; set; } = false;
 
+    // Expansão: Integração Asaas
+    public string? AsaasAccountId { get; set; }
+    public string? AsaasCustomerId { get; set; }
+
     // Expansão: Auditoria de Alteração
     public DateTime? DataUltimaAlteracao { get; set; }
     public int? UsuarioAlteracaoId { get; set; }
