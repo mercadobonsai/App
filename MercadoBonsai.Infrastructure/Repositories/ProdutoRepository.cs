@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using MercadoBonsai.Domain.Entities;
+using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Infrastructure.Data;
 
@@ -124,5 +125,19 @@ public class ProdutoRepository : IProdutoRepository
 
         using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(sql, produto);
+    }
+
+    public async Task<bool> AtualizarStatusDisponibilidadeAsync(int id, StatusProduto status, int quantidadeEstoque)
+    {
+        const string sql = @"
+            UPDATE produtos
+            SET 
+                status = @status,
+                quantidadeestoque = @quantidadeEstoque
+            WHERE id = @id;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        var rows = await connection.ExecuteAsync(sql, new { id, status = (int)status, quantidadeEstoque });
+        return rows > 0;
     }
 }

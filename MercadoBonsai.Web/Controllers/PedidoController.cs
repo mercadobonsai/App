@@ -73,6 +73,37 @@ public class PedidoController : Controller
             return RedirectToAction("Detalhes", "Produto", new { id = produtoId });
         }
 
+        // 1. Validação Obrigatória de Dados Fiscais / Endereço Completo (Comprador e Vendedor)
+        bool CompradorValido(Usuario u) => u != null 
+            && !string.IsNullOrWhiteSpace(u.CpfCnpj) 
+            && !string.IsNullOrWhiteSpace(u.Telefone)
+            && !string.IsNullOrWhiteSpace(u.Cep)
+            && !string.IsNullOrWhiteSpace(u.Logradouro)
+            && !string.IsNullOrWhiteSpace(u.Bairro)
+            && !string.IsNullOrWhiteSpace(u.Cidade)
+            && !string.IsNullOrWhiteSpace(u.Estado);
+
+        bool VendedorValido(Usuario u) => u != null 
+            && !string.IsNullOrWhiteSpace(u.CpfCnpj) 
+            && !string.IsNullOrWhiteSpace(u.Telefone)
+            && !string.IsNullOrWhiteSpace(u.Cep)
+            && !string.IsNullOrWhiteSpace(u.Logradouro)
+            && !string.IsNullOrWhiteSpace(u.Bairro)
+            && !string.IsNullOrWhiteSpace(u.Cidade)
+            && !string.IsNullOrWhiteSpace(u.Estado);
+
+        if (!CompradorValido(comprador))
+        {
+            TempData["Erro"] = "Para realizar a compra, é necessário que seus dados cadastrais (CPF/CNPJ, Telefone e Endereço Completo) estejam preenchidos no perfil.";
+            return RedirectToAction("MeuPerfil", "Conta");
+        }
+
+        if (!VendedorValido(vendedor))
+        {
+            TempData["Erro"] = "O vendedor deste anúncio precisa cadastrar o CPF/CNPJ, Telefone e Endereço Completo no perfil para habilitar vendas na plataforma.";
+            return RedirectToAction("Detalhes", "Produto", new { id = produtoId });
+        }
+
         int proximoNumero = await _pedidoRepository.ObterProximoNumeroPedidoAsync();
         decimal freteInicial = valorFreteInformado ?? 0.00m;
         decimal valorTotal = produto.Preco + freteInicial;
@@ -99,6 +130,9 @@ public class PedidoController : Controller
 
         int pedidoId = await _pedidoRepository.CriarAsync(pedido);
         pedido.Id = pedidoId;
+
+        // 2. Gestão de Disponibilidade: Bloqueia o produto na vitrine imediatamente após a criação do pedido
+        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(produto.Id, StatusProduto.Indisponivel, 0);
 
         // Dispara Webhook e-vendas imediatamente no status 'Criado'
         await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
@@ -149,6 +183,16 @@ public class PedidoController : Controller
         if (vendedor == null)
         {
             TempData["Erro"] = "Vendedor não localizado.";
+            return RedirectToAction("MinhasVendas");
+        }
+
+        // 5. Obrigatoriedade do Frete Conforme a Regra do Item
+        var produto = await _produtoRepository.ObterPorIdAsync(pedido.ProdutoId);
+        bool freteObrigatorio = produto != null && string.Equals(produto.FormaEnvio, "Frete por conta do comprador", StringComparison.OrdinalIgnoreCase);
+
+        if (freteObrigatorio && valorFrete <= 0.00m)
+        {
+            TempData["Erro"] = "Este item está configurado como 'Frete por conta do comprador'. O valor do frete é obrigatório e deve ser maior que R$ 0,00.";
             return RedirectToAction("MinhasVendas");
         }
 
@@ -212,10 +256,13 @@ public class PedidoController : Controller
 
         await _pedidoRepository.AtualizarStatusAsync(pedido.Id, StatusPedido.Recusado, pedido.Observacao);
 
+        // 2. Retorna a disponibilidade do produto para Disponível na vitrine em caso de recusa/cancelamento
+        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Disponivel, 1);
+
         // Dispara Webhook e-vendas no status 'Recusado'
         await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
 
-        TempData["Sucesso"] = $"Pedido #{pedido.Numero} recusado com sucesso.";
+        TempData["Sucesso"] = $"Pedido #{pedido.Numero} recusado com sucesso e o item retornou a ficar disponível na vitrine.";
         return RedirectToAction("MinhasVendas");
     }
 
