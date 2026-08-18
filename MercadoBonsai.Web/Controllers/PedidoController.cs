@@ -168,7 +168,7 @@ public class PedidoController : Controller
 
     // POST: /Pedido/AceitarPedido (Ação do Vendedor)
     [HttpPost]
-    public async Task<IActionResult> AceitarPedido(int id, decimal valorFrete)
+    public async Task<IActionResult> AceitarPedido(int id, string? valorFrete)
     {
         int vendedorId = ObterUsuarioLogadoId();
         var pedido = await _pedidoRepository.ObterPorIdAsync(id);
@@ -186,11 +186,14 @@ public class PedidoController : Controller
             return RedirectToAction("MinhasVendas");
         }
 
+        // Converte e higieniza valor monetário prevenindo erros de separador PT-BR (ex: 55,60 -> 55.60)
+        decimal valorFreteParsed = ConverterValorMonetario(valorFrete);
+
         // 5. Obrigatoriedade do Frete Conforme a Regra do Item
         var produto = await _produtoRepository.ObterPorIdAsync(pedido.ProdutoId);
         bool freteObrigatorio = produto != null && string.Equals(produto.FormaEnvio, "Frete por conta do comprador", StringComparison.OrdinalIgnoreCase);
 
-        if (freteObrigatorio && valorFrete <= 0.00m)
+        if (freteObrigatorio && valorFreteParsed <= 0.00m)
         {
             TempData["Erro"] = "Este item está configurado como 'Frete por conta do comprador'. O valor do frete é obrigatório e deve ser maior que R$ 0,00.";
             return RedirectToAction("MinhasVendas");
@@ -207,9 +210,9 @@ public class PedidoController : Controller
             }
         }
 
-        // 2. Calcula novo valor total com o valor real do frete
-        decimal freteCalculado = Math.Max(0.00m, valorFrete);
-        decimal valorTotalNovo = pedido.ValorPedido + freteCalculado;
+        // 2. Calcula novo valor total com o valor real do frete (arredondado a 2 casas decimais)
+        decimal freteCalculado = Math.Round(Math.Max(0.00m, valorFreteParsed), 2);
+        decimal valorTotalNovo = Math.Round(pedido.ValorPedido + freteCalculado, 2);
 
         pedido.ValorFrete = freteCalculado;
         pedido.ValorTotal = valorTotalNovo;
@@ -230,6 +233,31 @@ public class PedidoController : Controller
 
         TempData["Sucesso"] = $"Pedido #{pedido.Numero} aceito com sucesso! Frete de R$ {freteCalculado:N2} adicionado e link de pagamento gerado.";
         return RedirectToAction("MinhasVendas");
+    }
+
+    private static decimal ConverterValorMonetario(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return 0.00m;
+
+        var str = input.Trim().Replace("R$", "").Trim();
+
+        // Se contiver vírgula e ponto (ex: 1.250,50)
+        if (str.Contains(",") && str.Contains("."))
+        {
+            str = str.Replace(".", "").Replace(",", ".");
+        }
+        else if (str.Contains(","))
+        {
+            // Se contiver apenas vírgula (ex: 55,60)
+            str = str.Replace(",", ".");
+        }
+
+        if (decimal.TryParse(str, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal val))
+        {
+            return Math.Round(val, 2);
+        }
+
+        return 0.00m;
     }
 
     // POST: /Pedido/RecusarPedido (Ação do Vendedor)
