@@ -32,7 +32,7 @@ public class AsaasService : IAsaasService
         // Modo Stub / Pré-configurado se a chave não estiver preenchida
         if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "seu_asaas_token_aqui")
         {
-            _logger.LogInformation("Asaas API Key não configurada. Simulando criação de Cliente para Usuário #{Id}", usuario.Id);
+            _logger.LogInformation("Asaas API Key não configurada. Simulando criação de Cliente para #{UsuarioId}", usuario.Id);
             return new AsaasClienteResult
             {
                 Sucesso = true,
@@ -42,16 +42,20 @@ public class AsaasService : IAsaasService
 
         try
         {
+            var cpfCnpjLimpo = SomenteNumeros(usuario.CpfCnpj);
+            var foneLimpo = SomenteNumeros(usuario.Telefone);
+            var cepLimpo = SomenteNumeros(usuario.Cep);
+
             var payload = new
             {
                 name = usuario.Nome,
+                cpfCnpj = cpfCnpjLimpo,
                 email = usuario.Email,
-                cpfCnpj = usuario.CpfCnpj,
-                phone = usuario.Telefone,
-                mobilePhone = usuario.Telefone,
-                postalCode = usuario.Cep,
+                phone = foneLimpo,
+                mobilePhone = foneLimpo,
+                postalCode = cepLimpo,
                 address = usuario.Logradouro,
-                addressNumber = usuario.Numero,
+                addressNumber = string.IsNullOrWhiteSpace(usuario.Numero) ? "SN" : usuario.Numero,
                 complement = usuario.Complemento,
                 province = usuario.Bairro,
                 city = usuario.Cidade,
@@ -108,20 +112,23 @@ public class AsaasService : IAsaasService
 
         try
         {
-            bool isCnpj = !string.IsNullOrWhiteSpace(vendedor.CpfCnpj) && vendedor.CpfCnpj.Length > 11;
+            var cpfCnpjLimpo = SomenteNumeros(vendedor.CpfCnpj);
+            var foneLimpo = SomenteNumeros(vendedor.Telefone);
+            var cepLimpo = SomenteNumeros(vendedor.Cep);
+            bool isCnpj = cpfCnpjLimpo.Length > 11;
             var personType = isCnpj ? "JURIDICA" : "FISICA";
 
             var payload = new
             {
                 name = string.IsNullOrWhiteSpace(vendedor.RazaoSocial) ? vendedor.Nome : vendedor.RazaoSocial,
                 email = vendedor.Email,
-                cpfCnpj = vendedor.CpfCnpj,
-                mobilePhone = vendedor.Telefone,
+                cpfCnpj = cpfCnpjLimpo,
+                mobilePhone = foneLimpo,
                 address = vendedor.Logradouro,
-                addressNumber = vendedor.Numero,
+                addressNumber = string.IsNullOrWhiteSpace(vendedor.Numero) ? "SN" : vendedor.Numero,
                 complement = vendedor.Complemento,
                 province = vendedor.Bairro,
-                postalCode = vendedor.Cep,
+                postalCode = cepLimpo,
                 personType = personType,
                 birthDate = isCnpj ? null : vendedor.DataNascimento?.ToString("yyyy-MM-dd"),
                 companyType = isCnpj ? "MEI" : null
@@ -314,9 +321,11 @@ public class AsaasService : IAsaasService
         try
         {
             using var doc = JsonDocument.Parse(responseBody);
-            if (doc.RootElement.TryGetProperty("errors", out var errorsProp) && errorsProp.ValueKind == JsonValueKind.Array)
+            var root = doc.RootElement;
+            var mensagens = new List<string>();
+
+            if (root.TryGetProperty("errors", out var errorsProp) && errorsProp.ValueKind == JsonValueKind.Array)
             {
-                var mensagens = new List<string>();
                 foreach (var errElement in errorsProp.EnumerateArray())
                 {
                     if (errElement.TryGetProperty("description", out var descProp))
@@ -328,18 +337,40 @@ public class AsaasService : IAsaasService
                         }
                     }
                 }
+            }
+            else if (root.TryGetProperty("message", out var msgProp))
+            {
+                var msg = msgProp.GetString();
+                if (!string.IsNullOrWhiteSpace(msg)) mensagens.Add(msg.Trim());
+            }
+            else if (root.TryGetProperty("error", out var errProp))
+            {
+                var err = errProp.GetString();
+                if (!string.IsNullOrWhiteSpace(err)) mensagens.Add(err.Trim());
+            }
 
-                if (mensagens.Count > 0)
-                {
-                    return string.Join(" | ", mensagens);
-                }
+            if (mensagens.Count > 0)
+            {
+                return string.Join(" | ", mensagens);
             }
         }
         catch
         {
-            // Retorna fallback genérico caso o body não seja JSON parseável
+            // Retorna o corpo truncado da resposta caso não seja um JSON parseável
         }
 
-        return "Falha no processamento do cadastro junto à plataforma Asaas.";
+        var limpo = responseBody.Trim();
+        return limpo.Length > 200 ? limpo.Substring(0, 200) + "..." : limpo;
+    }
+
+    private static string SomenteNumeros(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        var sb = new StringBuilder();
+        foreach (var c in input)
+        {
+            if (char.IsDigit(c)) sb.Append(c);
+        }
+        return sb.ToString();
     }
 }
