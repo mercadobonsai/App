@@ -294,6 +294,12 @@
                                                     <div>Gestão de Clientes</div>
                                                 </a>
                                             </li>
+                                            <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "SubcontasAsaas" ? "active" : "")">
+                                                <a asp-controller="Admin" asp-action="SubcontasAsaas" class="menu-link">
+                                                    <i class="menu-icon icon-base ri ri-bank-card-line me-2"></i>
+                                                    <div>Subcontas Asaas</div>
+                                                </a>
+                                            </li>
                                             <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Planos" ? "active" : "")">
                                                 <a asp-controller="Admin" asp-action="Planos" class="menu-link">
                                                     <i class="menu-icon icon-base ri ri-vip-crown-line me-2"></i>

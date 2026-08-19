@@ -154,6 +154,53 @@ public class AsaasService : IAsaasService
         }
     }
 
+    // Encerrar / Desativar Subconta de Vendedor (DELETE /v3/accounts/{id})
+    public async Task<AsaasSubcontaResult> EncerrarSubcontaAsync(string asaasAccountId)
+    {
+        var apiKey = _configuration["Asaas:ApiKey"]?.Trim();
+        var baseUrl = _configuration["Asaas:ApiUrl"] ?? "https://sandbox.asaas.com/api/v3";
+        var userAgent = _configuration["Asaas:UserAgent"] ?? "MercadoBonsai/1.0 (suporte@mercadobonsai.com.br)";
+
+        if (string.IsNullOrWhiteSpace(asaasAccountId))
+        {
+            return new AsaasSubcontaResult { Sucesso = false, MensagemErro = "ID da Subconta Asaas é inválido ou não informado." };
+        }
+
+        // Modo Stub / Pré-configurado se a chave não estiver preenchida ou ID for simulado
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "seu_asaas_token_aqui" || asaasAccountId.StartsWith("acc_simulada_"))
+        {
+            _logger.LogInformation("Asaas API Key não configurada ou conta simulada. Concluindo encerramento stub para a subconta {AccountId}", asaasAccountId);
+            return new AsaasSubcontaResult { Sucesso = true, AsaasAccountId = asaasAccountId };
+        }
+
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"{baseUrl}/accounts/{asaasAccountId}");
+            request.Headers.Add("access_token", apiKey);
+            request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
+
+            var response = await _httpClient.SendAsync(request);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Subconta Asaas {AccountId} encerrada com sucesso via API!", asaasAccountId);
+                return new AsaasSubcontaResult { Sucesso = true, AsaasAccountId = asaasAccountId };
+            }
+            else
+            {
+                string erroDescrito = ExtrairErrosAsaas(responseBody);
+                _logger.LogWarning("Falha ao encerrar Subconta Asaas {AccountId} HTTP {Status}: {Body}", asaasAccountId, response.StatusCode, responseBody);
+                return new AsaasSubcontaResult { Sucesso = false, MensagemErro = erroDescrito };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exceção ao encerrar Subconta Asaas {AccountId}", asaasAccountId);
+            return new AsaasSubcontaResult { Sucesso = false, MensagemErro = ex.Message };
+        }
+    }
+
     public async Task<AsaasCobrancaResult> CriarCobrancaAsync(Pedido pedido, Usuario vendedor)
     {
         var apiKey = _configuration["Asaas:ApiKey"]?.Trim();

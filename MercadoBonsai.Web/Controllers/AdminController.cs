@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using MercadoBonsai.Domain.Entities;
+using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Web.Models;
+using MercadoBonsai.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -17,17 +21,23 @@ public class AdminController : Controller
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPlanoRepository _planoRepository;
     private readonly IPropagandaRepository _propagandaRepository;
+    private readonly IAsaasService _asaasService;
+    private readonly VendedorTokenService _vendedorTokenService;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
     public AdminController(
         IUsuarioRepository usuarioRepository, 
         IPlanoRepository planoRepository, 
         IPropagandaRepository propagandaRepository,
+        IAsaasService asaasService,
+        VendedorTokenService vendedorTokenService,
         IWebHostEnvironment webHostEnvironment)
     {
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
         _propagandaRepository = propagandaRepository;
+        _asaasService = asaasService;
+        _vendedorTokenService = vendedorTokenService;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -51,6 +61,10 @@ public class AdminController : Controller
             return NotFound();
         }
 
+        var plano = await _planoRepository.ObterPorIdAsync(usuario.PlanoId);
+        var nomePlano = plano?.Nome ?? (usuario.PlanoId == 1 ? "Bronze" : usuario.PlanoId == 2 ? "Prata" : usuario.PlanoId == 3 ? "Ouro" : "Free");
+        bool liberarCartao = usuario.PlanoId >= 2;
+
         var viewModel = new PerfilViewModel
         {
             Id = usuario.Id,
@@ -61,6 +75,13 @@ public class AdminController : Controller
             RazaoSocial = usuario.RazaoSocial,
             CpfCnpj = usuario.CpfCnpj,
             InscricaoEstadual = usuario.InscricaoEstadual,
+            Cep = usuario.Cep,
+            Logradouro = usuario.Logradouro,
+            Numero = usuario.Numero,
+            Complemento = usuario.Complemento,
+            Bairro = usuario.Bairro,
+            Cidade = usuario.Cidade,
+            Estado = usuario.Estado,
             ChavePix = usuario.ChavePix,
             Banco = usuario.Banco,
             Agencia = usuario.Agencia,
@@ -68,10 +89,23 @@ public class AdminController : Controller
             DescricaoViveiro = usuario.DescricaoViveiro,
             LogotipoUrl = usuario.LogotipoUrl,
             PlanoId = usuario.PlanoId,
+            NomePlano = nomePlano,
+            LiberarCartaoVisitas = liberarCartao,
             IsentoCobranca = usuario.IsentoCobranca,
+            AsaasCustomerId = usuario.AsaasCustomerId,
+            AsaasAccountId = usuario.AsaasAccountId,
+            AsaasSubscriptionId = usuario.AsaasSubscriptionId,
             DataUltimaAlteracao = usuario.DataUltimaAlteracao,
             UsuarioAlteracaoNome = usuario.UsuarioAlteracaoNome
         };
+
+        if (liberarCartao)
+        {
+            viewModel.LinkVitrineCartao = Url.Action("Vitrine", "Cartao", new { token = _vendedorTokenService.GerarToken(usuario.Id, "vitrine") }, Request.Scheme);
+            viewModel.LinkInsumosCartao = Url.Action("Insumos", "Cartao", new { token = _vendedorTokenService.GerarToken(usuario.Id, "insumos") }, Request.Scheme);
+            viewModel.LinkVasosCartao = Url.Action("Vasos", "Cartao", new { token = _vendedorTokenService.GerarToken(usuario.Id, "vasos") }, Request.Scheme);
+            viewModel.LinkEngajamentoCartao = Url.Action("Engajamento", "Cartao", new { token = _vendedorTokenService.GerarToken(usuario.Id, "engajamento") }, Request.Scheme);
+        }
 
         return View(viewModel);
     }
@@ -127,6 +161,13 @@ public class AdminController : Controller
         usuario.RazaoSocial = model.RazaoSocial;
         usuario.CpfCnpj = model.CpfCnpj;
         usuario.InscricaoEstadual = model.InscricaoEstadual;
+        usuario.Cep = model.Cep;
+        usuario.Logradouro = model.Logradouro;
+        usuario.Numero = model.Numero;
+        usuario.Complemento = model.Complemento;
+        usuario.Bairro = model.Bairro;
+        usuario.Cidade = model.Cidade;
+        usuario.Estado = model.Estado;
         usuario.ChavePix = model.ChavePix;
         usuario.Banco = model.Banco;
         usuario.Agencia = model.Agencia;
@@ -139,8 +180,93 @@ public class AdminController : Controller
 
         await _usuarioRepository.AtualizarAsync(usuario);
 
+        // Tenta sincronizar Asaas se o admin tiver preenchido os dados e estiver sem subconta
+        bool dadosCompletos = !string.IsNullOrWhiteSpace(usuario.CpfCnpj)
+            && !string.IsNullOrWhiteSpace(usuario.Telefone)
+            && !string.IsNullOrWhiteSpace(usuario.Cep)
+            && !string.IsNullOrWhiteSpace(usuario.Logradouro);
+
+        if (dadosCompletos && (usuario.Perfil == PerfilUsuario.Vendedor || usuario.Perfil == PerfilUsuario.Administrador))
+        {
+            if (string.IsNullOrEmpty(usuario.AsaasCustomerId))
+            {
+                var resCliente = await _asaasService.CriarClienteAsync(usuario);
+                if (resCliente.Sucesso && !string.IsNullOrEmpty(resCliente.AsaasCustomerId))
+                {
+                    usuario.AsaasCustomerId = resCliente.AsaasCustomerId;
+                    await _usuarioRepository.AtualizarAsync(usuario);
+                }
+            }
+
+            if (string.IsNullOrEmpty(usuario.AsaasAccountId))
+            {
+                var resSubconta = await _asaasService.CriarSubcontaVendedorAsync(usuario);
+                if (resSubconta.Sucesso && !string.IsNullOrEmpty(resSubconta.AsaasAccountId))
+                {
+                    usuario.AsaasAccountId = resSubconta.AsaasAccountId;
+                    await _usuarioRepository.AtualizarAsync(usuario);
+                }
+            }
+        }
+
         TempData["Sucesso"] = $"Cadastro do cliente '{usuario.Nome}' atualizado com sucesso!";
         return RedirectToAction("Clientes");
+    }
+
+    // GET: /Admin/SubcontasAsaas
+    [HttpGet]
+    public async Task<IActionResult> SubcontasAsaas()
+    {
+        var todosUsuarios = await _usuarioRepository.ListarTodosAsync(null, null);
+        // Filtra vendedores ou administradores com ou sem subconta Asaas
+        var vendedores = todosUsuarios
+            .Where(u => u.Perfil == PerfilUsuario.Vendedor || u.Perfil == PerfilUsuario.Administrador || !string.IsNullOrEmpty(u.AsaasAccountId))
+            .OrderByDescending(u => u.DataCadastro);
+
+        return View(vendedores);
+    }
+
+    // POST: /Admin/EncerrarSubconta
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EncerrarSubconta(int usuarioId)
+    {
+        var usuario = await _usuarioRepository.ObterPorIdAsync(usuarioId);
+        if (usuario == null)
+        {
+            TempData["Erro"] = "Usuário não localizado.";
+            return RedirectToAction("SubcontasAsaas");
+        }
+
+        if (string.IsNullOrEmpty(usuario.AsaasAccountId))
+        {
+            TempData["Erro"] = $"O usuário '{usuario.Nome}' não possui nenhuma Subconta Asaas ativa no momento.";
+            return RedirectToAction("SubcontasAsaas");
+        }
+
+        var accountIdOriginal = usuario.AsaasAccountId;
+        var result = await _asaasService.EncerrarSubcontaAsync(accountIdOriginal);
+
+        if (result.Sucesso)
+        {
+            var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int.TryParse(adminIdClaim, out int adminId);
+
+            usuario.AsaasAccountId = null;
+            usuario.DataUltimaAlteracao = DateTime.UtcNow;
+            usuario.UsuarioAlteracaoId = adminId;
+            usuario.UsuarioAlteracaoNome = User.Identity?.Name ?? "Administrador";
+
+            await _usuarioRepository.AtualizarAsync(usuario);
+
+            TempData["Sucesso"] = $"Subconta Asaas '{accountIdOriginal}' de '{usuario.Nome}' foi encerrada com sucesso na API Asaas!";
+        }
+        else
+        {
+            TempData["Erro"] = $"Não foi possível encerrar a Subconta Asaas na API: {result.MensagemErro}";
+        }
+
+        return RedirectToAction("SubcontasAsaas");
     }
 
     // GET: /Admin/Planos

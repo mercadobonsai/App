@@ -29,5 +29,6 @@ public interface IAsaasService
 {
     Task<AsaasClienteResult> CriarClienteAsync(Usuario usuario);
     Task<AsaasSubcontaResult> CriarSubcontaVendedorAsync(Usuario vendedor);
+    Task<AsaasSubcontaResult> EncerrarSubcontaAsync(string asaasAccountId);
     Task<AsaasCobrancaResult> CriarCobrancaAsync(Pedido pedido, Usuario vendedor);
 }

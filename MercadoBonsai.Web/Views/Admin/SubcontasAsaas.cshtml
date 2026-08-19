@@ -1,0 +1,170 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Usuario>
+@{
+    ViewData["Title"] = "Gestão de Subcontas Asaas - Mercado Bonsai";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1" style="color: #1976D2;"><i class="icon-base ri ri-bank-card-line me-2"></i>Gestão de Subcontas Asaas</h3>
+            <p class="text-muted mb-0">Gerencie e monitore as subcontas de recebimento ativas de vendedores e parceiros no Asaas</p>
+        </div>
+        <div>
+            <span class="badge bg-primary fs-6 px-3 py-2">
+                <i class="icon-base ri ri-user-shared-line me-1"></i> Total: @Model.Count(u => !string.IsNullOrEmpty(u.AsaasAccountId)) Subcontas Ativas
+            </span>
+        </div>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" role="alert">
+            <i class="icon-base ri ri-checkbox-circle-line me-2 fs-5"></i> @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-4" role="alert">
+            <i class="icon-base ri ri-error-warning-line me-2 fs-5"></i> @TempData["Erro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-list-check-2 me-2"></i>Subcontas de Vendedores e Administradores</h6>
+        </div>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Vendedor / Viveiro</th>
+                        <th>Documento / Perfil</th>
+                        <th>ID Cliente Asaas</th>
+                        <th>ID Subconta Asaas</th>
+                        <th>Status Asaas</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="icon-base ri ri-user-unfollow-line fs-3 d-block mb-2"></i>
+                                Nenhum vendedor cadastrado com subconta Asaas.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar me-3">
+                                            @if (!string.IsNullOrEmpty(item.LogotipoUrl))
+                                            {
+                                                <img src="@item.LogotipoUrl" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div class="avatar-initial rounded-circle bg-label-primary d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                                                    @item.Nome.Substring(0, Math.Min(2, item.Nome.Length)).ToUpper()
+                                                </div>
+                                            }
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold text-dark d-block">@item.Nome</span>
+                                            <small class="text-muted">@item.Email</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="d-block text-dark fw-semibold">@(string.IsNullOrEmpty(item.CpfCnpj) ? "Não informado" : item.CpfCnpj)</span>
+                                    <span class="badge bg-label-info text-capitalize small">@item.Perfil</span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.AsaasCustomerId))
+                                    {
+                                        <code class="text-success fw-bold">@item.AsaasCustomerId</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Pendente</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.AsaasAccountId))
+                                    {
+                                        <code class="text-primary fw-bold">@item.AsaasAccountId</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Pendente</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.AsaasAccountId))
+                                    {
+                                        <span class="badge bg-success"><i class="icon-base ri ri-checkbox-circle-fill me-1"></i>Subconta Ativa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="icon-base ri ri-time-line me-1"></i>Pendente de Cadastro</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-action="EditarCliente" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm" title="Editar Perfil Completo">
+                                            <i class="icon-base ri ri-edit-line me-1"></i> Editar
+                                        </a>
+
+                                        @if (!string.IsNullOrEmpty(item.AsaasAccountId))
+                                        {
+                                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalEncerrar_@item.Id" title="Encerrar Subconta no Asaas">
+                                                <i class="icon-base ri ri-close-circle-line me-1"></i> Encerrar Subconta
+                                            </button>
+
+                                            <!-- Modal de Confirmação de Encerramento de Subconta -->
+                                            <div class="modal fade" id="modalEncerrar_@item.Id" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content text-start">
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title text-white"><i class="icon-base ri ri-error-warning-line me-2"></i>Encerrar Subconta Asaas</h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p class="mb-2">Você está prestes a encerrar a Subconta Asaas do vendedor <strong>@item.Nome</strong>.</p>
+                                                            <div class="alert alert-warning text-dark mb-3">
+                                                                <small><i class="icon-base ri ri-alert-line me-1"></i> Esta ação enviará uma instrução de exclusão/desativação para a API do Asaas para a subconta <code>@item.AsaasAccountId</code> e desvinculará o vendedor da plataforma.</small>
+                                                            </div>
+                                                            <p class="small text-muted mb-0">Deseja realmente prosseguir com o encerramento?</p>
+                                                        </div>
+                                                        <div class="modal-footer bg-light">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <form asp-action="EncerrarSubconta" method="post" class="d-inline">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="usuarioId" value="@item.Id" />
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    <i class="icon-base ri ri-delete-bin-line me-1"></i> Confirmar Encerramento
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

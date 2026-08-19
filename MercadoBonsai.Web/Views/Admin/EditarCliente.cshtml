@@ -8,12 +8,20 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold mb-1" style="color: #4A7C59;"><i class="icon-base ri ri-edit-box-line me-2"></i>Editar Cliente / Vendedor</h3>
-            <p class="text-muted mb-0">Gerencie os dados cadastrais, fiscais, financeiros e o logotipo do viveiro</p>
+            <p class="text-muted mb-0">Gerencie os dados cadastrais, fiscais, endereço de origem, financeiros e integrações Asaas</p>
         </div>
         <a asp-action="Clientes" class="btn btn-outline-secondary">
             <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar à Listagem
         </a>
     </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" role="alert">
+            <i class="icon-base ri ri-checkbox-circle-line me-2 fs-5"></i> @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
     <form asp-action="EditarCliente" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
@@ -23,10 +31,10 @@
             <!-- Coluna Principal (Formulários) -->
             <div class="col-lg-8">
 
-                <!-- Card 1: Dados Cadastrais & Perfil -->
+                <!-- REQUIREMENT 3.1: Dados Pessoais e Contato -->
                 <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-user-line me-2"></i>Dados Cadastrais & Perfil</h6>
+                    <div class="card-header bg-success text-white py-3">
+                        <h6 class="fw-bold mb-0 text-white"><i class="icon-base ri ri-user-settings-line me-2"></i>Dados Pessoais & Contato</h6>
                     </div>
                     <div class="card-body p-4">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
@@ -44,7 +52,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Telefone" class="form-label fw-semibold"></label>
-                                <input asp-for="Telefone" class="form-control" placeholder="(00) 00000-0000" />
+                                <input asp-for="Telefone" class="form-control mask-phone" placeholder="(00) 00000-0000" />
+                                <span asp-validation-for="Telefone" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Perfil" class="form-label fw-semibold"></label>
@@ -67,85 +76,133 @@
                     </div>
                 </div>
 
-                <!-- Card 2: Dados Fiscais -->
+                <!-- REQUIREMENT 3.2: Dados Fiscais (CPF/CNPJ, Inscrição Estadual e Razão Social) -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-file-text-line me-2"></i>Dados Fiscais</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-file-text-line me-2"></i>Dados Fiscais (Pessoa Física ou Jurídica)</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label asp-for="RazaoSocial" class="form-label fw-semibold"></label>
-                                <input asp-for="RazaoSocial" class="form-control" placeholder="Nome Fantasia / Razão Social" />
+                                <label asp-for="CpfCnpj" class="form-label fw-semibold"></label>
+                                <input asp-for="CpfCnpj" class="form-control mask-cpf-cnpj" placeholder="CPF (000.000.000-00) ou CNPJ" />
+                                <small class="text-muted">Necessário para faturamento, emissão e cadastro no Asaas.</small>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="CpfCnpj" class="form-label fw-semibold"></label>
-                                <input asp-for="CpfCnpj" class="form-control" placeholder="CPF ou CNPJ" />
+                                <label asp-for="RazaoSocial" class="form-label fw-semibold"></label>
+                                <input asp-for="RazaoSocial" class="form-control" placeholder="Razão Social ou Nome Fantasia" />
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="InscricaoEstadual" class="form-label fw-semibold"></label>
-                                <input asp-for="InscricaoEstadual" class="form-control" placeholder="I.E. se houver" />
+                                <input asp-for="InscricaoEstadual" class="form-control" placeholder="Inscrição Estadual (se houver)" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 3: Dados Financeiros (Repasses) -->
+                <!-- REQUIREMENT 3.3: Endereço Completo & Origem do Envio (Melhor Envio) -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-map-pin-line me-2"></i>Endereço de Origem & Envio (Cálculo de Frete)</h6>
+                        <small class="text-muted" id="lblCepStatus"></small>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label asp-for="Cep" class="form-label fw-semibold"></label>
+                                <div class="input-group">
+                                    <input asp-for="Cep" class="form-control mask-cep" id="inputCep" placeholder="00000-000" onblur="consultarViaCep(this.value)" />
+                                    <button type="button" class="btn btn-outline-secondary" onclick="consultarViaCep(document.getElementById('inputCep').value)">
+                                        <i class="icon-base ri ri-search-line"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Cep" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Logradouro" class="form-label fw-semibold"></label>
+                                <input asp-for="Logradouro" class="form-control" id="inputLogradouro" placeholder="Rua, Avenida, Alameda..." />
+                            </div>
+                            <div class="col-md-2">
+                                <label asp-for="Numero" class="form-label fw-semibold"></label>
+                                <input asp-for="Numero" class="form-control" placeholder="123" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Complemento" class="form-label fw-semibold"></label>
+                                <input asp-for="Complemento" class="form-control" placeholder="Apto, Bloco, Sala..." />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Bairro" class="form-label fw-semibold"></label>
+                                <input asp-for="Bairro" class="form-control" id="inputBairro" placeholder="Bairro" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Cidade" class="form-label fw-semibold"></label>
+                                <input asp-for="Cidade" class="form-control" id="inputCidade" placeholder="Cidade" />
+                            </div>
+                            <div class="col-md-1">
+                                <label asp-for="Estado" class="form-label fw-semibold"></label>
+                                <input asp-for="Estado" class="form-control text-uppercase" id="inputEstado" placeholder="UF" maxlength="2" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REQUIREMENT 3.4: Apresentação do Viveiro -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-bank-card-line me-2"></i>Dados Financeiros para Repasse</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-store-line me-2"></i>Apresentação & História do Viveiro</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <label asp-for="DescricaoViveiro" class="form-label fw-semibold"></label>
+                            <textarea asp-for="DescricaoViveiro" class="form-control" rows="4" placeholder="Conte a história do viveiro..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REQUIREMENT 3.5: Dados Financeiros & Conta PIX -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light py-3">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-bank-line me-2"></i>Dados Financeiros para Repasses & Saques</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label asp-for="ChavePix" class="form-label fw-semibold"></label>
-                                <input asp-for="ChavePix" class="form-control" placeholder="E-mail, CPF/CNPJ ou Chave Aleatória" />
+                                <input asp-for="ChavePix" class="form-control" placeholder="CPF, CNPJ, E-mail, Celular ou Aleatória" />
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Banco" class="form-label fw-semibold"></label>
-                                <input asp-for="Banco" class="form-control" placeholder="Ex: Banco do Brasil (001)" />
+                                <input asp-for="Banco" class="form-control" placeholder="Ex: Banco do Brasil, Itaú, Nubank" />
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Agencia" class="form-label fw-semibold"></label>
-                                <input asp-for="Agencia" class="form-control" placeholder="Ex: 1234-5" />
+                                <input asp-for="Agencia" class="form-control" placeholder="0000-0" />
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Conta" class="form-label fw-semibold"></label>
-                                <input asp-for="Conta" class="form-control" placeholder="Ex: 98765-4" />
+                                <input asp-for="Conta" class="form-control" placeholder="00000-0" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 4: Apresentação do Viveiro -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-landscape-line me-2"></i>Apresentação do Viveiro</h6>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="mb-3">
-                            <label asp-for="DescricaoViveiro" class="form-label fw-semibold"></label>
-                            <textarea asp-for="DescricaoViveiro" class="form-control" rows="4" placeholder="Escreva uma breve apresentação do viveiro..."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-3">
-                    <button type="submit" class="btn btn-success px-4">
-                        <i class="icon-base ri ri-save-line me-1"></i> Salvar Alterações
+                <!-- Botões de Ação -->
+                <div class="mb-4 d-flex gap-3">
+                    <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm" style="background-color: #4A7C59; border-color: #4A7C59;">
+                        <i class="icon-base ri ri-save-line me-2"></i>Salvar Alterações do Perfil
                     </button>
-                    <a asp-action="Clientes" class="btn btn-outline-secondary">Cancelar</a>
+                    <a asp-action="Clientes" class="btn btn-outline-secondary btn-lg">Cancelar</a>
                 </div>
 
             </div>
 
-            <!-- Coluna Lateral (Logotipo & Auditoria) -->
+            <!-- Coluna Lateral Direita (Logotipo, Status Asaas, Cartão Digital e Auditoria) -->
             <div class="col-lg-4">
                 
-                <!-- Card: Logotipo do Viveiro -->
+                <!-- 1. Logotipo do Viveiro -->
                 <div class="card border-0 shadow-sm mb-4 text-center">
                     <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-image-edit-line me-2"></i>Logotipo do Viveiro</h5>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-image-edit-line me-2"></i>Logotipo do Viveiro</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="mb-3">
@@ -169,19 +226,119 @@
                     </div>
                 </div>
 
-                <!-- Card: Histórico de Alteração -->
+                <!-- 2. Status da Integração de Recebimentos Asaas -->
+                @if (Model.Perfil == MercadoBonsai.Domain.Enums.PerfilUsuario.Vendedor || Model.Perfil == MercadoBonsai.Domain.Enums.PerfilUsuario.Administrador)
+                {
+                    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-left: 5px solid #1976D2 !important;">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 40px; height: 40px; background-color: #1976D2; color: white;">
+                                    <i class="icon-base ri ri-bank-card-line fs-5"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">Status de Recebimentos Asaas</h6>
+                                    <small class="text-muted d-block" style="font-size: 0.78rem;">Subconta oficial para vendas</small>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column gap-2">
+                                @if (!string.IsNullOrEmpty(Model.AsaasCustomerId))
+                                {
+                                    <span class="badge bg-success fs-7 px-3 py-2 text-start"><i class="icon-base ri ri-user-check-line me-1"></i>Cliente Asaas: @Model.AsaasCustomerId</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary fs-7 px-3 py-2 text-start"><i class="icon-base ri ri-user-unfollow-line me-1"></i>Cliente Asaas: Pendente</span>
+                                }
+
+                                @if (!string.IsNullOrEmpty(Model.AsaasAccountId))
+                                {
+                                    <span class="badge bg-primary fs-7 px-3 py-2 text-start"><i class="icon-base ri ri-checkbox-circle-fill me-1"></i>Subconta Ativa: @Model.AsaasAccountId</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark fs-7 px-3 py-2 text-start"><i class="icon-base ri ri-time-line me-1"></i>Subconta: Preencha os dados para ativar</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- 3. Cartão de Visitas Digital & Links Diretos -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-white"><i class="icon-base ri ri-qr-code-line me-2"></i>Cartão de Visitas Digital</h6>
+                        <span class="badge bg-white text-success fw-bold">@Model.NomePlano</span>
+                    </div>
+                    <div class="card-body p-3">
+                        @if (Model.LiberarCartaoVisitas)
+                        {
+                            <p class="text-muted small mb-3" style="font-size: 0.8rem;">
+                                Seus links diretos gerados com criptografia para compartilhar sua vitrine e produtos nas redes sociais:
+                            </p>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="p-2 bg-light rounded border d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span class="fw-bold text-success small"><i class="icon-base ri ri-store-2-line me-1"></i> Vitrine</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-success btn-xs px-2 py-1" onclick="copiarLink('@Model.LinkVitrineCartao', 'Vitrine Geral')">
+                                        <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar
+                                    </button>
+                                </div>
+                                <div class="p-2 bg-light rounded border d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span class="fw-bold text-success small"><i class="icon-base ri ri-tools-line me-1"></i> Insumos</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-success btn-xs px-2 py-1" onclick="copiarLink('@Model.LinkInsumosCartao', 'Seção de Insumos')">
+                                        <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar
+                                    </button>
+                                </div>
+                                <div class="p-2 bg-light rounded border d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span class="fw-bold text-success small"><i class="icon-base ri ri-cup-line me-1"></i> Vasos</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-success btn-xs px-2 py-1" onclick="copiarLink('@Model.LinkVasosCartao', 'Seção de Vasos')">
+                                        <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar
+                                    </button>
+                                </div>
+                                <div class="p-2 bg-light rounded border d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span class="fw-bold text-success small"><i class="icon-base ri ri-auction-line me-1"></i> Leilões</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-success btn-xs px-2 py-1" onclick="copiarLink('@Model.LinkEngajamentoCartao', 'Leilões e Ações')">
+                                        <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center">
+                                <i class="icon-base ri ri-vip-crown-line fs-2 text-warning me-3"></i>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1 small">Plano Prata ou Ouro</h6>
+                                    <p class="text-muted small mb-0" style="font-size: 0.78rem;">
+                                        Cartão de Visitas Digital exclusivo para Planos Prata e Ouro. 
+                                        <a asp-controller="Conta" asp-action="Assinatura" class="fw-bold text-success text-decoration-underline ms-1">Fazer Upgrade</a>
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- 4. Histórico de Alteração (Obrigatoriamente por último) -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-history-line me-2"></i>Auditoria de Alteração</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-history-line me-2"></i>Histórico de Alteração</h6>
                     </div>
                     <div class="card-body p-3">
                         <div class="small">
                             <div class="mb-2">
                                 <span class="text-muted">Última Atualização:</span><br />
-                                <strong>@(Model.DataUltimaAlteracao.HasValue ? Model.DataUltimaAlteracao.Value.ToString("dd/MM/yyyy HH:mm:ss") : "Nenhuma alteração registrada")</strong>
+                                <strong>@(Model.DataUltimaAlteracao.HasValue ? Model.DataUltimaAlteracao.Value.ToString("dd/MM/yyyy HH:mm:ss") : "Nenhuma alteração recente")</strong>
                             </div>
                             <div>
-                                <span class="text-muted">Alterado por:</span><br />
+                                <span class="text-muted">Atualizado por:</span><br />
                                 <strong>@(string.IsNullOrEmpty(Model.UsuarioAlteracaoNome) ? "Sistema" : Model.UsuarioAlteracaoNome)</strong>
                             </div>
                         </div>
@@ -195,4 +352,51 @@
 
 @section Scripts {
     <script src="~/starter-kit/assets/js/masks.js"></script>
+    <script>
+        function copiarLink(url, secao) {
+            if (!url) return;
+            navigator.clipboard.writeText(url).then(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Link Copiado!',
+                    text: 'O link criptografado da ' + secao + ' foi copiado para a área de transferência.',
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            }).catch(function(err) {
+                prompt("Copie o link direto:", url);
+            });
+        }
+
+        async function consultarViaCep(cepInput) {
+            if (!cepInput) return;
+            const cep = cepInput.replace(/\D/g, '');
+            const lblStatus = document.getElementById('lblCepStatus');
+            
+            if (cep.length !== 8) {
+                lblStatus.innerHTML = '<span class="text-danger">CEP inválido.</span>';
+                return;
+            }
+
+            lblStatus.innerHTML = '<span class="text-info"><i class="spinner-border spinner-border-sm me-1"></i> Buscando via ViaCEP...</span>';
+
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+
+                if (data.erro) {
+                    lblStatus.innerHTML = '<span class="text-danger">CEP não encontrado.</span>';
+                    return;
+                }
+
+                document.getElementById('inputLogradouro').value = data.logradouro || '';
+                document.getElementById('inputBairro').value = data.bairro || '';
+                document.getElementById('inputCidade').value = data.localidade || '';
+                document.getElementById('inputEstado').value = data.uf || '';
+                lblStatus.innerHTML = '<span class="text-success"><i class="icon-base ri ri-check-line me-1"></i> Endereço preenchido!</span>';
+            } catch (err) {
+                lblStatus.innerHTML = '<span class="text-muted">Preencha manualmente.</span>';
+            }
+        }
+    </script>
 }
