@@ -75,6 +75,7 @@ public class AdminController : Controller
             RazaoSocial = usuario.RazaoSocial,
             CpfCnpj = usuario.CpfCnpj,
             InscricaoEstadual = usuario.InscricaoEstadual,
+            DataNascimento = usuario.DataNascimento,
             Cep = usuario.Cep,
             Logradouro = usuario.Logradouro,
             Numero = usuario.Numero,
@@ -162,6 +163,7 @@ public class AdminController : Controller
         usuario.RazaoSocial = model.RazaoSocial;
         usuario.CpfCnpj = model.CpfCnpj;
         usuario.InscricaoEstadual = model.InscricaoEstadual;
+        usuario.DataNascimento = model.DataNascimento;
         usuario.Cep = model.Cep;
         usuario.Logradouro = model.Logradouro;
         usuario.Numero = model.Numero;

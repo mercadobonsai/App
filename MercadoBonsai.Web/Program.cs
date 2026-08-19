@@ -56,6 +56,7 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS asaas_customer_id VARCHAR(100) NULL;
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS asaas_subscription_id VARCHAR(100) NULL;
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS percentualretencaopersonalizado NUMERIC(5,2) NULL;
+            ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS datanascimento DATE NULL;
         ");
     }
     catch (Exception ex)

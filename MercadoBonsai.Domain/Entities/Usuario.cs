@@ -17,6 +17,7 @@ public class Usuario
     public string? RazaoSocial { get; set; }
     public string? CpfCnpj { get; set; }
     public string? InscricaoEstadual { get; set; }
+    public DateTime? DataNascimento { get; set; }
 
     // Expansão: Endereço Completo & Origem de Envio
     public string? Cep { get; set; }

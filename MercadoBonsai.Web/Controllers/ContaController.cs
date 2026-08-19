@@ -177,6 +177,7 @@ public class ContaController : Controller
             RazaoSocial = usuario.RazaoSocial,
             CpfCnpj = usuario.CpfCnpj,
             InscricaoEstadual = usuario.InscricaoEstadual,
+            DataNascimento = usuario.DataNascimento,
             Cep = usuario.Cep,
             Logradouro = usuario.Logradouro,
             Numero = usuario.Numero,
@@ -260,6 +261,7 @@ public class ContaController : Controller
         usuario.RazaoSocial = model.RazaoSocial;
         usuario.CpfCnpj = model.CpfCnpj;
         usuario.InscricaoEstadual = model.InscricaoEstadual;
+        usuario.DataNascimento = model.DataNascimento;
         usuario.Cep = model.Cep;
         usuario.Logradouro = model.Logradouro;
         usuario.Numero = model.Numero;
@@ -279,13 +281,17 @@ public class ContaController : Controller
         await _usuarioRepository.AtualizarAsync(usuario);
 
         // Integração Asaas em Duas Etapas Isoladas (Resiliência & Retry)
+        bool isCnpj = !string.IsNullOrWhiteSpace(usuario.CpfCnpj) && usuario.CpfCnpj.Length > 11;
+        bool dataNascimentoOK = isCnpj || usuario.DataNascimento.HasValue;
+
         bool dadosFiscaisCompletos = !string.IsNullOrWhiteSpace(usuario.CpfCnpj)
             && !string.IsNullOrWhiteSpace(usuario.Telefone)
             && !string.IsNullOrWhiteSpace(usuario.Cep)
             && !string.IsNullOrWhiteSpace(usuario.Logradouro)
             && !string.IsNullOrWhiteSpace(usuario.Bairro)
             && !string.IsNullOrWhiteSpace(usuario.Cidade)
-            && !string.IsNullOrWhiteSpace(usuario.Estado);
+            && !string.IsNullOrWhiteSpace(usuario.Estado)
+            && dataNascimentoOK;
 
         if (dadosFiscaisCompletos && (usuario.Perfil == PerfilUsuario.Vendedor || usuario.Perfil == PerfilUsuario.Administrador))
         {

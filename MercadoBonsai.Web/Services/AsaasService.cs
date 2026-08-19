@@ -123,6 +123,7 @@ public class AsaasService : IAsaasService
                 province = vendedor.Bairro,
                 postalCode = vendedor.Cep,
                 personType = personType,
+                birthDate = isCnpj ? null : vendedor.DataNascimento?.ToString("yyyy-MM-dd"),
                 companyType = isCnpj ? "MEI" : null
             };
 

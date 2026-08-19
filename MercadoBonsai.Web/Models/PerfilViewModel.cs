@@ -32,6 +32,10 @@ public class PerfilViewModel
     [Display(Name = "Inscrição Estadual")]
     public string? InscricaoEstadual { get; set; }
 
+    [Display(Name = "Data de Nascimento")]
+    [DataType(DataType.Date)]
+    public DateTime? DataNascimento { get; set; }
+
     // Endereço Completo & Origem do Envio (Melhor Envio)
     [Display(Name = "CEP de Origem / Envio")]
     public string? Cep { get; set; }
