@@ -18,6 +18,7 @@ public class Usuario
     public string? CpfCnpj { get; set; }
     public string? InscricaoEstadual { get; set; }
     public DateTime? DataNascimento { get; set; }
+    public decimal? RendaFaturamento { get; set; }
 
     // Expansão: Endereço Completo & Origem de Envio
     public string? Cep { get; set; }

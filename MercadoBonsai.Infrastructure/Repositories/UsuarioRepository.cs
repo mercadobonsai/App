@@ -29,6 +29,7 @@ public class UsuarioRepository : IUsuarioRepository
         cpfcnpj AS CpfCnpj,
         inscricaoestadual AS InscricaoEstadual,
         datanascimento::timestamp AS DataNascimento,
+        rendafaturamento AS RendaFaturamento,
         cep AS Cep,
         logradouro AS Logradouro,
         numero AS Numero,
@@ -80,11 +81,11 @@ public class UsuarioRepository : IUsuarioRepository
         const string sql = @"
             INSERT INTO usuarios (
                 nome, email, senhahash, telefone, perfil, datacadastro,
-                razaosocial, cpfcnpj, inscricaoestadual, datanascimento, cep, logradouro, numero, complemento, bairro, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca, asaas_account_id, asaas_customer_id, asaas_subscription_id, percentualretencaopersonalizado
+                razaosocial, cpfcnpj, inscricaoestadual, datanascimento, rendafaturamento, cep, logradouro, numero, complemento, bairro, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca, asaas_account_id, asaas_customer_id, asaas_subscription_id, percentualretencaopersonalizado
             )
             VALUES (
                 @Nome, LOWER(TRIM(@Email)), @SenhaHash, @Telefone, @Perfil, @DataCadastro,
-                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @DataNascimento, @Cep, @Logradouro, @Numero, @Complemento, @Bairro, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca, @AsaasAccountId, @AsaasCustomerId, @AsaasSubscriptionId, @PercentualRetencaoPersonalizado
+                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @DataNascimento, @RendaFaturamento, @Cep, @Logradouro, @Numero, @Complemento, @Bairro, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca, @AsaasAccountId, @AsaasCustomerId, @AsaasSubscriptionId, @PercentualRetencaoPersonalizado
             )
             RETURNING id;";
 
@@ -105,6 +106,7 @@ public class UsuarioRepository : IUsuarioRepository
                 cpfcnpj = @CpfCnpj,
                 inscricaoestadual = @InscricaoEstadual,
                 datanascimento = @DataNascimento,
+                rendafaturamento = @RendaFaturamento,
                 cep = @Cep,
                 logradouro = @Logradouro,
                 numero = @Numero,

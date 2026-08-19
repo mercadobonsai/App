@@ -101,6 +101,14 @@
                                 <input asp-for="DataNascimento" type="date" class="form-control" />
                                 <small class="text-muted">Obrigatório para Pessoa Física (CPF) para ativação da subconta Asaas.</small>
                             </div>
+                            <div class="col-md-6">
+                                <label asp-for="RendaFaturamento" class="form-label fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">R$</span>
+                                    <input asp-for="RendaFaturamento" class="form-control" placeholder="5000,00" />
+                                </div>
+                                <small class="text-muted">Exigido pela API Asaas para estimativa de faturamento da subconta.</small>
+                            </div>
                         </div>
                     </div>
                 </div>

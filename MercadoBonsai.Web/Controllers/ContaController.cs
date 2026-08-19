@@ -178,6 +178,7 @@ public class ContaController : Controller
             CpfCnpj = usuario.CpfCnpj,
             InscricaoEstadual = usuario.InscricaoEstadual,
             DataNascimento = usuario.DataNascimento,
+            RendaFaturamento = usuario.RendaFaturamento,
             Cep = usuario.Cep,
             Logradouro = usuario.Logradouro,
             Numero = usuario.Numero,
@@ -262,6 +263,7 @@ public class ContaController : Controller
         usuario.CpfCnpj = model.CpfCnpj;
         usuario.InscricaoEstadual = model.InscricaoEstadual;
         usuario.DataNascimento = model.DataNascimento;
+        usuario.RendaFaturamento = model.RendaFaturamento;
         usuario.Cep = model.Cep;
         usuario.Logradouro = model.Logradouro;
         usuario.Numero = model.Numero;

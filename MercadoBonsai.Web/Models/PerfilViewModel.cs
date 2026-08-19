@@ -36,6 +36,10 @@ public class PerfilViewModel
     [DataType(DataType.Date)]
     public DateTime? DataNascimento { get; set; }
 
+    [Display(Name = "Renda Mensal / Faturamento Estimado (R$)")]
+    [Range(0, 999999999, ErrorMessage = "Informe um valor de renda/faturamento válido.")]
+    public decimal? RendaFaturamento { get; set; }
+
     // Endereço Completo & Origem do Envio (Melhor Envio)
     [Display(Name = "CEP de Origem / Envio")]
     public string? Cep { get; set; }

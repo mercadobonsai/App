@@ -118,6 +118,10 @@ public class AsaasService : IAsaasService
             bool isCnpj = cpfCnpjLimpo.Length > 11;
             var personType = isCnpj ? "JURIDICA" : "FISICA";
 
+            decimal rendaInformada = (vendedor.RendaFaturamento.HasValue && vendedor.RendaFaturamento.Value > 0) 
+                ? vendedor.RendaFaturamento.Value 
+                : 5000.00m;
+
             var payload = new
             {
                 name = string.IsNullOrWhiteSpace(vendedor.RazaoSocial) ? vendedor.Nome : vendedor.RazaoSocial,
@@ -131,6 +135,7 @@ public class AsaasService : IAsaasService
                 postalCode = cepLimpo,
                 personType = personType,
                 birthDate = isCnpj ? null : vendedor.DataNascimento?.ToString("yyyy-MM-dd"),
+                incomeValue = rendaInformada,
                 companyType = isCnpj ? "MEI" : null
             };
 
