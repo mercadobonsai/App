@@ -480,3 +480,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Local appsettings overrides
+appsettings.Development.json
+appsettings.Local.json
+MercadoBonsai.Web/appsettings.Development.json
+MercadoBonsai.Web/appsettings.Local.json
