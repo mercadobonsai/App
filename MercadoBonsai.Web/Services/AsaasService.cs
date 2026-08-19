@@ -302,7 +302,6 @@ public class AsaasService : IAsaasService
                         new
                         {
                             walletId = vendedor.AsaasAccountId,
-                            fixedValue = valorLiquidoVendedor,
                             percentualValue = percentualVendedor
                         }
                     }
