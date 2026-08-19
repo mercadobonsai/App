@@ -25,6 +25,7 @@ public class CobrancaFiltroViewModel
     public decimal TotalCobrado { get; set; }
     public decimal TotalRecebido { get; set; }
     public decimal TotalPendente { get; set; }
+    public decimal TotalRetidoPlataforma { get; set; }
 }
 
 public class AsaasCobrancaItemDto
@@ -41,6 +42,15 @@ public class AsaasCobrancaItemDto
     public string? InvoiceUrl { get; set; }
     public string? ExternalReference { get; set; }
     public string? Description { get; set; }
+
+    // Informações Detalhadas do Split
+    public bool HasSplit { get; set; }
+    public string? SplitWalletId { get; set; }
+    public decimal? SplitFixedValue { get; set; }
+    public decimal? SplitPercentualValue { get; set; }
+    public decimal? SplitTotalValue { get; set; }
+    public string? SplitStatus { get; set; }
+    public decimal ValorRetidoPlataforma { get; set; }
 }
 
 public class AsaasCobrancasPaginadasResult

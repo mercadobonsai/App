@@ -64,10 +64,12 @@ public class FinanceiroController : Controller
             filtro.TotalCobrado = 0;
             filtro.TotalRecebido = 0;
             filtro.TotalPendente = 0;
+            filtro.TotalRetidoPlataforma = 0;
 
             foreach (var item in result.Data)
             {
                 filtro.TotalCobrado += item.Value;
+                filtro.TotalRetidoPlataforma += item.ValorRetidoPlataforma;
                 if (item.Status == "RECEIVED" || item.Status == "CONFIRMED" || item.Status == "RECEIVED_IN_CASH")
                 {
                     filtro.TotalRecebido += item.Value;

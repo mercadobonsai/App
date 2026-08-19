@@ -677,6 +677,27 @@ public class AsaasService : IAsaasService
                             Description = item.TryGetProperty("description", out var descP) ? descP.GetString() : null
                         };
 
+                        if (item.TryGetProperty("split", out var splitArray) && splitArray.ValueKind == JsonValueKind.Array && splitArray.GetArrayLength() > 0)
+                        {
+                            dto.HasSplit = true;
+                            var firstSplit = splitArray[0];
+                            dto.SplitWalletId = firstSplit.TryGetProperty("walletId", out var wProp) ? wProp.GetString() : null;
+                            dto.SplitFixedValue = firstSplit.TryGetProperty("fixedValue", out var fvProp) && fvProp.ValueKind != JsonValueKind.Null ? fvProp.GetDecimal() : null;
+                            dto.SplitPercentualValue = firstSplit.TryGetProperty("percentualValue", out var pvProp) && pvProp.ValueKind != JsonValueKind.Null ? pvProp.GetDecimal() : null;
+                            dto.SplitTotalValue = firstSplit.TryGetProperty("totalValue", out var tvProp) && tvProp.ValueKind != JsonValueKind.Null ? tvProp.GetDecimal() : (firstSplit.TryGetProperty("value", out var valProp) && valProp.ValueKind != JsonValueKind.Null ? valProp.GetDecimal() : dto.SplitFixedValue);
+                            dto.SplitStatus = firstSplit.TryGetProperty("status", out var stSplitProp) ? stSplitProp.GetString() : null;
+
+                            if (dto.SplitTotalValue.HasValue && dto.SplitTotalValue.Value > 0)
+                            {
+                                dto.ValorRetidoPlataforma = Math.Max(0.00m, dto.Value - dto.SplitTotalValue.Value);
+                            }
+                            else if (dto.SplitPercentualValue.HasValue)
+                            {
+                                decimal percentualRetencao = Math.Max(0.00m, 100.00m - dto.SplitPercentualValue.Value);
+                                dto.ValorRetidoPlataforma = Math.Round(dto.Value * (percentualRetencao / 100.00m), 2);
+                            }
+                        }
+
                         lista.Add(dto);
                     }
                 }
