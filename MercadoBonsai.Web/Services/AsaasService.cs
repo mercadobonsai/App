@@ -284,6 +284,17 @@ public class AsaasService : IAsaasService
                 }
             }
 
+            if (!string.IsNullOrEmpty(vendedor.Email))
+            {
+                var walletValida = await ObterSubcontaExistenteAsync(vendedor.Email, SomenteNumeros(vendedor.CpfCnpj));
+                if (!string.IsNullOrEmpty(walletValida) && walletValida != vendedor.AsaasAccountId)
+                {
+                    _logger.LogInformation("Sincronizando Wallet ID real do vendedor #{VendedorId}: '{Antiga}' -> '{Nova}'", vendedor.Id, vendedor.AsaasAccountId, walletValida);
+                    vendedor.AsaasAccountId = walletValida;
+                    await _usuarioRepository.AtualizarAsync(vendedor);
+                }
+            }
+
             _logger.LogInformation("Gerando cobrança Asaas Pedido #{Numero}: Total R$ {Total}, Comissão Plataforma {Comissao}% (R$ {Retencao}), Repasse Subconta R$ {Repasse} (Wallet: {Wallet})", 
                 pedido.Numero, pedido.ValorTotal, comissaoValida, valorRetidoPlataforma, valorLiquidoVendedor, vendedor.AsaasAccountId ?? "Sem Wallet");
 
@@ -497,7 +508,11 @@ public class AsaasService : IAsaasService
                 {
                     foreach (var item in dataArray.EnumerateArray())
                     {
-                        if (item.TryGetProperty("id", out var idProp))
+                        if (item.TryGetProperty("walletId", out var walletProp) && !string.IsNullOrEmpty(walletProp.GetString()))
+                        {
+                            return walletProp.GetString();
+                        }
+                        else if (item.TryGetProperty("id", out var idProp) && !string.IsNullOrEmpty(idProp.GetString()))
                         {
                             var id = idProp.GetString();
                             if (!string.IsNullOrEmpty(id)) return id;
