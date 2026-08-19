@@ -27,118 +27,6 @@
         </div>
     }
 
-    @if (Model.Perfil == MercadoBonsai.Domain.Enums.PerfilUsuario.Vendedor || Model.Perfil == MercadoBonsai.Domain.Enums.PerfilUsuario.Administrador)
-    {
-        <!-- Card Status Integração Asaas (Fase 1) -->
-        <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-left: 5px solid #1976D2 !important;">
-            <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 44px; height: 44px; background-color: #1976D2; color: white;">
-                        <i class="icon-base ri ri-bank-card-line fs-4"></i>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold mb-1 text-dark">Status da Integração de Recebimentos Asaas</h6>
-                        <small class="text-muted d-block">Subconta oficial para emissão de vendas e cobranças no Mercado Bonsai</small>
-                    </div>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                    @if (!string.IsNullOrEmpty(Model.AsaasCustomerId))
-                    {
-                        <span class="badge bg-success fs-7 px-3 py-2"><i class="icon-base ri ri-user-check-line me-1"></i>Cliente Asaas: @Model.AsaasCustomerId</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary fs-7 px-3 py-2"><i class="icon-base ri ri-user-unfollow-line me-1"></i>Cliente Asaas: Pendente</span>
-                    }
-
-                    @if (!string.IsNullOrEmpty(Model.AsaasAccountId))
-                    {
-                        <span class="badge bg-primary fs-7 px-3 py-2"><i class="icon-base ri ri-checkbox-circle-fill me-1"></i>Subconta Ativa: @Model.AsaasAccountId</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-warning text-dark fs-7 px-3 py-2"><i class="icon-base ri ri-time-line me-1"></i>Subconta Asaas: Preencha os dados abaixo para ativar</span>
-                    }
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- Card Especial: Cartão de Visitas Digital & Links Diretos (Plano Prata+) -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
-            <h6 class="fw-bold mb-0 text-white"><i class="icon-base ri ri-qr-code-line me-2"></i>Cartão de Visitas Digital & Links Diretos (Plano Prata & Ouro)</h6>
-            <span class="badge bg-white text-success fw-bold">Plano Atual: @Model.NomePlano</span>
-        </div>
-        <div class="card-body p-4">
-            @if (Model.LiberarCartaoVisitas)
-            {
-                <p class="text-muted small mb-3">
-                    Seus links diretos são gerados com criptografia para compartilhar sua vitrine e produtos nas redes sociais com máxima segurança:
-                </p>
-                <div class="row g-3">
-                    <div class="col-md-6 col-lg-3">
-                        <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
-                            <div>
-                                <h6 class="fw-bold text-success mb-1"><i class="icon-base ri ri-store-2-line me-1"></i> Minha Vitrine</h6>
-                                <small class="text-muted d-block mb-3">Todos os seus bonsais ativos no portal</small>
-                            </div>
-                            <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="copiarLink('@Model.LinkVitrineCartao', 'Vitrine Geral')">
-                                <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar Link Vitrine
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3">
-                        <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
-                            <div>
-                                <h6 class="fw-bold text-success mb-1"><i class="icon-base ri ri-tools-line me-1"></i> Meus Insumos</h6>
-                                <small class="text-muted d-block mb-3">Ferramentas e adubos do seu estoque</small>
-                            </div>
-                            <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="copiarLink('@Model.LinkInsumosCartao', 'Seção de Insumos')">
-                                <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar Link Insumos
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3">
-                        <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
-                            <div>
-                                <h6 class="fw-bold text-success mb-1"><i class="icon-base ri ri-cup-line me-1"></i> Meus Vasos</h6>
-                                <small class="text-muted d-block mb-3">Vasos e cerâmicas do seu viveiro</small>
-                            </div>
-                            <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="copiarLink('@Model.LinkVasosCartao', 'Seção de Vasos')">
-                                <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar Link Vasos
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-3">
-                        <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
-                            <div>
-                                <h6 class="fw-bold text-success mb-1"><i class="icon-base ri ri-auction-line me-1"></i> Leilões & Rifas</h6>
-                                <small class="text-muted d-block mb-3">Suas ações e leilões ativos</small>
-                            </div>
-                            <button type="button" class="btn btn-outline-success btn-sm w-100" onclick="copiarLink('@Model.LinkEngajamentoCartao', 'Leilões e Ações')">
-                                <i class="icon-base ri ri-file-copy-line me-1"></i> Copiar Link Leilões
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            }
-            else
-            {
-                <div class="d-flex align-items-center">
-                    <i class="icon-base ri ri-vip-crown-line fs-2 text-warning me-3"></i>
-                    <div>
-                        <h6 class="fw-bold text-dark mb-1">Recurso Exclusivo a partir do Plano Prata</h6>
-                        <p class="text-muted small mb-0">
-                            A geração de Cartão de Visitas Digital com links criptografados e endpoints dedicados é exclusiva dos <strong>Planos Prata e Ouro</strong>. 
-                            <a asp-controller="Conta" asp-action="Assinatura" class="fw-bold text-success text-decoration-underline ms-1">Fazer Upgrade do Plano</a>
-                        </p>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-
     <form asp-action="MeuPerfil" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="Id" />
@@ -149,12 +37,10 @@
 
                 <!-- REQUIREMENT 3.1: Dados Pessoais e Contato -->
                 <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light py-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-user-line me-2"></i>1. Dados Pessoais & Contato</h6>
+                    <div class="card-header bg-success text-white py-3">
+                        <h6 class="fw-bold mb-0 text-white"><i class="icon-base ri ri-user-settings-line me-2"></i>Dados Pessoais & Contato</h6>
                     </div>
                     <div class="card-body p-4">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3" role="alert"></div>
-
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label asp-for="Nome" class="form-label fw-semibold"></label>
@@ -163,52 +49,51 @@
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Email" class="form-label fw-semibold"></label>
-                                <input asp-for="Email" class="form-control" readonly />
-                                <small class="text-muted">O e-mail de acesso não pode ser alterado.</small>
+                                <input asp-for="Email" class="form-control bg-light" readonly />
+                                <small class="text-muted">O e-mail é a chave de acesso e não pode ser alterado diretamente.</small>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="Telefone" class="form-label fw-semibold"></label>
-                                <input asp-for="Telefone" id="inputTelefone" class="form-control" placeholder="(00) 00000-0000" />
-                                <small class="text-muted">Obrigatório para cálculo de frete por transportadora.</small>
+                                <input asp-for="Telefone" class="form-control mask-phone" placeholder="(00) 00000-0000" />
+                                <span asp-validation-for="Telefone" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Perfil de Acesso</label>
-                                <input class="form-control text-capitalize" value="@Model.Perfil.ToString()" readonly />
+                                <input type="text" class="form-control bg-light text-capitalize" value="@Model.Perfil" readonly />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- REQUIREMENT 3.2: Dados Fiscais -->
+                <!-- REQUIREMENT 3.2: Dados Fiscais (CPF/CNPJ, Inscrição Estadual e Razão Social) -->
                 <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-file-text-line me-2"></i>2. Dados Fiscais (Exigidos para Envio e Emissão)</h6>
-                        <span class="badge bg-label-info">Obrigatório para Vendedores</span>
+                    <div class="card-header bg-light py-3">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-file-text-line me-2"></i>Dados Fiscais (Pessoa Física ou Jurídica)</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label asp-for="RazaoSocial" class="form-label fw-semibold"></label>
-                                <input asp-for="RazaoSocial" class="form-control" placeholder="Nome Fantasia / Razão Social" />
+                                <label asp-for="CpfCnpj" class="form-label fw-semibold"></label>
+                                <input asp-for="CpfCnpj" class="form-control mask-cpf-cnpj" placeholder="CPF (000.000.000-00) ou CNPJ" />
+                                <small class="text-muted">Necessário para faturamento, emissão e cadastro no Asaas.</small>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="CpfCnpj" class="form-label fw-semibold"></label>
-                                <input asp-for="CpfCnpj" id="inputCpfCnpj" class="form-control" placeholder="CPF ou CNPJ (somente números)" />
-                                <small class="text-muted">Obrigatório para o cálculo de frete (Melhor Envio).</small>
+                                <label asp-for="RazaoSocial" class="form-label fw-semibold"></label>
+                                <input asp-for="RazaoSocial" class="form-control" placeholder="Razão Social ou Nome Fantasia" />
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="InscricaoEstadual" class="form-label fw-semibold"></label>
-                                <input asp-for="InscricaoEstadual" class="form-control" placeholder="I.E. se houver (ou Isento)" />
+                                <input asp-for="InscricaoEstadual" class="form-control" placeholder="Inscrição Estadual (se houver)" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- REQUIREMENT 3.3: Endereço Completo de Origem do Envio (Melhor Envio) -->
-                <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #4A7C59 !important;">
+                <!-- REQUIREMENT 3.3: Endereço Completo & Origem do Envio (Melhor Envio) -->
+                <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-map-pin-user-line me-2 text-success"></i>3. Endereço Completo de Origem do Envio (Cálculo de Frete)</h6>
-                        <span class="badge bg-success">Melhor Envio</span>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-map-pin-line me-2"></i>Endereço de Origem & Envio (Cálculo de Frete)</h6>
+                        <small class="text-muted" id="lblCepStatus"></small>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
