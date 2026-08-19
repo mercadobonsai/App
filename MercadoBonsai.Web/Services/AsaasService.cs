@@ -85,6 +85,18 @@ public class AsaasService : IAsaasService
             {
                 string erroDescrito = ExtrairErrosAsaas(responseBody);
                 _logger.LogWarning("Falha ao criar Cliente Asaas HTTP {Status}: {Body}", response.StatusCode, responseBody);
+
+                if (responseBody.Contains("já está em uso", StringComparison.OrdinalIgnoreCase) || responseBody.Contains("ja esta em uso", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogInformation("Email ou CPF/CNPJ de cliente já cadastrado no Asaas. Buscando cliente existente via GET /v3/customers...");
+                    var existingCustomerId = await ObterClienteExistenteAsync(usuario.Email, cpfCnpjLimpo);
+                    if (!string.IsNullOrEmpty(existingCustomerId))
+                    {
+                        _logger.LogInformation("Cliente existente recuperado no Asaas com ID {CustomerId}", existingCustomerId);
+                        return new AsaasClienteResult { Sucesso = true, AsaasCustomerId = existingCustomerId };
+                    }
+                }
+
                 return new AsaasClienteResult { Sucesso = false, MensagemErro = erroDescrito };
             }
         }
@@ -160,6 +172,18 @@ public class AsaasService : IAsaasService
             {
                 string erroDescrito = ExtrairErrosAsaas(responseBody);
                 _logger.LogWarning("Falha ao criar Subconta Asaas HTTP {Status}: {Body}", response.StatusCode, responseBody);
+
+                if (responseBody.Contains("já está em uso", StringComparison.OrdinalIgnoreCase) || responseBody.Contains("ja esta em uso", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogInformation("Email ou CPF/CNPJ de subconta já cadastrado no Asaas. Buscando subconta existente via GET /v3/accounts...");
+                    var existingAccountId = await ObterSubcontaExistenteAsync(vendedor.Email, cpfCnpjLimpo);
+                    if (!string.IsNullOrEmpty(existingAccountId))
+                    {
+                        _logger.LogInformation("Subconta existente recuperada no Asaas com ID {AccountId}", existingAccountId);
+                        return new AsaasSubcontaResult { Sucesso = true, AsaasAccountId = existingAccountId };
+                    }
+                }
+
                 return new AsaasSubcontaResult { Sucesso = false, MensagemErro = erroDescrito };
             }
         }
@@ -406,5 +430,91 @@ public class AsaasService : IAsaasService
             if (char.IsDigit(c)) sb.Append(c);
         }
         return sb.ToString();
+    }
+
+    private async Task<string?> ObterSubcontaExistenteAsync(string email, string cpfCnpj)
+    {
+        var apiKey = _configuration["Asaas:ApiKey"]?.Trim();
+        var baseUrl = _configuration["Asaas:ApiUrl"] ?? "https://sandbox.asaas.com/api/v3";
+        var userAgent = _configuration["Asaas:UserAgent"] ?? "MercadoBonsai/1.0 (suporte@mercadobonsai.com.br)";
+
+        try
+        {
+            string url = !string.IsNullOrEmpty(cpfCnpj) 
+                ? $"{baseUrl}/accounts?cpfCnpj={cpfCnpj}" 
+                : $"{baseUrl}/accounts?email={Uri.EscapeDataString(email)}";
+
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("access_token", apiKey);
+            request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
+
+            var response = await _httpClient.SendAsync(request);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                using var doc = JsonDocument.Parse(responseBody);
+                if (doc.RootElement.TryGetProperty("data", out var dataArray) && dataArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in dataArray.EnumerateArray())
+                    {
+                        if (item.TryGetProperty("id", out var idProp))
+                        {
+                            var id = idProp.GetString();
+                            if (!string.IsNullOrEmpty(id)) return id;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao buscar subconta existente no Asaas.");
+        }
+
+        return null;
+    }
+
+    private async Task<string?> ObterClienteExistenteAsync(string email, string cpfCnpj)
+    {
+        var apiKey = _configuration["Asaas:ApiKey"]?.Trim();
+        var baseUrl = _configuration["Asaas:ApiUrl"] ?? "https://sandbox.asaas.com/api/v3";
+        var userAgent = _configuration["Asaas:UserAgent"] ?? "MercadoBonsai/1.0 (suporte@mercadobonsai.com.br)";
+
+        try
+        {
+            string url = !string.IsNullOrEmpty(cpfCnpj) 
+                ? $"{baseUrl}/customers?cpfCnpj={cpfCnpj}" 
+                : $"{baseUrl}/customers?email={Uri.EscapeDataString(email)}";
+
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("access_token", apiKey);
+            request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
+
+            var response = await _httpClient.SendAsync(request);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                using var doc = JsonDocument.Parse(responseBody);
+                if (doc.RootElement.TryGetProperty("data", out var dataArray) && dataArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in dataArray.EnumerateArray())
+                    {
+                        if (item.TryGetProperty("id", out var idProp))
+                        {
+                            var id = idProp.GetString();
+                            if (!string.IsNullOrEmpty(id)) return id;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao buscar cliente existente no Asaas.");
+        }
+
+        return null;
     }
 }
