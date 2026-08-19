@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using MercadoBonsai.Domain.Entities;
+using MercadoBonsai.Web.Models;
 
 namespace MercadoBonsai.Web.Services;
 
@@ -31,4 +32,5 @@ public interface IAsaasService
     Task<AsaasSubcontaResult> CriarSubcontaVendedorAsync(Usuario vendedor);
     Task<AsaasSubcontaResult> EncerrarSubcontaAsync(string asaasAccountId);
     Task<AsaasCobrancaResult> CriarCobrancaAsync(Pedido pedido, Usuario vendedor, decimal percentualComissao = 10.00m);
+    Task<AsaasCobrancasPaginadasResult> ListarCobrancasAsync(CobrancaFiltroViewModel filtro, string? asaasCustomerId = null, string? asaasAccountId = null);
 }

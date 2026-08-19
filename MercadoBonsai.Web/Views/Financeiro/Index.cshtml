@@ -1,0 +1,287 @@
+@model MercadoBonsai.Web.Models.CobrancaFiltroViewModel
+
+@{
+    bool isAdmin = ViewBag.IsAdmin ?? false;
+    ViewData["Title"] = isAdmin ? "Financeiro - Cobranças Asaas (Plataforma)" : "Financeiro - Minhas Cobranças Asaas";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    <!-- Cabeçalho -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold m-0 text-success">
+                <i class="icon-base ri ri-money-dollar-circle-line me-2"></i>
+                @(isAdmin ? "Gestão Financeira & Cobranças Asaas (Plataforma)" : "Minhas Cobranças & Repasses Asaas")
+            </h4>
+            <p class="text-muted small m-0">
+                @(isAdmin ? "Visualização completa de todas as cobranças geradas na conta raiz do Mercado Bonsai via Asaas." : "Acompanhamento detalhado das cobranças e repasses vinculados à sua conta no Mercado Bonsai.")
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="Financeiro" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="icon-base ri ri-refresh-line me-1"></i> Atualizar Dados
+            </a>
+        </div>
+    </div>
+
+    <!-- Cards de Métricas de Topo -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fw-semibold d-block mb-1">Total em Cobranças</span>
+                        <h4 class="card-title mb-0 fw-bold text-primary">R$ @Model.TotalCobrado.ToString("N2")</h4>
+                    </div>
+                    <div class="avatar avatar-md bg-label-primary rounded-circle p-2">
+                        <i class="icon-base ri ri-money-dollar-box-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fw-semibold d-block mb-1">Recebido / Confirmado</span>
+                        <h4 class="card-title mb-0 fw-bold text-success">R$ @Model.TotalRecebido.ToString("N2")</h4>
+                    </div>
+                    <div class="avatar avatar-md bg-label-success rounded-circle p-2">
+                        <i class="icon-base ri ri-checkbox-circle-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted fw-semibold d-block mb-1">Aguardando Pagamento</span>
+                        <h4 class="card-title mb-0 fw-bold text-warning">R$ @Model.TotalPendente.ToString("N2")</h4>
+                    </div>
+                    <div class="avatar avatar-md bg-label-warning rounded-circle p-2">
+                        <i class="icon-base ri ri-time-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de Pesquisa -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" asp-controller="Financeiro" asp-action="Index" class="row g-3 align-items-end">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label fw-semibold text-secondary">Status da Cobrança</label>
+                    <select name="Status" class="form-select">
+                        <option value="">-- Todos os Status --</option>
+                        <option value="PENDING" selected="@(Model.Status == "PENDING")">Aguardando Pagamento (PENDING)</option>
+                        <option value="RECEIVED" selected="@(Model.Status == "RECEIVED")">Recebido (RECEIVED)</option>
+                        <option value="CONFIRMED" selected="@(Model.Status == "CONFIRMED")">Confirmado (CONFIRMED)</option>
+                        <option value="OVERDUE" selected="@(Model.Status == "OVERDUE")">Vencido (OVERDUE)</option>
+                        <option value="REFUNDED" selected="@(Model.Status == "REFUNDED")">Estornado (REFUNDED)</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label fw-semibold text-secondary">Meio de Pagamento</label>
+                    <select name="BillingType" class="form-select">
+                        <option value="">-- Todos os Meios --</option>
+                        <option value="PIX" selected="@(Model.BillingType == "PIX")">Pix</option>
+                        <option value="BOLETO" selected="@(Model.BillingType == "BOLETO")">Boleto Bancário</option>
+                        <option value="CREDIT_CARD" selected="@(Model.BillingType == "CREDIT_CARD")">Cartão de Crédito</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-2">
+                    <label class="form-label fw-semibold text-secondary">Nº do Pedido</label>
+                    <input type="text" name="ExternalReference" value="@Model.ExternalReference" class="form-control" placeholder="Ex: 1005" />
+                </div>
+                <div class="col-12 col-sm-6 col-md-2">
+                    <label class="form-label fw-semibold text-secondary">Data Criação (De)</label>
+                    <input type="date" name="DataInicio" value="@(Model.DataInicio?.ToString("yyyy-MM-dd"))" class="form-control" />
+                </div>
+                <div class="col-12 col-sm-6 col-md-2">
+                    <label class="form-label fw-semibold text-secondary">Data Criação (Até)</label>
+                    <input type="date" name="DataFim" value="@(Model.DataFim?.ToString("yyyy-MM-dd"))" class="form-control" />
+                </div>
+                <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+                    <a asp-controller="Financeiro" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                        <i class="icon-base ri ri-eraser-line me-1"></i> Limpar Filtros
+                    </a>
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="icon-base ri ri-search-line me-1"></i> Filtrar Cobranças
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Cobranças -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID Asaas / Ref.</th>
+                        <th>Data Criação</th>
+                        <th>Vencimento</th>
+                        <th>Meio de Pagamento</th>
+                        <th>Valor Total</th>
+                        <th>Valor Líquido</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Cobrancas == null || !Model.Cobrancas.Any())
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="icon-base ri ri-inbox-line fs-1 d-block mb-2 text-secondary"></i>
+                                Nenhuma cobrança encontrada com os filtros selecionados.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.Cobrancas)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark mb-0">@item.Id</div>
+                                    @if (!string.IsNullOrEmpty(item.ExternalReference))
+                                    {
+                                        <span class="badge bg-label-info">Pedido #@item.ExternalReference</span>
+                                    }
+                                </td>
+                                <td>@item.DateCreated.ToString("dd/MM/yyyy")</td>
+                                <td>@(item.DueDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td>
+                                    @if (item.BillingType == "PIX")
+                                    {
+                                        <span class="badge bg-label-success"><i class="icon-base ri ri-qr-code-line me-1"></i> Pix</span>
+                                    }
+                                    else if (item.BillingType == "BOLETO")
+                                    {
+                                        <span class="badge bg-label-primary"><i class="icon-base ri ri-barcode-line me-1"></i> Boleto</span>
+                                    }
+                                    else if (item.BillingType == "CREDIT_CARD")
+                                    {
+                                        <span class="badge bg-label-warning text-dark"><i class="icon-base ri ri-bank-card-line me-1"></i> Cartão</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-label-secondary">@item.BillingType</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-dark">R$ @item.Value.ToString("N2")</span>
+                                </td>
+                                <td>
+                                    @if (item.NetValue.HasValue)
+                                    {
+                                        <span class="fw-semibold text-success">R$ @item.NetValue.Value.ToString("N2")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Status == "RECEIVED" || item.Status == "CONFIRMED" || item.Status == "RECEIVED_IN_CASH")
+                                    {
+                                        <span class="badge bg-success">Pago / Confirmado</span>
+                                    }
+                                    else if (item.Status == "PENDING")
+                                    {
+                                        <span class="badge bg-warning text-dark">Aguardando Pagamento</span>
+                                    }
+                                    else if (item.Status == "OVERDUE")
+                                    {
+                                        <span class="badge bg-danger">Vencido</span>
+                                    }
+                                    else if (item.Status == "REFUNDED")
+                                    {
+                                        <span class="badge bg-secondary">Estornado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">@item.Status</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (!string.IsNullOrEmpty(item.InvoiceUrl))
+                                    {
+                                        <a href="@item.InvoiceUrl" target="_blank" class="btn btn-sm btn-outline-success">
+                                            <i class="icon-base ri ri-external-link-line me-1"></i> Ver Fatura
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Rodapé de Paginação -->
+        @if (Model.TotalCount > 0)
+        {
+            int paginaAtual = (Model.Offset / Model.Limit) + 1;
+            int totalPaginas = (int)Math.Ceiling((double)Model.TotalCount / Model.Limit);
+
+            <div class="card-footer d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 border-top py-3">
+                <small class="text-muted">
+                    Exibindo <strong>@(Model.Offset + 1)</strong> até <strong>@Math.Min(Model.Offset + Model.Limit, Model.TotalCount)</strong> de <strong>@Model.TotalCount</strong> cobranças
+                </small>
+                <div class="btn-group btn-group-sm">
+                    @if (Model.Offset > 0)
+                    {
+                        int offsetAnterior = Math.Max(0, Model.Offset - Model.Limit);
+                        <a asp-controller="Financeiro" asp-action="Index" 
+                           asp-route-Offset="@offsetAnterior" 
+                           asp-route-Limit="@Model.Limit"
+                           asp-route-Status="@Model.Status"
+                           asp-route-BillingType="@Model.BillingType"
+                           asp-route-ExternalReference="@Model.ExternalReference"
+                           asp-route-DataInicio="@(Model.DataInicio?.ToString("yyyy-MM-dd"))"
+                           asp-route-DataFim="@(Model.DataFim?.ToString("yyyy-MM-dd"))"
+                           class="btn btn-outline-secondary">
+                            <i class="icon-base ri ri-arrow-left-s-line me-1"></i> Anterior
+                        </a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-secondary" disabled>
+                            <i class="icon-base ri ri-arrow-left-s-line me-1"></i> Anterior
+                        </button>
+                    }
+
+                    <button class="btn btn-outline-secondary active" disabled>Página @paginaAtual de @totalPaginas</button>
+
+                    @if (Model.HasMore || (Model.Offset + Model.Limit < Model.TotalCount))
+                    {
+                        int proximoOffset = Model.Offset + Model.Limit;
+                        <a asp-controller="Financeiro" asp-action="Index" 
+                           asp-route-Offset="@proximoOffset" 
+                           asp-route-Limit="@Model.Limit"
+                           asp-route-Status="@Model.Status"
+                           asp-route-BillingType="@Model.BillingType"
+                           asp-route-ExternalReference="@Model.ExternalReference"
+                           asp-route-DataInicio="@(Model.DataInicio?.ToString("yyyy-MM-dd"))"
+                           asp-route-DataFim="@(Model.DataFim?.ToString("yyyy-MM-dd"))"
+                           class="btn btn-outline-secondary">
+                            Próximo <i class="icon-base ri ri-arrow-right-s-line ms-1"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-secondary" disabled>
+                            Próximo <i class="icon-base ri ri-arrow-right-s-line ms-1"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

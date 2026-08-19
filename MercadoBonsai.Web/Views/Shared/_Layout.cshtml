@@ -139,6 +139,12 @@
                                                 <span>Minha Assinatura</span>
                                             </a>
                                         </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Financeiro" asp-action="Index">
+                                                <i class="icon-base ri ri-money-dollar-box-line icon-md me-3"></i>
+                                                <span>Financeiro / Cobranças</span>
+                                            </a>
+                                        </li>
                                         <li><div class="dropdown-divider my-1"></div></li>
                                         <li>
                                             <a class="dropdown-item" asp-controller="Conta" asp-action="Logout">
@@ -312,6 +318,12 @@
                                                 <a asp-controller="Admin" asp-action="Propagandas" class="menu-link">
                                                     <i class="menu-icon icon-base ri ri-megaphone-line me-2"></i>
                                                     <div>Auditoria de Anúncios</div>
+                                                </a>
+                                            </li>
+                                            <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Financeiro" ? "active" : "")">
+                                                <a asp-controller="Financeiro" asp-action="Index" class="menu-link">
+                                                    <i class="menu-icon icon-base ri ri-money-dollar-circle-line me-2"></i>
+                                                    <div>Financeiro</div>
                                                 </a>
                                             </li>
                                         </ul>

@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using MercadoBonsai.Domain.Entities;
 using MercadoBonsai.Domain.Interfaces;
+using MercadoBonsai.Web.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -554,5 +555,153 @@ public class AsaasService : IAsaasService
         }
 
         return null;
+    }
+
+    public async Task<AsaasCobrancasPaginadasResult> ListarCobrancasAsync(CobrancaFiltroViewModel filtro, string? asaasCustomerId = null, string? asaasAccountId = null)
+    {
+        var apiKey = _configuration["Asaas:ApiKey"]?.Trim();
+        var baseUrl = _configuration["Asaas:ApiUrl"] ?? "https://sandbox.asaas.com/api/v3";
+        var userAgent = _configuration["Asaas:UserAgent"] ?? "MercadoBonsai/1.0 (suporte@mercadobonsai.com.br)";
+
+        // Modo Stub / Chave não configurada
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "seu_asaas_token_aqui")
+        {
+            _logger.LogInformation("Asaas API Key não configurada. Retornando dados simulados para ListarCobrancasAsync.");
+            var listaSimulada = new List<AsaasCobrancaItemDto>
+            {
+                new AsaasCobrancaItemDto
+                {
+                    Id = "pay_simulado_1005",
+                    DateCreated = DateTime.Now.AddDays(-1),
+                    Customer = asaasCustomerId ?? "cus_simulado_vendedor",
+                    Value = 373.00m,
+                    NetValue = 335.70m,
+                    BillingType = "PIX",
+                    Status = "PENDING",
+                    DueDate = DateTime.Now.AddDays(2),
+                    InvoiceUrl = "https://sandbox.asaas.com/i/pay_simulado_1005",
+                    ExternalReference = "1005",
+                    Description = "Pedido #1005 - Mercado Bonsai (Simulado)"
+                }
+            };
+
+            return new AsaasCobrancasPaginadasResult
+            {
+                Sucesso = true,
+                TotalCount = 1,
+                Offset = filtro.Offset,
+                Limit = filtro.Limit,
+                HasMore = false,
+                Data = listaSimulada
+            };
+        }
+
+        try
+        {
+            var queryParams = new List<string>
+            {
+                $"offset={filtro.Offset}",
+                $"limit={filtro.Limit}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(filtro.Status))
+            {
+                queryParams.Add($"status={Uri.EscapeDataString(filtro.Status.Trim())}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtro.BillingType))
+            {
+                queryParams.Add($"billingType={Uri.EscapeDataString(filtro.BillingType.Trim())}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtro.ExternalReference))
+            {
+                queryParams.Add($"externalReference={Uri.EscapeDataString(filtro.ExternalReference.Trim())}");
+            }
+
+            // Filtro restritivo de cliente/vendedor
+            string? clienteFinal = !string.IsNullOrWhiteSpace(asaasCustomerId) ? asaasCustomerId : filtro.Customer;
+            if (!string.IsNullOrWhiteSpace(clienteFinal))
+            {
+                queryParams.Add($"customer={Uri.EscapeDataString(clienteFinal.Trim())}");
+            }
+
+            if (filtro.DataInicio.HasValue)
+            {
+                queryParams.Add($"dateCreated[ge]={filtro.DataInicio.Value:yyyy-MM-dd}");
+            }
+
+            if (filtro.DataFim.HasValue)
+            {
+                queryParams.Add($"dateCreated[le]={filtro.DataFim.Value:yyyy-MM-dd}");
+            }
+
+            string queryString = string.Join("&", queryParams);
+            string requestUri = $"{baseUrl}/payments?{queryString}";
+
+            var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+            request.Headers.Add("access_token", apiKey);
+            request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
+
+            var response = await _httpClient.SendAsync(request);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                using var doc = JsonDocument.Parse(responseBody);
+                var root = doc.RootElement;
+
+                int totalCount = root.TryGetProperty("totalCount", out var tcProp) ? tcProp.GetInt32() : 0;
+                bool hasMore = root.TryGetProperty("hasMore", out var hmProp) && hmProp.GetBoolean();
+                int offset = root.TryGetProperty("offset", out var offProp) ? offProp.GetInt32() : filtro.Offset;
+                int limit = root.TryGetProperty("limit", out var limProp) ? limProp.GetInt32() : filtro.Limit;
+
+                var lista = new List<AsaasCobrancaItemDto>();
+                if (root.TryGetProperty("data", out var dataArray) && dataArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in dataArray.EnumerateArray())
+                    {
+                        var dto = new AsaasCobrancaItemDto
+                        {
+                            Id = item.TryGetProperty("id", out var idP) ? idP.GetString() ?? "" : "",
+                            DateCreated = item.TryGetProperty("dateCreated", out var dcP) && DateTime.TryParse(dcP.GetString(), out var dcVal) ? dcVal : DateTime.MinValue,
+                            Customer = item.TryGetProperty("customer", out var cP) ? cP.GetString() : null,
+                            Value = item.TryGetProperty("value", out var vP) ? vP.GetDecimal() : 0.00m,
+                            NetValue = item.TryGetProperty("netValue", out var nvP) && nvP.ValueKind != JsonValueKind.Null ? nvP.GetDecimal() : null,
+                            BillingType = item.TryGetProperty("billingType", out var btP) ? btP.GetString() ?? "" : "",
+                            Status = item.TryGetProperty("status", out var stP) ? stP.GetString() ?? "" : "",
+                            DueDate = item.TryGetProperty("dueDate", out var ddP) && DateTime.TryParse(ddP.GetString(), out var ddVal) ? ddVal : null,
+                            PaymentDate = item.TryGetProperty("paymentDate", out var pdP) && DateTime.TryParse(pdP.GetString(), out var pdVal) ? pdVal : null,
+                            InvoiceUrl = item.TryGetProperty("invoiceUrl", out var iuP) ? iuP.GetString() : (item.TryGetProperty("bankSlipUrl", out var bsP) ? bsP.GetString() : null),
+                            ExternalReference = item.TryGetProperty("externalReference", out var erP) ? erP.GetString() : null,
+                            Description = item.TryGetProperty("description", out var descP) ? descP.GetString() : null
+                        };
+
+                        lista.Add(dto);
+                    }
+                }
+
+                return new AsaasCobrancasPaginadasResult
+                {
+                    Sucesso = true,
+                    TotalCount = totalCount,
+                    Offset = offset,
+                    Limit = limit,
+                    HasMore = hasMore,
+                    Data = lista
+                };
+            }
+            else
+            {
+                string erroDescrito = ExtrairErrosAsaas(responseBody);
+                _logger.LogWarning("Falha ao listar cobranças Asaas HTTP {Status}: {Body}", response.StatusCode, responseBody);
+                return new AsaasCobrancasPaginadasResult { Sucesso = false, MensagemErro = erroDescrito };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exceção ao comunicar com a API Asaas (ListarCobrancas)");
+            return new AsaasCobrancasPaginadasResult { Sucesso = false, MensagemErro = ex.Message };
+        }
     }
 }
