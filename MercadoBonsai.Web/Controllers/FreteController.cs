@@ -97,9 +97,15 @@ public class FreteController : Controller
         {
             var resultados = await _melhorEnvioService.CalcularFreteAsync(req);
 
+            var validos = resultados.Where(r => !r.TemErro && r.PrazoDias > 0).ToList();
+            int prazoMedio = validos.Any() ? (int)System.Math.Round(validos.Average(r => r.PrazoDias)) : 5;
+            bool exibirValoresPreco = false; // Flag para suprimir preços de transportadoras no pré-cálculo e exibir apenas estimativa de prazo médio
+
             return Json(new {
                 success = true,
                 cepDestino = FormatarCep(cepDestinoLimpo),
+                prazoMedio = prazoMedio,
+                exibirValoresPreco = exibirValoresPreco,
                 opcoes = resultados
             });
         }

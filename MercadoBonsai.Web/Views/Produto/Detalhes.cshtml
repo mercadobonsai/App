@@ -277,7 +277,30 @@
 
                 if (!data.opcoes || data.opcoes.length === 0) {
                     lista.innerHTML = '<div class="alert alert-secondary mb-0">Nenhuma opção de transportadora disponível para este trecho.</div>';
+                } else if (!data.exibirValoresPreco) {
+                    const cardPrazo = document.createElement('div');
+                    cardPrazo.className = 'card border-0 bg-light p-4 rounded text-center shadow-sm';
+                    cardPrazo.innerHTML = `
+                        <div class="mb-3">
+                            <div class="rounded-circle bg-warning text-dark d-inline-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                                <i class="icon-base ri ri-truck-line fs-2"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Prazo Estimado de Entrega</h5>
+                        <p class="fs-4 text-success fw-bold mb-2">
+                            <i class="icon-base ri ri-time-line me-1"></i> Aproximadamente <strong>${data.prazoMedio} ${data.prazoMedio === 1 ? 'dia útil' : 'dias úteis'}</strong>
+                        </p>
+                        <span class="text-muted small d-block mb-3">
+                            (Baseado na média das transportadoras disponíveis para sua região)
+                        </span>
+                        <div class="alert alert-info border-0 text-start small mb-0">
+                            <i class="icon-base ri ri-information-line me-1"></i>
+                            O valor final do frete será calculado e informado pelo vendedor no aceite do pedido, garantindo o empacotamento seguro do seu bonsai.
+                        </div>
+                    `;
+                    lista.appendChild(cardPrazo);
                 } else {
+                    // Modo legada / valores ativos
                     data.opcoes.forEach(op => {
                         const itemHtml = document.createElement('div');
                         itemHtml.className = 'card border shadow-none p-3 rounded';

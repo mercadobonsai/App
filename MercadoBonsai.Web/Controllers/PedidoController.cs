@@ -199,7 +199,17 @@ public class PedidoController : Controller
             return RedirectToAction("MinhasVendas");
         }
 
-        // 1. Cria Subconta Asaas se ainda não existir
+        // 1. Garantir Cliente e Subconta Asaas se ainda não existirem
+        if (string.IsNullOrWhiteSpace(vendedor.AsaasCustomerId))
+        {
+            var clienteResult = await _asaasService.CriarClienteAsync(vendedor);
+            if (clienteResult.Sucesso && !string.IsNullOrEmpty(clienteResult.AsaasCustomerId))
+            {
+                vendedor.AsaasCustomerId = clienteResult.AsaasCustomerId;
+                await _usuarioRepository.AtualizarAsync(vendedor);
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(vendedor.AsaasAccountId))
         {
             var subcontaResult = await _asaasService.CriarSubcontaVendedorAsync(vendedor);

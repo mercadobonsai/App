@@ -226,12 +226,13 @@ public class AsaasService : IAsaasService
         {
             var payload = new
             {
-                customer = string.IsNullOrEmpty(vendedor.AsaasCustomerId) ? pedido.CompradorEmail : vendedor.AsaasCustomerId,
+                customer = string.IsNullOrEmpty(vendedor.AsaasCustomerId) ? "cus_000005574044" : vendedor.AsaasCustomerId,
                 billingType = "UNDEFINED", // Permite Pix, Cartão e Boleto na mesma tela
                 value = pedido.ValorTotal,
                 dueDate = DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"),
                 description = $"Pedido #{pedido.Numero} - Mercado Bonsai",
-                externalReference = pedido.Numero.ToString()
+                externalReference = pedido.Numero.ToString(),
+                walletId = string.IsNullOrEmpty(vendedor.AsaasAccountId) ? null : vendedor.AsaasAccountId
             };
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/payments");
