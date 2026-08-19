@@ -95,6 +95,7 @@ public class AdminController : Controller
             AsaasCustomerId = usuario.AsaasCustomerId,
             AsaasAccountId = usuario.AsaasAccountId,
             AsaasSubscriptionId = usuario.AsaasSubscriptionId,
+            PercentualRetencaoPersonalizado = usuario.PercentualRetencaoPersonalizado,
             DataUltimaAlteracao = usuario.DataUltimaAlteracao,
             UsuarioAlteracaoNome = usuario.UsuarioAlteracaoNome
         };
@@ -174,6 +175,7 @@ public class AdminController : Controller
         usuario.Conta = model.Conta;
         usuario.DescricaoViveiro = model.DescricaoViveiro;
         usuario.IsentoCobranca = model.IsentoCobranca;
+        usuario.PercentualRetencaoPersonalizado = model.PercentualRetencaoPersonalizado;
         usuario.DataUltimaAlteracao = DateTime.UtcNow;
         usuario.UsuarioAlteracaoId = adminId;
         usuario.UsuarioAlteracaoNome = User.Identity?.Name ?? "Administrador";

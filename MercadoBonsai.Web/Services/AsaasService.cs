@@ -201,16 +201,22 @@ public class AsaasService : IAsaasService
         }
     }
 
-    public async Task<AsaasCobrancaResult> CriarCobrancaAsync(Pedido pedido, Usuario vendedor)
+    public async Task<AsaasCobrancaResult> CriarCobrancaAsync(Pedido pedido, Usuario vendedor, decimal percentualComissao = 10.00m)
     {
         var apiKey = _configuration["Asaas:ApiKey"]?.Trim();
         var baseUrl = _configuration["Asaas:ApiUrl"] ?? "https://sandbox.asaas.com/api/v3";
         var userAgent = _configuration["Asaas:UserAgent"] ?? "MercadoBonsai/1.0 (suporte@mercadobonsai.com.br)";
 
+        // Cálculo da Retenção (Comissão da Plataforma) e Repasse Líquido para a Subconta
+        decimal comissaoValida = Math.Clamp(percentualComissao, 0.00m, 100.00m);
+        decimal percentualVendedor = 100.00m - comissaoValida;
+        decimal valorRetidoPlataforma = Math.Round(pedido.ValorTotal * (comissaoValida / 100.00m), 2);
+        decimal valorLiquidoVendedor = Math.Round(pedido.ValorTotal - valorRetidoPlataforma, 2);
+
         // Modo Stub / Pré-configurado quando o token não foi preenchido
         if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "seu_asaas_token_aqui")
         {
-            _logger.LogInformation("Asaas API Key não configurada. Gerando cobrança pré-configurada para Pedido #{Numero}", pedido.Numero);
+            _logger.LogInformation("Asaas API Key não configurada. Gerando cobrança com split pré-configurada para Pedido #{Numero} (Total R$ {Total}, Comissão {Comissao}%, Retenção R$ {Retencao}, Vendedor R$ {Repasse})", pedido.Numero, pedido.ValorTotal, comissaoValida, valorRetidoPlataforma, valorLiquidoVendedor);
             var paymentIdSimulado = $"pay_{pedido.Numero}_{Guid.NewGuid().ToString().Substring(0, 8)}";
             var urlCheckoutSimulado = $"https://sandbox.asaas.com/i/{paymentIdSimulado}";
 
@@ -224,16 +230,43 @@ public class AsaasService : IAsaasService
 
         try
         {
-            var payload = new
+            _logger.LogInformation("Gerando cobrança Asaas Pedido #{Numero}: Total R$ {Total}, Comissão Plataforma {Comissao}% (R$ {Retencao}), Repasse Subconta R$ {Repasse} (Wallet: {Wallet})", 
+                pedido.Numero, pedido.ValorTotal, comissaoValida, valorRetidoPlataforma, valorLiquidoVendedor, vendedor.AsaasAccountId ?? "Sem Wallet");
+
+            object payload;
+            if (!string.IsNullOrEmpty(vendedor.AsaasAccountId))
             {
-                customer = string.IsNullOrEmpty(vendedor.AsaasCustomerId) ? "cus_000005574044" : vendedor.AsaasCustomerId,
-                billingType = "UNDEFINED", // Permite Pix, Cartão e Boleto na mesma tela
-                value = pedido.ValorTotal,
-                dueDate = DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"),
-                description = $"Pedido #{pedido.Numero} - Mercado Bonsai",
-                externalReference = pedido.Numero.ToString(),
-                walletId = string.IsNullOrEmpty(vendedor.AsaasAccountId) ? null : vendedor.AsaasAccountId
-            };
+                payload = new
+                {
+                    customer = string.IsNullOrEmpty(vendedor.AsaasCustomerId) ? "cus_000005574044" : vendedor.AsaasCustomerId,
+                    billingType = "UNDEFINED", // Permite Pix, Cartão e Boleto na mesma tela
+                    value = pedido.ValorTotal,
+                    dueDate = DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"),
+                    description = $"Pedido #{pedido.Numero} - Mercado Bonsai",
+                    externalReference = pedido.Numero.ToString(),
+                    split = new[]
+                    {
+                        new
+                        {
+                            walletId = vendedor.AsaasAccountId,
+                            fixedValue = valorLiquidoVendedor,
+                            percentualValue = percentualVendedor
+                        }
+                    }
+                };
+            }
+            else
+            {
+                payload = new
+                {
+                    customer = string.IsNullOrEmpty(vendedor.AsaasCustomerId) ? "cus_000005574044" : vendedor.AsaasCustomerId,
+                    billingType = "UNDEFINED",
+                    value = pedido.ValorTotal,
+                    dueDate = DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"),
+                    description = $"Pedido #{pedido.Numero} - Mercado Bonsai",
+                    externalReference = pedido.Numero.ToString()
+                };
+            }
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/payments");
             request.Headers.Add("access_token", apiKey);

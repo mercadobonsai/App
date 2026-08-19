@@ -30,5 +30,5 @@ public interface IAsaasService
     Task<AsaasClienteResult> CriarClienteAsync(Usuario usuario);
     Task<AsaasSubcontaResult> CriarSubcontaVendedorAsync(Usuario vendedor);
     Task<AsaasSubcontaResult> EncerrarSubcontaAsync(string asaasAccountId);
-    Task<AsaasCobrancaResult> CriarCobrancaAsync(Pedido pedido, Usuario vendedor);
+    Task<AsaasCobrancaResult> CriarCobrancaAsync(Pedido pedido, Usuario vendedor, decimal percentualComissao = 10.00m);
 }

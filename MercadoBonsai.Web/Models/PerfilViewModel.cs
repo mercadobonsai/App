@@ -89,10 +89,13 @@ public class PerfilViewModel
     public string? LinkVasosCartao { get; set; }
     public string? LinkEngajamentoCartao { get; set; }
 
-    // Expansão: Integração Asaas
+    // Expansão: Integração Asaas & Retenção de Comissão
     public string? AsaasCustomerId { get; set; }
     public string? AsaasAccountId { get; set; }
     public string? AsaasSubscriptionId { get; set; }
+
+    [Display(Name = "Comissão / Retenção Personalizada (%)")]
+    public decimal? PercentualRetencaoPersonalizado { get; set; }
 
     // Auditoria
     public DateTime? DataUltimaAlteracao { get; set; }

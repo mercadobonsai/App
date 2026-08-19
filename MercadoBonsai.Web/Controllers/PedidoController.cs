@@ -17,6 +17,7 @@ public class PedidoController : Controller
     private readonly IPedidoRepository _pedidoRepository;
     private readonly IProdutoRepository _produtoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IPlanoRepository _planoRepository;
     private readonly IEvendasWebhookService _evendasWebhookService;
     private readonly IAsaasService _asaasService;
 
@@ -24,12 +25,14 @@ public class PedidoController : Controller
         IPedidoRepository pedidoRepository,
         IProdutoRepository produtoRepository,
         IUsuarioRepository usuarioRepository,
+        IPlanoRepository planoRepository,
         IEvendasWebhookService evendasWebhookService,
         IAsaasService asaasService)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;
         _usuarioRepository = usuarioRepository;
+        _planoRepository = planoRepository;
         _evendasWebhookService = evendasWebhookService;
         _asaasService = asaasService;
     }
@@ -228,8 +231,23 @@ public class PedidoController : Controller
         pedido.ValorTotal = valorTotalNovo;
         pedido.StatusPedido = StatusPedido.AguardandoPagamento;
 
-        // 3. Gera Cobrança no Asaas
-        var cobrancaResult = await _asaasService.CriarCobrancaAsync(pedido, vendedor);
+        // 3. Determina a alíquota de retenção/comissão (Personalizada do Vendedor ou pelo Plano Ativo)
+        decimal percentualComissao = 10.00m;
+        if (vendedor.PercentualRetencaoPersonalizado.HasValue && vendedor.PercentualRetencaoPersonalizado.Value > 0)
+        {
+            percentualComissao = vendedor.PercentualRetencaoPersonalizado.Value;
+        }
+        else
+        {
+            var plano = await _planoRepository.ObterPorIdAsync(vendedor.PlanoId);
+            if (plano != null)
+            {
+                percentualComissao = plano.PercentualComissao;
+            }
+        }
+
+        // 4. Gera Cobrança no Asaas com Split vinculada à subconta do vendedor
+        var cobrancaResult = await _asaasService.CriarCobrancaAsync(pedido, vendedor, percentualComissao);
         if (cobrancaResult.Sucesso)
         {
             pedido.UrlCheckout = cobrancaResult.UrlCheckout;

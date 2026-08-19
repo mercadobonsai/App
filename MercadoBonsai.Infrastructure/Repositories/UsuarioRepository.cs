@@ -47,6 +47,7 @@ public class UsuarioRepository : IUsuarioRepository
         asaas_account_id AS AsaasAccountId,
         asaas_customer_id AS AsaasCustomerId,
         asaas_subscription_id AS AsaasSubscriptionId,
+        percentualretencaopersonalizado AS PercentualRetencaoPersonalizado,
         dataultimaalteracao AS DataUltimaAlteracao,
         usuarioalteracaoid AS UsuarioAlteracaoId,
         usuarioalteracaonome AS UsuarioAlteracaoNome";
@@ -78,11 +79,11 @@ public class UsuarioRepository : IUsuarioRepository
         const string sql = @"
             INSERT INTO usuarios (
                 nome, email, senhahash, telefone, perfil, datacadastro,
-                razaosocial, cpfcnpj, inscricaoestadual, cep, logradouro, numero, complemento, bairro, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca, asaas_account_id, asaas_customer_id, asaas_subscription_id
+                razaosocial, cpfcnpj, inscricaoestadual, cep, logradouro, numero, complemento, bairro, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca, asaas_account_id, asaas_customer_id, asaas_subscription_id, percentualretencaopersonalizado
             )
             VALUES (
                 @Nome, LOWER(TRIM(@Email)), @SenhaHash, @Telefone, @Perfil, @DataCadastro,
-                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @Cep, @Logradouro, @Numero, @Complemento, @Bairro, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca, @AsaasAccountId, @AsaasCustomerId, @AsaasSubscriptionId
+                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @Cep, @Logradouro, @Numero, @Complemento, @Bairro, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca, @AsaasAccountId, @AsaasCustomerId, @AsaasSubscriptionId, @PercentualRetencaoPersonalizado
             )
             RETURNING id;";
 
@@ -121,6 +122,7 @@ public class UsuarioRepository : IUsuarioRepository
                 asaas_account_id = @AsaasAccountId,
                 asaas_customer_id = @AsaasCustomerId,
                 asaas_subscription_id = @AsaasSubscriptionId,
+                percentualretencaopersonalizado = @PercentualRetencaoPersonalizado,
                 dataultimaalteracao = @DataUltimaAlteracao,
                 usuarioalteracaoid = @UsuarioAlteracaoId,
                 usuarioalteracaonome = @UsuarioAlteracaoNome
