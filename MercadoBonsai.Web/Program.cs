@@ -44,6 +44,27 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 var app = builder.Build();
 
+// Executa migrações de schema automáticas no PostgreSQL
+using (var scope = app.Services.CreateScope())
+{
+    var factory = scope.ServiceProvider.GetRequiredService<PostgresConnectionFactory>();
+    try
+    {
+        using var conn = factory.CreateConnection();
+        conn.Execute(@"
+            ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS asaas_account_id VARCHAR(100) NULL;
+            ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS asaas_customer_id VARCHAR(100) NULL;
+            ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS asaas_subscription_id VARCHAR(100) NULL;
+            ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS percentualretencaopersonalizado NUMERIC(5,2) NULL;
+        ");
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Erro ao executar verificação/migração automática de schema no PostgreSQL.");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
