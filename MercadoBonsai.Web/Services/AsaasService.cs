@@ -58,8 +58,11 @@ public class AsaasService : IAsaasService
                 state = usuario.Estado
             };
 
+            var userAgent = _configuration["Asaas:UserAgent"] ?? "MercadoBonsai/1.0 (suporte@mercadobonsai.com.br)";
+
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/customers");
             request.Headers.Add("access_token", apiKey);
+            request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
             request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
             var response = await _httpClient.SendAsync(request);
@@ -90,6 +93,7 @@ public class AsaasService : IAsaasService
     {
         var apiKey = _configuration["Asaas:ApiKey"]?.Trim();
         var baseUrl = _configuration["Asaas:ApiUrl"] ?? "https://sandbox.asaas.com/api/v3";
+        var userAgent = _configuration["Asaas:UserAgent"] ?? "MercadoBonsai/1.0 (suporte@mercadobonsai.com.br)";
 
         // Modo Stub / Pré-configurado se a chave não estiver preenchida
         if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "seu_asaas_token_aqui")
@@ -124,6 +128,7 @@ public class AsaasService : IAsaasService
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/accounts");
             request.Headers.Add("access_token", apiKey);
+            request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
             request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
             var response = await _httpClient.SendAsync(request);
@@ -153,6 +158,7 @@ public class AsaasService : IAsaasService
     {
         var apiKey = _configuration["Asaas:ApiKey"]?.Trim();
         var baseUrl = _configuration["Asaas:ApiUrl"] ?? "https://sandbox.asaas.com/api/v3";
+        var userAgent = _configuration["Asaas:UserAgent"] ?? "MercadoBonsai/1.0 (suporte@mercadobonsai.com.br)";
 
         // Modo Stub / Pré-configurado quando o token não foi preenchido
         if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "seu_asaas_token_aqui")
@@ -183,6 +189,7 @@ public class AsaasService : IAsaasService
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/payments");
             request.Headers.Add("access_token", apiKey);
+            request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
             request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
             var response = await _httpClient.SendAsync(request);
