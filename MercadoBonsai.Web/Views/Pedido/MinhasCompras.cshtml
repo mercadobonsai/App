@@ -94,6 +94,12 @@ else
                                         <i class="icon-base ri ri-bank-card-line me-1"></i> Pagar Agora (Asaas)
                                     </a>
                                 }
+                                else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.ErroCobranca || (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.AguardandoPagamento && string.IsNullOrEmpty(pedido.UrlCheckout)))
+                                {
+                                    <span class="badge bg-warning text-dark p-2 d-block text-wrap mb-2">
+                                        <i class="icon-base ri ri-time-line me-1"></i> O vendedor aceitou a venda e o link de cobrança está sendo emitido.
+                                    </span>
+                                }
                                 else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Entregue)
                                 {
                                     <form asp-controller="Pedido" asp-action="Conferir" method="post">

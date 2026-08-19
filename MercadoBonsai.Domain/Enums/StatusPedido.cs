@@ -5,6 +5,7 @@ public static class StatusPedido
     public const string Criado = "Criado";
     public const string AguardandoAceite = "Aguardando Aceite";
     public const string Recusado = "Recusado";
+    public const string ErroCobranca = "Erro na Cobrança";
     public const string AguardandoPagamento = "Aguardando Pagamento";
     public const string Pago = "Pago";
     public const string EmDespacho = "Em Despacho";
@@ -18,6 +19,7 @@ public static class StatusPedido
         Criado,
         AguardandoAceite,
         Recusado,
+        ErroCobranca,
         AguardandoPagamento,
         Pago,
         EmDespacho,

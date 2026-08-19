@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using MercadoBonsai.Domain.Entities;
+using MercadoBonsai.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -15,12 +16,14 @@ public class AsaasService : IAsaasService
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AsaasService> _logger;
+    private readonly IUsuarioRepository _usuarioRepository;
 
-    public AsaasService(HttpClient httpClient, IConfiguration configuration, ILogger<AsaasService> logger)
+    public AsaasService(HttpClient httpClient, IConfiguration configuration, ILogger<AsaasService> logger, IUsuarioRepository usuarioRepository)
     {
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
+        _usuarioRepository = usuarioRepository;
     }
 
     // ETAPA 1: Cadastro de Cliente no Asaas (POST /v3/customers)
@@ -243,6 +246,16 @@ public class AsaasService : IAsaasService
 
         try
         {
+            if (string.IsNullOrEmpty(vendedor.AsaasCustomerId))
+            {
+                var resCliente = await CriarClienteAsync(vendedor);
+                if (resCliente.Sucesso && !string.IsNullOrEmpty(resCliente.AsaasCustomerId))
+                {
+                    vendedor.AsaasCustomerId = resCliente.AsaasCustomerId;
+                    await _usuarioRepository.AtualizarAsync(vendedor);
+                }
+            }
+
             _logger.LogInformation("Gerando cobrança Asaas Pedido #{Numero}: Total R$ {Total}, Comissão Plataforma {Comissao}% (R$ {Retencao}), Repasse Subconta R$ {Repasse} (Wallet: {Wallet})", 
                 pedido.Numero, pedido.ValorTotal, comissaoValida, valorRetidoPlataforma, valorLiquidoVendedor, vendedor.AsaasAccountId ?? "Sem Wallet");
 
@@ -251,7 +264,7 @@ public class AsaasService : IAsaasService
             {
                 payload = new
                 {
-                    customer = string.IsNullOrEmpty(vendedor.AsaasCustomerId) ? "cus_000005574044" : vendedor.AsaasCustomerId,
+                    customer = vendedor.AsaasCustomerId,
                     billingType = "UNDEFINED", // Permite Pix, Cartão e Boleto na mesma tela
                     value = pedido.ValorTotal,
                     dueDate = DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"),
@@ -272,7 +285,7 @@ public class AsaasService : IAsaasService
             {
                 payload = new
                 {
-                    customer = string.IsNullOrEmpty(vendedor.AsaasCustomerId) ? "cus_000005574044" : vendedor.AsaasCustomerId,
+                    customer = vendedor.AsaasCustomerId,
                     billingType = "UNDEFINED",
                     value = pedido.ValorTotal,
                     dueDate = DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"),
@@ -307,6 +320,22 @@ public class AsaasService : IAsaasService
             {
                 string erroDescrito = ExtrairErrosAsaas(responseBody);
                 _logger.LogWarning("Falha ao criar cobrança Asaas HTTP {Status}: {Body}", response.StatusCode, responseBody);
+
+                // Auto-recuperação se a wallet/subconta tiver sido excluída ou for inválida no ambiente ativo
+                if (responseBody.Contains("Wallet") && (responseBody.Contains("inexistente") || responseBody.Contains("not found")))
+                {
+                    _logger.LogWarning("Wallet {AccountId} do vendedor #{VendedorId} não existe no Asaas. Resetando wallet e recriando subconta...", vendedor.AsaasAccountId, vendedor.Id);
+                    vendedor.AsaasAccountId = null;
+                    var subcontaNova = await CriarSubcontaVendedorAsync(vendedor);
+                    if (subcontaNova.Sucesso && !string.IsNullOrEmpty(subcontaNova.AsaasAccountId))
+                    {
+                        vendedor.AsaasAccountId = subcontaNova.AsaasAccountId;
+                        await _usuarioRepository.AtualizarAsync(vendedor);
+                        // Re-tenta gerar a cobrança automaticamente com a nova wallet criada
+                        return await CriarCobrancaAsync(pedido, vendedor, percentualComissao);
+                    }
+                }
+
                 return new AsaasCobrancaResult { Sucesso = false, MensagemErro = erroDescrito };
             }
         }

@@ -56,6 +56,7 @@ else
                 "Criado" => "bg-secondary text-white",
                 "Aguardando Aceite" => "bg-warning text-white",
                 "Recusado" => "bg-danger text-white",
+                "Erro na Cobrança" => "bg-danger text-white",
                 "Aguardando Pagamento" => "bg-info text-white",
                 "Pago" => "bg-success text-white",
                 "Em Despacho" => "bg-primary text-white",
@@ -144,6 +145,15 @@ else
                                     <i class="icon-base ri ri-close-line me-1"></i> Recusar
                                 </button>
                             </div>
+                        }
+                        else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.ErroCobranca || (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.AguardandoPagamento && string.IsNullOrEmpty(pedido.UrlCheckout)))
+                        {
+                            <form asp-controller="Pedido" asp-action="GerarCobrancaAsaas" method="post">
+                                <input type="hidden" name="id" value="@pedido.Id" />
+                                <button type="submit" class="btn btn-warning text-dark btn-sm w-100 fw-bold">
+                                    <i class="icon-base ri ri-refresh-line me-1"></i> Re-tentar Gerar Cobrança Asaas
+                                </button>
+                            </form>
                         }
                         else if (pedido.StatusPedido == MercadoBonsai.Domain.Enums.StatusPedido.Pago)
                         {

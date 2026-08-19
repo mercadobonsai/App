@@ -229,7 +229,6 @@ public class PedidoController : Controller
 
         pedido.ValorFrete = freteCalculado;
         pedido.ValorTotal = valorTotalNovo;
-        pedido.StatusPedido = StatusPedido.AguardandoPagamento;
 
         // 3. Determina a alíquota de retenção/comissão (Personalizada do Vendedor ou pelo Plano Ativo)
         decimal percentualComissao = 10.00m;
@@ -252,14 +251,86 @@ public class PedidoController : Controller
         {
             pedido.UrlCheckout = cobrancaResult.UrlCheckout;
             pedido.AsaasPaymentId = cobrancaResult.AsaasPaymentId;
+            pedido.StatusPedido = StatusPedido.AguardandoPagamento;
+
+            await _pedidoRepository.AtualizarFreteECheckoutAsync(pedido.Id, freteCalculado, valorTotalNovo, pedido.UrlCheckout, pedido.AsaasPaymentId);
+            await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
+
+            TempData["Sucesso"] = $"Pedido #{pedido.Numero} aceito com sucesso! Frete de R$ {freteCalculado:N2} adicionado e cobrança no Asaas gerada.";
+        }
+        else
+        {
+            pedido.StatusPedido = StatusPedido.ErroCobranca;
+            await _pedidoRepository.AtualizarFreteECheckoutAsync(pedido.Id, freteCalculado, valorTotalNovo, null, null);
+            await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
+
+            TempData["Erro"] = $"Pedido #{pedido.Numero} aceito com frete de R$ {freteCalculado:N2}, porém a cobrança no Asaas não pôde ser gerada: {cobrancaResult.MensagemErro}. Você pode tentar gerar novamente no botão abaixo.";
         }
 
-        await _pedidoRepository.AtualizarFreteECheckoutAsync(pedido.Id, freteCalculado, valorTotalNovo, pedido.UrlCheckout, pedido.AsaasPaymentId);
+        return RedirectToAction("MinhasVendas");
+    }
 
-        // 4. Dispara Webhook e-vendas com o novo status 'Aguardando Pagamento' e URLCHECKOUT
-        await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
+    // POST: /Pedido/GerarCobrancaAsaas/{id}
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GerarCobrancaAsaas(int id)
+    {
+        var usuarioLogadoIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(usuarioLogadoIdClaim) || !int.TryParse(usuarioLogadoIdClaim, out int usuarioLogadoId))
+        {
+            return RedirectToAction("Login", "Conta");
+        }
 
-        TempData["Sucesso"] = $"Pedido #{pedido.Numero} aceito com sucesso! Frete de R$ {freteCalculado:N2} adicionado e link de pagamento gerado.";
+        var pedido = await _pedidoRepository.ObterPorIdAsync(id);
+        if (pedido == null)
+        {
+            return NotFound();
+        }
+
+        bool ehAdmin = User.IsInRole("Administrador");
+        if (pedido.VendedorId != usuarioLogadoId && !ehAdmin)
+        {
+            return Forbid();
+        }
+
+        var vendedor = await _usuarioRepository.ObterPorIdAsync(pedido.VendedorId);
+        if (vendedor == null)
+        {
+            TempData["Erro"] = "Vendedor não localizado.";
+            return RedirectToAction("MinhasVendas");
+        }
+
+        decimal percentualComissao = 10.00m;
+        if (vendedor.PercentualRetencaoPersonalizado.HasValue && vendedor.PercentualRetencaoPersonalizado.Value > 0)
+        {
+            percentualComissao = vendedor.PercentualRetencaoPersonalizado.Value;
+        }
+        else
+        {
+            var plano = await _planoRepository.ObterPorIdAsync(vendedor.PlanoId);
+            if (plano != null)
+            {
+                percentualComissao = plano.PercentualComissao;
+            }
+        }
+
+        var cobrancaResult = await _asaasService.CriarCobrancaAsync(pedido, vendedor, percentualComissao);
+        if (cobrancaResult.Sucesso)
+        {
+            pedido.UrlCheckout = cobrancaResult.UrlCheckout;
+            pedido.AsaasPaymentId = cobrancaResult.AsaasPaymentId;
+            pedido.StatusPedido = StatusPedido.AguardandoPagamento;
+
+            await _pedidoRepository.AtualizarFreteECheckoutAsync(pedido.Id, pedido.ValorFrete ?? 0.00m, pedido.ValorTotal, pedido.UrlCheckout, pedido.AsaasPaymentId);
+            await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
+
+            TempData["Sucesso"] = $"Cobrança do Pedido #{pedido.Numero} gerada com sucesso no Asaas!";
+        }
+        else
+        {
+            TempData["Erro"] = $"Falha ao gerar cobrança no Asaas para o Pedido #{pedido.Numero}: {cobrancaResult.MensagemErro}";
+        }
+
         return RedirectToAction("MinhasVendas");
     }
 
