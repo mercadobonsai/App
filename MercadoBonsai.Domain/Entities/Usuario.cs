@@ -47,6 +47,7 @@ public class Usuario
     // Expansão: Integração Asaas
     public string? AsaasAccountId { get; set; }
     public string? AsaasCustomerId { get; set; }
+    public string? AsaasSubscriptionId { get; set; }
 
     // Expansão: Auditoria de Alteração
     public DateTime? DataUltimaAlteracao { get; set; }

@@ -89,6 +89,11 @@ public class PerfilViewModel
     public string? LinkVasosCartao { get; set; }
     public string? LinkEngajamentoCartao { get; set; }
 
+    // Expansão: Integração Asaas
+    public string? AsaasCustomerId { get; set; }
+    public string? AsaasAccountId { get; set; }
+    public string? AsaasSubscriptionId { get; set; }
+
     // Auditoria
     public DateTime? DataUltimaAlteracao { get; set; }
     public string? UsuarioAlteracaoNome { get; set; }

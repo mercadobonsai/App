@@ -100,8 +100,19 @@ public class ProdutoController : Controller
     // GET: /Produto/Criar
     [HttpGet]
     [Authorize(Roles = "Vendedor, Administrador")]
-    public IActionResult Criar()
+    public async Task<IActionResult> Criar()
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (int.TryParse(userIdClaim, out int vendedorId))
+        {
+            var vendedor = await _usuarioRepository.ObterPorIdAsync(vendedorId);
+            if (vendedor != null && string.IsNullOrEmpty(vendedor.AsaasAccountId))
+            {
+                TempData["Erro"] = "Sua conta de Vendedor ainda não possui a Subconta Asaas ativada. Por favor, preencha seus dados cadastrais e fiscais no 'Meu Perfil' para habilitar publicações de anúncios.";
+                return RedirectToAction("MeuPerfil", "Conta");
+            }
+        }
+
         return View(new CriarProdutoViewModel { FormaEnvio = "Frete por conta comprador" });
     }
 
@@ -111,6 +122,19 @@ public class ProdutoController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Criar(CriarProdutoViewModel model)
     {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int vendedorId))
+        {
+            return Unauthorized();
+        }
+
+        var vendedorObj = await _usuarioRepository.ObterPorIdAsync(vendedorId);
+        if (vendedorObj != null && string.IsNullOrEmpty(vendedorObj.AsaasAccountId))
+        {
+            TempData["Erro"] = "Sua conta de Vendedor ainda não possui a Subconta Asaas ativada. Por favor, preencha seus dados cadastrais e fiscais no 'Meu Perfil' para habilitar publicações de anúncios.";
+            return RedirectToAction("MeuPerfil", "Conta");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -136,12 +160,6 @@ public class ProdutoController : Controller
             }
 
             imagemUrl = $"/uploads/produtos/{uniqueFileName}";
-        }
-
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int vendedorId))
-        {
-            return Unauthorized();
         }
 
         var produto = new Produto

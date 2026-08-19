@@ -4,6 +4,7 @@ using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using MercadoBonsai.Domain.Entities;
+using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Web.Models;
 using MercadoBonsai.Web.Services;
@@ -20,17 +21,20 @@ public class ContaController : Controller
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPlanoRepository _planoRepository;
     private readonly VendedorTokenService _vendedorTokenService;
+    private readonly IAsaasService _asaasService;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
     public ContaController(
         IUsuarioRepository usuarioRepository,
         IPlanoRepository planoRepository,
         VendedorTokenService vendedorTokenService,
+        IAsaasService asaasService,
         IWebHostEnvironment webHostEnvironment)
     {
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
         _vendedorTokenService = vendedorTokenService;
+        _asaasService = asaasService;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -123,7 +127,14 @@ public class ContaController : Controller
 
         await _usuarioRepository.InserirAsync(usuario);
 
-        TempData["Sucesso"] = "Cadastro efetuado com sucesso! Efetue login para acessar sua conta.";
+        if (usuario.Perfil == PerfilUsuario.Vendedor)
+        {
+            TempData["Sucesso"] = "Cadastro de Vendedor realizado com sucesso! Efetue login para preencher seus dados e ativar sua conta no Asaas.";
+        }
+        else
+        {
+            TempData["Sucesso"] = "Cadastro efetuado com sucesso! Efetue login para acessar sua conta.";
+        }
         return RedirectToAction("Login");
     }
 
@@ -183,6 +194,9 @@ public class ContaController : Controller
             NomePlano = nomePlano,
             LiberarCartaoVisitas = liberarCartao,
             IsentoCobranca = usuario.IsentoCobranca,
+            AsaasCustomerId = usuario.AsaasCustomerId,
+            AsaasAccountId = usuario.AsaasAccountId,
+            AsaasSubscriptionId = usuario.AsaasSubscriptionId,
             DataUltimaAlteracao = usuario.DataUltimaAlteracao,
             UsuarioAlteracaoNome = usuario.UsuarioAlteracaoNome
         };
@@ -264,7 +278,63 @@ public class ContaController : Controller
 
         await _usuarioRepository.AtualizarAsync(usuario);
 
-        TempData["Sucesso"] = "Seus dados de perfil, endereço de origem e dados fiscais foram atualizados com sucesso!";
+        // Integração Asaas em Duas Etapas Isoladas (Resiliência & Retry)
+        bool dadosFiscaisCompletos = !string.IsNullOrWhiteSpace(usuario.CpfCnpj)
+            && !string.IsNullOrWhiteSpace(usuario.Telefone)
+            && !string.IsNullOrWhiteSpace(usuario.Cep)
+            && !string.IsNullOrWhiteSpace(usuario.Logradouro)
+            && !string.IsNullOrWhiteSpace(usuario.Bairro)
+            && !string.IsNullOrWhiteSpace(usuario.Cidade)
+            && !string.IsNullOrWhiteSpace(usuario.Estado);
+
+        if (dadosFiscaisCompletos && (usuario.Perfil == PerfilUsuario.Vendedor || usuario.Perfil == PerfilUsuario.Administrador))
+        {
+            var msgsCriticas = new List<string>();
+
+            // ETAPA 1: Cadastro de Cliente Asaas (POST /v3/customers)
+            if (string.IsNullOrEmpty(usuario.AsaasCustomerId))
+            {
+                var resCliente = await _asaasService.CriarClienteAsync(usuario);
+                if (resCliente.Sucesso && !string.IsNullOrEmpty(resCliente.AsaasCustomerId))
+                {
+                    usuario.AsaasCustomerId = resCliente.AsaasCustomerId;
+                    await _usuarioRepository.AtualizarAsync(usuario);
+                }
+                else if (!resCliente.Sucesso)
+                {
+                    msgsCriticas.Add($"[Cliente Asaas]: {resCliente.MensagemErro}");
+                }
+            }
+
+            // ETAPA 2: Criação de Subconta Vendedor (POST /v3/accounts)
+            if (string.IsNullOrEmpty(usuario.AsaasAccountId))
+            {
+                var resSubconta = await _asaasService.CriarSubcontaVendedorAsync(usuario);
+                if (resSubconta.Sucesso && !string.IsNullOrEmpty(resSubconta.AsaasAccountId))
+                {
+                    usuario.AsaasAccountId = resSubconta.AsaasAccountId;
+                    await _usuarioRepository.AtualizarAsync(usuario);
+                }
+                else if (!resSubconta.Sucesso)
+                {
+                    msgsCriticas.Add($"[Subconta Asaas]: {resSubconta.MensagemErro}");
+                }
+            }
+
+            if (msgsCriticas.Count > 0)
+            {
+                TempData["AvisoAsaas"] = "Seus dados foram salvos no perfil, porém a integração com a API Asaas retornou alertas: " + string.Join(" | ", msgsCriticas);
+            }
+            else
+            {
+                TempData["Sucesso"] = "Perfil e dados cadastrais salvos com sucesso! Sua Subconta Asaas está ativada e pronta para vendas.";
+            }
+        }
+        else
+        {
+            TempData["Sucesso"] = "Seus dados de perfil foram atualizados com sucesso!";
+        }
+
         return RedirectToAction("MeuPerfil");
     }
 
