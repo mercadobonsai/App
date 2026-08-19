@@ -28,7 +28,7 @@ public class UsuarioRepository : IUsuarioRepository
         razaosocial AS RazaoSocial,
         cpfcnpj AS CpfCnpj,
         inscricaoestadual AS InscricaoEstadual,
-        datanascimento AS DataNascimento,
+        datanascimento::timestamp AS DataNascimento,
         cep AS Cep,
         logradouro AS Logradouro,
         numero AS Numero,

@@ -5,8 +5,10 @@ using MercadoBonsai.Infrastructure.Data;
 using MercadoBonsai.Infrastructure.Repositories;
 using MercadoBonsai.Web.Services;
 
-// Registra TypeHandler para Dapper + Npgsql mapear UUID -> Guid corretamente
+// Registra TypeHandler para Dapper + Npgsql mapear UUID -> Guid e DateOnly -> DateTime corretamente
 SqlMapper.AddTypeHandler(GuidTypeHandler.Instance);
+SqlMapper.AddTypeHandler(new NullableDateTimeTypeHandler());
+SqlMapper.AddTypeHandler(new DateTimeTypeHandler());
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -88,3 +90,36 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.Run();
+
+public class NullableDateTimeTypeHandler : SqlMapper.TypeHandler<DateTime?>
+{
+    public override void SetValue(System.Data.IDbDataParameter parameter, DateTime? value)
+    {
+        parameter.Value = value.HasValue ? (object)value.Value : DBNull.Value;
+    }
+
+    public override DateTime? Parse(object value)
+    {
+        if (value == null || value is DBNull) return null;
+        if (value is DateTime dt) return dt;
+        if (value is DateOnly d) return d.ToDateTime(TimeOnly.MinValue);
+        if (DateTime.TryParse(value.ToString(), out var parsed)) return parsed;
+        return null;
+    }
+}
+
+public class DateTimeTypeHandler : SqlMapper.TypeHandler<DateTime>
+{
+    public override void SetValue(System.Data.IDbDataParameter parameter, DateTime value)
+    {
+        parameter.Value = value;
+    }
+
+    public override DateTime Parse(object value)
+    {
+        if (value is DateTime dt) return dt;
+        if (value is DateOnly d) return d.ToDateTime(TimeOnly.MinValue);
+        if (DateTime.TryParse(value.ToString(), out var parsed)) return parsed;
+        return DateTime.MinValue;
+    }
+}
