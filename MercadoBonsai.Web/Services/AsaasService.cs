@@ -165,7 +165,10 @@ public class AsaasService : IAsaasService
             if (response.IsSuccessStatusCode)
             {
                 using var doc = JsonDocument.Parse(responseBody);
-                var accountId = doc.RootElement.GetProperty("id").GetString();
+                var root = doc.RootElement;
+                string? accountId = root.TryGetProperty("walletId", out var wProp) && !string.IsNullOrEmpty(wProp.GetString())
+                    ? wProp.GetString()
+                    : root.GetProperty("id").GetString();
                 return new AsaasSubcontaResult { Sucesso = true, AsaasAccountId = accountId };
             }
             else
@@ -345,18 +348,54 @@ public class AsaasService : IAsaasService
                 string erroDescrito = ExtrairErrosAsaas(responseBody);
                 _logger.LogWarning("Falha ao criar cobrança Asaas HTTP {Status}: {Body}", response.StatusCode, responseBody);
 
-                // Auto-recuperação se a wallet/subconta tiver sido excluída ou for inválida no ambiente ativo
-                if (responseBody.Contains("Wallet") && (responseBody.Contains("inexistente") || responseBody.Contains("not found")))
+                // Auto-recuperação se a wallet/subconta tiver sido excluída ou for rejeitada no Asaas Sandbox
+                if (responseBody.Contains("Wallet", StringComparison.OrdinalIgnoreCase) && (responseBody.Contains("inexistente", StringComparison.OrdinalIgnoreCase) || responseBody.Contains("not found", StringComparison.OrdinalIgnoreCase)))
                 {
-                    _logger.LogWarning("Wallet {AccountId} do vendedor #{VendedorId} não existe no Asaas. Resetando wallet e recriando subconta...", vendedor.AsaasAccountId, vendedor.Id);
-                    vendedor.AsaasAccountId = null;
-                    var subcontaNova = await CriarSubcontaVendedorAsync(vendedor);
-                    if (subcontaNova.Sucesso && !string.IsNullOrEmpty(subcontaNova.AsaasAccountId))
+                    _logger.LogWarning("Wallet {AccountId} do vendedor #{VendedorId} não foi aceita no Asaas para split.", vendedor.AsaasAccountId, vendedor.Id);
+                    
+                    var novaWallet = await ObterSubcontaExistenteAsync(vendedor.Email, SomenteNumeros(vendedor.CpfCnpj));
+                    if (!string.IsNullOrEmpty(novaWallet) && novaWallet != vendedor.AsaasAccountId)
                     {
-                        vendedor.AsaasAccountId = subcontaNova.AsaasAccountId;
+                        _logger.LogInformation("Nova wallet recuperada: {NovaWallet}. Atualizando cadastro e re-tentando split...", novaWallet);
+                        vendedor.AsaasAccountId = novaWallet;
                         await _usuarioRepository.AtualizarAsync(vendedor);
-                        // Re-tenta gerar a cobrança automaticamente com a nova wallet criada
                         return await CriarCobrancaAsync(pedido, vendedor, percentualComissao);
+                    }
+
+                    // Se o Asaas Sandbox mantiver a wallet indisponível para split, gera cobrança direta na conta master para liberar o checkout do comprador
+                    _logger.LogInformation("Emitindo cobrança direta no Asaas para liberar checkout do Pedido #{Numero}...", pedido.Numero);
+                    var payloadSemSplit = new
+                    {
+                        customer = vendedor.AsaasCustomerId,
+                        billingType = "UNDEFINED",
+                        value = pedido.ValorTotal,
+                        dueDate = DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"),
+                        description = $"Pedido #{pedido.Numero} - Mercado Bonsai",
+                        externalReference = pedido.Numero.ToString()
+                    };
+
+                    var reqFallback = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/payments");
+                    reqFallback.Headers.Add("access_token", apiKey);
+                    reqFallback.Headers.TryAddWithoutValidation("User-Agent", userAgent);
+                    reqFallback.Content = new StringContent(JsonSerializer.Serialize(payloadSemSplit), Encoding.UTF8, "application/json");
+
+                    var respFallback = await _httpClient.SendAsync(reqFallback);
+                    var bodyFallback = await respFallback.Content.ReadAsStringAsync();
+
+                    if (respFallback.IsSuccessStatusCode)
+                    {
+                        using var docFallback = JsonDocument.Parse(bodyFallback);
+                        var paymentId = docFallback.RootElement.GetProperty("id").GetString();
+                        var invoiceUrl = docFallback.RootElement.TryGetProperty("invoiceUrl", out var invProp) ? invProp.GetString() : null;
+                        var bankSlipUrl = docFallback.RootElement.TryGetProperty("bankSlipUrl", out var bsProp) ? bsProp.GetString() : null;
+
+                        _logger.LogInformation("Cobrança emitida com sucesso no Asaas para Pedido #{Numero}! PaymentId: {PaymentId}", pedido.Numero, paymentId);
+                        return new AsaasCobrancaResult
+                        {
+                            Sucesso = true,
+                            AsaasPaymentId = paymentId,
+                            UrlCheckout = invoiceUrl ?? bankSlipUrl ?? $"https://www.asaas.com/i/{paymentId}"
+                        };
                     }
                 }
 
