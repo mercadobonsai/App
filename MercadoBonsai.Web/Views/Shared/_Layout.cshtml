@@ -263,12 +263,14 @@
                                                     <div>Meus Leilões</div>
                                                 </a>
                                             </li>
-                                            <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Rifa" ? "active" : "")">
-                                                <a asp-controller="Rifa" asp-action="MinhasRifas" class="menu-link">
-                                                    <i class="menu-icon icon-base ri ri-ticket-line me-2"></i>
-                                                    <div>Minhas Ações</div>
-                                                </a>
-                                            </li>
+                                             <!-- Descontinuado temporariamente: Rifas/Ações
+                                             <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Rifa" ? "active" : "")">
+                                                 <a asp-controller="Rifa" asp-action="MinhasRifas" class="menu-link">
+                                                     <i class="menu-icon icon-base ri ri-ticket-line me-2"></i>
+                                                     <div>Minhas Ações</div>
+                                                 </a>
+                                             </li>
+                                             -->
                                             <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Propaganda" ? "active" : "")">
                                                 <a asp-controller="Propaganda" asp-action="MinhasPropagandas" class="menu-link">
                                                     <i class="menu-icon icon-base ri ri-advertisement-line me-2"></i>

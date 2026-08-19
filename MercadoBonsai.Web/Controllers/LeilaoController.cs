@@ -39,7 +39,7 @@ public class LeilaoController : Controller
     public async Task<IActionResult> Encerrados()
     {
         var leiloes = await _leilaoRepository.ListarEncerradosAsync();
-        var rifaAtiva = await _rifaRepository.ObterRifaAtivaRecenteAsync();
+        Rifa? rifaAtiva = null; // Rifas descontinuadas temporariamente
         var leilaoAtivo = await _leilaoRepository.ObterLeilaoAtivoRecenteAsync();
 
         ViewData["RifaAtiva"] = rifaAtiva;

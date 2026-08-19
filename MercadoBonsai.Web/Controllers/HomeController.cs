@@ -86,7 +86,8 @@ public class HomeController : Controller
         var taskViveiros = _usuarioRepository.ListarViveirosEmDestaqueAsync();
         var taskLeilaoAtivo = _leilaoRepository.ObterLeilaoAtivoRecenteAsync();
         var taskLeiloesAtivos = _leilaoRepository.ListarAtivosAsync();
-        var taskRifaAtiva = _rifaRepository.ObterRifaAtivaRecenteAsync();
+        // Rifas descontinuadas temporariamente: Task.FromResult<Rifa?>(null)
+        var taskRifaAtiva = Task.FromResult<Rifa?>(null);
         var taskPatrocinio = _patrocinioRepository.ObterPatrocinioDestaqueAsync();
 
         var taskPropEconomico = _propagandaRepository.ListarAtivasPorTipoAsync("Economico");

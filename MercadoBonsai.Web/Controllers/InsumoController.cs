@@ -55,7 +55,7 @@ public class InsumoController : Controller
 
         var viveirosDestaque = await _usuarioRepository.ListarViveirosEmDestaqueAsync();
         var leilaoAtivo = await _leilaoRepository.ObterLeilaoAtivoRecenteAsync();
-        var rifaAtiva = await _rifaRepository.ObterRifaAtivaRecenteAsync();
+        Rifa? rifaAtiva = null; // Rifas descontinuadas temporariamente
         var patrocinioDestaque = await _patrocinioRepository.ObterPatrocinioDestaqueAsync();
 
         DicaCultivo? dicaJson = null;
