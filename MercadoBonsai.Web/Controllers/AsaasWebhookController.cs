@@ -86,10 +86,13 @@ public class AsaasWebhookController : ControllerBase
                     pedido.DataPagamento = DateTime.Now;
                     await _pedidoRepository.AtualizarAsync(pedido);
 
-                    // Regra de Negócio: Marca o produto como VENDIDO no estoque/vitrine (Status 3 = Vendido, Estoque = 0)
-                    await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Vendido, 0);
+                    // Atualiza status do produto conforme estoque disponível (Disponível se estoque > 0, Vendido se estoque == 0)
+                    var produtoPago = await _produtoRepository.ObterPorIdAsync(pedido.ProdutoId);
+                    int estoquePago = produtoPago != null ? produtoPago.QuantidadeEstoque : 0;
+                    StatusProduto statusPago = estoquePago > 0 ? StatusProduto.Disponivel : StatusProduto.Vendido;
+                    await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, statusPago, estoquePago);
 
-                    _logger.LogInformation("Pedido #{Numero} atualizado para PAGO e produto #{ProdutoId} marcado como VENDIDO!", pedido.Numero, pedido.ProdutoId);
+                    _logger.LogInformation("Pedido #{Numero} atualizado para PAGO e produto #{ProdutoId} atualizado (Status: {Status}, Estoque: {Estoque})", pedido.Numero, pedido.ProdutoId, statusPago, estoquePago);
 
                     // Notifica imediatamente o e-vendas sobre a transição para 'Pago'
                     await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);

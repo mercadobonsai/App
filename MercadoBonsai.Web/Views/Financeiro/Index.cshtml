@@ -141,18 +141,16 @@
                         <th>ID Asaas / Ref.</th>
                         <th>Data Criação</th>
                         <th>Vencimento</th>
-                        <th>Meio Pagamento</th>
+                        <th>Pagamento / Status</th>
                         <th>Valor Total</th>
                         <th>Detalhamento do Split & Retenção</th>
-                        <th>Status</th>
-                        <th class="text-end">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (Model.Cobrancas == null || !Model.Cobrancas.Any())
                     {
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="icon-base ri ri-inbox-line fs-1 d-block mb-2 text-secondary"></i>
                                 Nenhuma cobrança encontrada com os filtros selecionados.
                             </td>
@@ -173,22 +171,56 @@
                                 <td>@item.DateCreated.ToString("dd/MM/yyyy")</td>
                                 <td>@(item.DueDate?.ToString("dd/MM/yyyy") ?? "-")</td>
                                 <td>
-                                    @if (item.BillingType == "PIX")
-                                    {
-                                        <span class="badge bg-label-success"><i class="icon-base ri ri-qr-code-line me-1"></i> Pix</span>
-                                    }
-                                    else if (item.BillingType == "BOLETO")
-                                    {
-                                        <span class="badge bg-label-primary"><i class="icon-base ri ri-barcode-line me-1"></i> Boleto</span>
-                                    }
-                                    else if (item.BillingType == "CREDIT_CARD")
-                                    {
-                                        <span class="badge bg-label-warning text-dark"><i class="icon-base ri ri-bank-card-line me-1"></i> Cartão</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-label-secondary">@item.BillingType</span>
-                                    }
+                                    <!-- Linha 1: Meio de Pagamento + Ícone de Olho para Fatura -->
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        @if (item.BillingType == "PIX")
+                                        {
+                                            <span class="badge bg-label-success"><i class="icon-base ri ri-qr-code-line me-1"></i> Pix</span>
+                                        }
+                                        else if (item.BillingType == "BOLETO")
+                                        {
+                                            <span class="badge bg-label-primary"><i class="icon-base ri ri-barcode-line me-1"></i> Boleto</span>
+                                        }
+                                        else if (item.BillingType == "CREDIT_CARD")
+                                        {
+                                            <span class="badge bg-label-warning text-dark"><i class="icon-base ri ri-bank-card-line me-1"></i> Cartão</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-label-secondary">@item.BillingType</span>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(item.InvoiceUrl))
+                                        {
+                                            <a href="@item.InvoiceUrl" target="_blank" class="text-success text-decoration-none" title="Visualizar Fatura Asaas">
+                                                <i class="icon-base ri ri-eye-line fs-5"></i>
+                                            </a>
+                                        }
+                                    </div>
+
+                                    <!-- Linha 2: Status da Cobrança -->
+                                    <div>
+                                        @if (item.Status == "RECEIVED" || item.Status == "CONFIRMED" || item.Status == "RECEIVED_IN_CASH")
+                                        {
+                                            <span class="badge bg-success">Pago / Confirmado</span>
+                                        }
+                                        else if (item.Status == "PENDING")
+                                        {
+                                            <span class="badge bg-warning text-dark">Aguardando Pagamento</span>
+                                        }
+                                        else if (item.Status == "OVERDUE")
+                                        {
+                                            <span class="badge bg-danger">Vencido</span>
+                                        }
+                                        else if (item.Status == "REFUNDED")
+                                        {
+                                            <span class="badge bg-secondary">Estornado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info">@item.Status</span>
+                                        }
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="fw-bold text-dark">R$ @item.Value.ToString("N2")</span>
@@ -231,36 +263,6 @@
                                                 <small class="text-muted">Valor Líquido: <strong class="text-dark">R$ @item.NetValue.Value.ToString("N2")</strong></small>
                                             }
                                         </div>
-                                    }
-                                </td>
-                                <td>
-                                    @if (item.Status == "RECEIVED" || item.Status == "CONFIRMED" || item.Status == "RECEIVED_IN_CASH")
-                                    {
-                                        <span class="badge bg-success">Pago / Confirmado</span>
-                                    }
-                                    else if (item.Status == "PENDING")
-                                    {
-                                        <span class="badge bg-warning text-dark">Aguardando Pagamento</span>
-                                    }
-                                    else if (item.Status == "OVERDUE")
-                                    {
-                                        <span class="badge bg-danger">Vencido</span>
-                                    }
-                                    else if (item.Status == "REFUNDED")
-                                    {
-                                        <span class="badge bg-secondary">Estornado</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-info">@item.Status</span>
-                                    }
-                                </td>
-                                <td class="text-end">
-                                    @if (!string.IsNullOrEmpty(item.InvoiceUrl))
-                                    {
-                                        <a href="@item.InvoiceUrl" target="_blank" class="btn btn-sm btn-outline-success">
-                                            <i class="icon-base ri ri-external-link-line me-1"></i> Ver Fatura
-                                        </a>
                                     }
                                 </td>
                             </tr>

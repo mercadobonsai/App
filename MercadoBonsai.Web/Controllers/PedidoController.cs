@@ -134,8 +134,10 @@ public class PedidoController : Controller
         int pedidoId = await _pedidoRepository.CriarAsync(pedido);
         pedido.Id = pedidoId;
 
-        // 2. Gestão de Disponibilidade: Bloqueia o produto na vitrine imediatamente após a criação do pedido
-        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(produto.Id, StatusProduto.Indisponivel, 0);
+        // 2. Gestão de Estoque & Disponibilidade: Decrementa o estoque. O produto só fica Indisponível se o estoque chegar a 0.
+        int novoEstoque = Math.Max(0, produto.QuantidadeEstoque - 1);
+        StatusProduto novoStatus = novoEstoque > 0 ? StatusProduto.Disponivel : StatusProduto.Indisponivel;
+        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(produto.Id, novoStatus, novoEstoque);
 
         // Dispara Webhook e-vendas imediatamente no status 'Criado'
         await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
@@ -383,13 +385,15 @@ public class PedidoController : Controller
 
         await _pedidoRepository.AtualizarStatusAsync(pedido.Id, StatusPedido.Recusado, pedido.Observacao);
 
-        // 2. Retorna a disponibilidade do produto para Disponível na vitrine em caso de recusa/cancelamento
-        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Disponivel, 1);
+        // 2. Repõe o estoque e restaura a disponibilidade do produto na vitrine em caso de recusa
+        var produtoRecusado = await _produtoRepository.ObterPorIdAsync(pedido.ProdutoId);
+        int estoqueRestaurado = (produtoRecusado != null ? produtoRecusado.QuantidadeEstoque : 0) + 1;
+        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Disponivel, estoqueRestaurado);
 
         // Dispara Webhook e-vendas no status 'Recusado'
         await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
 
-        TempData["Sucesso"] = $"Pedido #{pedido.Numero} recusado com sucesso e o item retornou a ficar disponível na vitrine.";
+        TempData["Sucesso"] = $"Pedido #{pedido.Numero} recusado com sucesso e o estoque/disponibilidade do item foi restaurado ({estoqueRestaurado} unid.).";
         return RedirectToAction("MinhasVendas");
     }
 
@@ -409,8 +413,11 @@ public class PedidoController : Controller
         pedido.StatusPedido = StatusPedido.EmDespacho;
         await _pedidoRepository.AtualizarStatusAsync(pedido.Id, StatusPedido.EmDespacho);
 
-        // Marca produto como Vendido no estoque/vitrine
-        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Vendido, 0);
+        // Atualiza status do produto conforme o estoque restante
+        var produtoDespacho = await _produtoRepository.ObterPorIdAsync(pedido.ProdutoId);
+        int estoqueAtualDespacho = produtoDespacho != null ? produtoDespacho.QuantidadeEstoque : 0;
+        StatusProduto statusDespacho = estoqueAtualDespacho > 0 ? StatusProduto.Disponivel : StatusProduto.Vendido;
+        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, statusDespacho, estoqueAtualDespacho);
 
         // Dispara Webhook e-vendas
         await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);

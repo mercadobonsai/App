@@ -60,6 +60,9 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS percentualretencaopersonalizado NUMERIC(5,2) NULL;
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS datanascimento DATE NULL;
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS rendafaturamento NUMERIC(15,2) NULL;
+
+            UPDATE produtos SET status = 1 WHERE quantidadeestoque > 0 AND status = 2;
+            UPDATE produtos SET status = 2 WHERE quantidadeestoque = 0 AND status = 1;
         ");
     }
     catch (Exception ex)
