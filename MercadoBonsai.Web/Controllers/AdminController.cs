@@ -62,7 +62,7 @@ public class AdminController : Controller
         }
 
         var plano = await _planoRepository.ObterPorIdAsync(usuario.PlanoId);
-        var nomePlano = plano?.Nome ?? (usuario.PlanoId == 1 ? "Bronze" : usuario.PlanoId == 2 ? "Prata" : usuario.PlanoId == 3 ? "Ouro" : "Free");
+        var nomePlano = plano?.Nome ?? (usuario.PlanoId == 1 ? "Bronze" : usuario.PlanoId == 2 ? "Prata" : usuario.PlanoId == 3 ? "Ouro" : usuario.PlanoId == 4 ? "Diamante" : "Free");
         bool liberarCartao = usuario.PlanoId >= 2;
 
         var viewModel = new PerfilViewModel

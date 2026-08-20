@@ -169,6 +169,17 @@
                             <label asp-for="DescricaoViveiro" class="form-label fw-semibold"></label>
                             <textarea asp-for="DescricaoViveiro" class="form-control" rows="4" placeholder="Conte a história do viveiro..."></textarea>
                         </div>
+                        <div class="mb-3">
+                            <label asp-for="WebhookUrl" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="icon-base ri ri-webhook-line text-success"></i></span>
+                                <input asp-for="WebhookUrl" class="form-control" placeholder="https://seu-sistema-evendas.com.br/api/webhook" />
+                            </div>
+                            <span asp-validation-for="WebhookUrl" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">
+                                URL de Webhook personalizada para notificações do e-vendas. Deixe em branco para usar o endereço padrão da plataforma.
+                            </small>
+                        </div>
                     </div>
                 </div>
 

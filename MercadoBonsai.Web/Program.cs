@@ -64,6 +64,14 @@ using (var scope = app.Services.CreateScope())
 
             UPDATE produtos SET status = 1 WHERE quantidadeestoque > 0 AND status = 2;
             UPDATE produtos SET status = 2 WHERE quantidadeestoque = 0 AND status = 1;
+
+            INSERT INTO planos (id, nome, valor, preco, percentualcomissao, limitelifas30dias, limiteleiloes30dias, limiteanuncios, limitefotos, destaqueshome)
+            OVERRIDING SYSTEM VALUE
+            VALUES (4, 'Diamante', 99.90, 99.90, 4.00, 15, 15, 100, 12, TRUE)
+            ON CONFLICT (id) DO UPDATE 
+            SET nome = EXCLUDED.nome, valor = EXCLUDED.valor, preco = EXCLUDED.preco, percentualcomissao = EXCLUDED.percentualcomissao,
+                limitelifas30dias = EXCLUDED.limitelifas30dias, limiteleiloes30dias = EXCLUDED.limiteleiloes30dias, 
+                limiteanuncios = EXCLUDED.limiteanuncios, limitefotos = EXCLUDED.limitefotos, destaqueshome = EXCLUDED.destaqueshome;
         ");
     }
     catch (Exception ex)
