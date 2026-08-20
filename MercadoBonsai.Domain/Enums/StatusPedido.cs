@@ -13,6 +13,7 @@ public static class StatusPedido
     public const string Entregue = "Entregue";
     public const string Conferido = "Conferido";
     public const string Finalizado = "Finalizado";
+    public const string Cancelado = "Cancelado";
 
     public static readonly string[] Todos = new[]
     {
@@ -26,6 +27,7 @@ public static class StatusPedido
         EmTransito,
         Entregue,
         Conferido,
-        Finalizado
+        Finalizado,
+        Cancelado
     };
 }

@@ -105,6 +105,10 @@ public class PerfilViewModel
     [Display(Name = "Comissão / Retenção Personalizada (%)")]
     public decimal? PercentualRetencaoPersonalizado { get; set; }
 
+    [Display(Name = "URL de Webhook Personalizada (e-vendas)")]
+    [Url(ErrorMessage = "Informe uma URL válida com http:// ou https://")]
+    public string? WebhookUrl { get; set; }
+
     // Auditoria
     public DateTime? DataUltimaAlteracao { get; set; }
     public string? UsuarioAlteracaoNome { get; set; }

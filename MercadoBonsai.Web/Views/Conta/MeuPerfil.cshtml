@@ -186,6 +186,17 @@
                             <textarea asp-for="DescricaoViveiro" class="form-control" rows="4" placeholder="Escreva uma breve apresentação do seu viveiro, espécies cultivadas, tempo de experiência e especialidades..."></textarea>
                             <small class="text-muted">Esta descrição é exibida nos cartões patrocinados da Home para destacar o seu viveiro.</small>
                         </div>
+                        <div class="mb-3">
+                            <label asp-for="WebhookUrl" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="icon-base ri ri-webhook-line text-success"></i></span>
+                                <input asp-for="WebhookUrl" class="form-control" placeholder="https://seu-sistema-evendas.com.br/api/webhook" />
+                            </div>
+                            <span asp-validation-for="WebhookUrl" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">
+                                URL de Webhook personalizada para o e-vendas. Deixe em branco para usar a URL padrão da plataforma Mercado Bonsai.
+                            </small>
+                        </div>
                     </div>
                 </div>
 

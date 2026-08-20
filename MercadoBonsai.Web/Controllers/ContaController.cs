@@ -199,6 +199,7 @@ public class ContaController : Controller
             AsaasCustomerId = usuario.AsaasCustomerId,
             AsaasAccountId = usuario.AsaasAccountId,
             AsaasSubscriptionId = usuario.AsaasSubscriptionId,
+            WebhookUrl = usuario.WebhookUrl,
             DataUltimaAlteracao = usuario.DataUltimaAlteracao,
             UsuarioAlteracaoNome = usuario.UsuarioAlteracaoNome
         };
@@ -276,6 +277,7 @@ public class ContaController : Controller
         usuario.Agencia = model.Agencia;
         usuario.Conta = model.Conta;
         usuario.DescricaoViveiro = model.DescricaoViveiro;
+        usuario.WebhookUrl = model.WebhookUrl?.Trim();
         usuario.DataUltimaAlteracao = DateTime.UtcNow;
         usuario.UsuarioAlteracaoId = userId;
         usuario.UsuarioAlteracaoNome = User.Identity?.Name ?? usuario.Nome;
