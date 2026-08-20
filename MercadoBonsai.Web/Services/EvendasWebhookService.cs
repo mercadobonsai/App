@@ -98,11 +98,29 @@ public class EvendasWebhookService : IEvendasWebhookService
             return true;
         }
 
-        // 3. Disparo Automático HTTP POST Assíncrono
+        // 3. Disparo Automático HTTP POST Assíncrono com Header 'token' condicional
+        string urlPadraoPlataforma = _configuration["Webhook:EvendasUrl"] ?? "http://api.e-vendas.net.br/api/pedidos/";
+        string tokenPadraoPlataforma = _configuration["Webhook:EvendasToken"] ?? "c01c472d-7c6c-4e85-8398-884a44a7c4c1";
+
+        bool isUrlPadrao = !string.IsNullOrWhiteSpace(webhookUrl) 
+            && string.Equals(webhookUrl.Trim().TrimEnd('/'), urlPadraoPlataforma.Trim().TrimEnd('/'), StringComparison.OrdinalIgnoreCase);
+
         try
         {
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(webhookUrl, content);
+            var request = new HttpRequestMessage(HttpMethod.Post, webhookUrl);
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            if (isUrlPadrao)
+            {
+                request.Headers.Add("token", tokenPadraoPlataforma);
+                _logger.LogInformation("Header 'token' adicionado ao disparo para a URL padrão do e-vendas (Token: {Token}).", tokenPadraoPlataforma);
+            }
+            else
+            {
+                _logger.LogInformation("URL de destino é personalizada do vendedor ('{Url}'). Nenhum header 'token' enviado.", webhookUrl);
+            }
+
+            var response = await _httpClient.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation("Webhook e-vendas para Pedido #{Numero} entregue com sucesso HTTP {Status} na URL '{Url}'", pedido.Numero, response.StatusCode, webhookUrl);
