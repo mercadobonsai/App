@@ -56,11 +56,13 @@ public class EvendasWebhookService : IEvendasWebhookService
             }
         }
 
-        // 2. Montagem do payload JSON com os 24 campos padrão integrados ao e-vendas
+        // 2. Montagem do payload JSON com os campos integrados ao e-vendas
         var payload = new
         {
             id = pedido.Id,
             NUMERO = pedido.Numero,
+            TRANSACAO = pedido.Numero.ToString(),
+            IDPLATAFORMA = 17,
             comprador_id = pedido.CompradorId,
             vendedor_id = pedido.VendedorId,
             produto_id = pedido.ProdutoId,
@@ -121,14 +123,18 @@ public class EvendasWebhookService : IEvendasWebhookService
             }
 
             var response = await _httpClient.SendAsync(request);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation("Webhook e-vendas para Pedido #{Numero} entregue com sucesso HTTP {Status} na URL '{Url}'", pedido.Numero, response.StatusCode, webhookUrl);
+                _logger.LogInformation("Webhook e-vendas para Pedido #{Numero} entregue com sucesso HTTP {Status} na URL '{Url}'. Resposta e-vendas: '{Body}'", 
+                    pedido.Numero, response.StatusCode, webhookUrl, responseBody);
                 return true;
             }
             else
             {
-                _logger.LogWarning("Webhook e-vendas para Pedido #{Numero} respondeu com erro HTTP {Status} na URL '{Url}'", pedido.Numero, response.StatusCode, webhookUrl);
+                _logger.LogWarning("Webhook e-vendas para Pedido #{Numero} respondeu com erro HTTP {Status} na URL '{Url}'. Resposta e-vendas: '{Body}'", 
+                    pedido.Numero, response.StatusCode, webhookUrl, responseBody);
                 return false;
             }
         }
