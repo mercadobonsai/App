@@ -89,6 +89,16 @@
                                     }
                                 </td>
                                 <td class="text-end">
+                                    @if (item.Status == StatusLeilao.Finalizado && item.TemLances)
+                                    {
+                                        <form asp-action="RecusarVendaChamarProximo" method="post" class="d-inline me-1" onsubmit="return confirm('Deseja recusar a venda atual e gerar cobrança para o próximo arrematante da fila de lances?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="leilaoId" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Recusar Venda Atual e Chamar Próximo da Fila">
+                                                <i class="icon-base ri ri-user-shared-line me-1"></i> Chamar Próximo
+                                            </button>
+                                        </form>
+                                    }
                                     <a asp-action="Editar" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
                                         <i class="icon-base ri ri-edit-line me-1"></i> Gerenciar / Alterar
                                     </a>

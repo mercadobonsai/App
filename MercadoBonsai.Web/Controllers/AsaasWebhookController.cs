@@ -18,6 +18,7 @@ public class AsaasWebhookController : ControllerBase
     private readonly IPedidoRepository _pedidoRepository;
     private readonly IProdutoRepository _produtoRepository;
     private readonly IEvendasWebhookService _evendasWebhookService;
+    private readonly ILeilaoService _leilaoService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AsaasWebhookController> _logger;
 
@@ -25,12 +26,14 @@ public class AsaasWebhookController : ControllerBase
         IPedidoRepository pedidoRepository,
         IProdutoRepository produtoRepository,
         IEvendasWebhookService evendasWebhookService,
+        ILeilaoService leilaoService,
         IConfiguration configuration,
         ILogger<AsaasWebhookController> logger)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;
         _evendasWebhookService = evendasWebhookService;
+        _leilaoService = leilaoService;
         _configuration = configuration;
         _logger = logger;
     }
@@ -139,18 +142,30 @@ public class AsaasWebhookController : ControllerBase
                 pedido.StatusPedido = StatusPedido.Cancelado;
                 await _pedidoRepository.AtualizarAsync(pedido);
 
-                // Restaura o estoque do produto ao cancelar/estornar a cobrança
-                var produtoCancelado = await _produtoRepository.ObterPorIdAsync(pedido.ProdutoId);
-                int estoqueRestaurado = (produtoCancelado != null ? produtoCancelado.QuantidadeEstoque : 0) + 1;
-                await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Disponivel, estoqueRestaurado);
+                // Restaura o estoque se for um produto físico tradicional
+                if (pedido.ProdutoId > 0)
+                {
+                    var produtoCancelado = await _produtoRepository.ObterPorIdAsync(pedido.ProdutoId);
+                    int estoqueRestaurado = (produtoCancelado != null ? produtoCancelado.QuantidadeEstoque : 0) + 1;
+                    await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Disponivel, estoqueRestaurado);
+                }
 
-                _logger.LogInformation("Pedido #{Numero} atualizado para CANCELADO ({Evento}) via Webhook Asaas. Estoque restaurado para {Estoque} unid.", 
-                    pedido.Numero, evento, estoqueRestaurado);
+                // Se o pedido pertencia a um LEILÃO, aciona o FALLBACK em cascata para o próximo colocado (2º, 3º... colocados)
+                if (pedido.LeilaoId.HasValue && pedido.LeilaoId.Value > 0)
+                {
+                    int posicaoAtual = pedido.PosicaoVencedorLeilao ?? 1;
+                    _logger.LogInformation("Webhook Asaas: Pedido #{Numero} do Leilão #{LeilaoId} cancelado. Acionando fallback para o {ProximaPosicao}º colocado...", 
+                        pedido.Numero, pedido.LeilaoId.Value, posicaoAtual + 1);
+
+                    await _leilaoService.ChamarProximoColocadoAsync(pedido.LeilaoId.Value, posicaoAtual);
+                }
+
+                _logger.LogInformation("Pedido #{Numero} atualizado para CANCELADO ({Evento}) via Webhook Asaas.", pedido.Numero, evento);
 
                 // Disparo Automático HTTP POST para o e-vendas
                 await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
 
-                return Ok(new { success = true, message = $"Pedido #{pedido.Numero} marcado como CANCELADO ({evento}) e estoque reposto." });
+                return Ok(new { success = true, message = $"Pedido #{pedido.Numero} marcado como CANCELADO ({evento}) e fallback de leilão processado." });
             }
 
             _logger.LogInformation("Webhook Asaas (Evento: {Evento}) processado sem alteração de estado direta no pedido #{Numero}.", evento, pedido.Numero);

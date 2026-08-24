@@ -18,6 +18,8 @@ public class LeilaoController : Controller
     private readonly IRifaRepository _rifaRepository;
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPlanoRepository _planoRepository;
+    private readonly IPedidoRepository _pedidoRepository;
+    private readonly ILeilaoService _leilaoService;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
     public LeilaoController(
@@ -25,12 +27,16 @@ public class LeilaoController : Controller
         IRifaRepository rifaRepository,
         IUsuarioRepository usuarioRepository,
         IPlanoRepository planoRepository,
+        IPedidoRepository pedidoRepository,
+        ILeilaoService leilaoService,
         IWebHostEnvironment webHostEnvironment)
     {
         _leilaoRepository = leilaoRepository;
         _rifaRepository = rifaRepository;
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
+        _pedidoRepository = pedidoRepository;
+        _leilaoService = leilaoService;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -298,6 +304,52 @@ public class LeilaoController : Controller
         await _leilaoRepository.AtualizarAsync(leilao);
 
         TempData["Sucesso"] = "Leilão alterado com sucesso!";
+        return RedirectToAction("MeusLeiloes");
+    }
+
+    // POST: /Leilao/RecusarVendaChamarProximo
+    [HttpPost]
+    [Authorize(Roles = "Vendedor, Administrador")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RecusarVendaChamarProximo(int leilaoId)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int vendedorId))
+        {
+            return Unauthorized();
+        }
+
+        var leilao = await _leilaoRepository.ObterPorIdAsync(leilaoId);
+        if (leilao == null) return NotFound();
+
+        if (!User.IsInRole("Administrador") && leilao.VendedorId != vendedorId)
+        {
+            return Forbid();
+        }
+
+        // Buscar último pedido gerado para o leilão
+        var pedidosVendedor = await _pedidoRepository.ObterPorVendedorAsync(vendedorId);
+        var pedidoLeilao = pedidosVendedor.FirstOrDefault(p => p.LeilaoId == leilaoId && p.StatusPedido == StatusPedido.AguardandoPagamento);
+
+        int posicaoAtual = pedidoLeilao?.PosicaoVencedorLeilao ?? 1;
+
+        if (pedidoLeilao != null)
+        {
+            pedidoLeilao.StatusPedido = StatusPedido.Recusado;
+            pedidoLeilao.Observacao = "Recusado manualmente pelo vendedor para chamada sequencial do próximo colocado.";
+            await _pedidoRepository.AtualizarStatusAsync(pedidoLeilao.Id, StatusPedido.Recusado, pedidoLeilao.Observacao);
+        }
+
+        bool sucesso = await _leilaoService.ChamarProximoColocadoAsync(leilaoId, posicaoAtual);
+        if (sucesso)
+        {
+            TempData["Sucesso"] = $"Chamada sequencial realizada com sucesso! O {posicaoAtual + 1}º colocado da fila foi acionado e uma nova cobrança foi emitida.";
+        }
+        else
+        {
+            TempData["Erro"] = "Não há mais lances válidos na fila deste leilão para realizar chamada sequencial.";
+        }
+
         return RedirectToAction("MeusLeiloes");
     }
 }

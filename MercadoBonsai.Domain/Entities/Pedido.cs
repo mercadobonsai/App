@@ -28,6 +28,8 @@ public class Pedido
     public DateTime? CompradorAniversario { get; set; }
     public string? UrlAvaliacao { get; set; }
     public string? AsaasPaymentId { get; set; }
+    public int? LeilaoId { get; set; }
+    public int? PosicaoVencedorLeilao { get; set; } = 1;
 
     // Propriedades auxiliares de junção (Join/DTO)
     public string? ProdutoNome { get; set; }

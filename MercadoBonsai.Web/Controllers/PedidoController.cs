@@ -20,6 +20,7 @@ public class PedidoController : Controller
     private readonly IPlanoRepository _planoRepository;
     private readonly IEvendasWebhookService _evendasWebhookService;
     private readonly IAsaasService _asaasService;
+    private readonly ILeilaoService _leilaoService;
 
     public PedidoController(
         IPedidoRepository pedidoRepository,
@@ -27,7 +28,8 @@ public class PedidoController : Controller
         IUsuarioRepository usuarioRepository,
         IPlanoRepository planoRepository,
         IEvendasWebhookService evendasWebhookService,
-        IAsaasService asaasService)
+        IAsaasService asaasService,
+        ILeilaoService leilaoService)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;
@@ -35,6 +37,7 @@ public class PedidoController : Controller
         _planoRepository = planoRepository;
         _evendasWebhookService = evendasWebhookService;
         _asaasService = asaasService;
+        _leilaoService = leilaoService;
     }
 
     private int ObterUsuarioLogadoId()
@@ -385,15 +388,29 @@ public class PedidoController : Controller
 
         await _pedidoRepository.AtualizarStatusAsync(pedido.Id, StatusPedido.Recusado, pedido.Observacao);
 
-        // 2. Repõe o estoque e restaura a disponibilidade do produto na vitrine em caso de recusa
-        var produtoRecusado = await _produtoRepository.ObterPorIdAsync(pedido.ProdutoId);
-        int estoqueRestaurado = (produtoRecusado != null ? produtoRecusado.QuantidadeEstoque : 0) + 1;
-        await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Disponivel, estoqueRestaurado);
+        // 2. Repõe o estoque se for um produto físico tradicional
+        if (pedido.ProdutoId > 0)
+        {
+            var produtoRecusado = await _produtoRepository.ObterPorIdAsync(pedido.ProdutoId);
+            int estoqueRestaurado = (produtoRecusado != null ? produtoRecusado.QuantidadeEstoque : 0) + 1;
+            await _produtoRepository.AtualizarStatusDisponibilidadeAsync(pedido.ProdutoId, StatusProduto.Disponivel, estoqueRestaurado);
+        }
+
+        // 3. Se o pedido pertencia a um LEILÃO, aciona o FALLBACK para o próximo arrematante da fila
+        if (pedido.LeilaoId.HasValue && pedido.LeilaoId.Value > 0)
+        {
+            int posicaoAtual = pedido.PosicaoVencedorLeilao ?? 1;
+            await _leilaoService.ChamarProximoColocadoAsync(pedido.LeilaoId.Value, posicaoAtual);
+            TempData["Sucesso"] = $"Venda recusada. O próximo arrematante da fila ({posicaoAtual + 1}º Colocado) foi acionado e uma nova cobrança foi gerada!";
+        }
+        else
+        {
+            TempData["Sucesso"] = $"Pedido #{pedido.Numero} recusado com sucesso.";
+        }
 
         // Dispara Webhook e-vendas no status 'Recusado'
         await _evendasWebhookService.NotificarMudancaStatusAsync(pedido);
 
-        TempData["Sucesso"] = $"Pedido #{pedido.Numero} recusado com sucesso e o estoque/disponibilidade do item foi restaurado ({estoqueRestaurado} unid.).";
         return RedirectToAction("MinhasVendas");
     }
 

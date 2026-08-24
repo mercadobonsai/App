@@ -31,6 +31,8 @@ builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
 builder.Services.AddHttpClient<IMelhorEnvioService, MelhorEnvioService>();
 builder.Services.AddHttpClient<IEvendasWebhookService, EvendasWebhookService>();
 builder.Services.AddHttpClient<IAsaasService, AsaasService>();
+builder.Services.AddScoped<ILeilaoService, LeilaoService>();
+builder.Services.AddHostedService<LeilaoEncerradoBackgroundService>();
 
 // Autenticação por Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -61,6 +63,8 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS datanascimento DATE NULL;
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS rendafaturamento NUMERIC(15,2) NULL;
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS webhook_url VARCHAR(500) NULL;
+            ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS leilaoid INT NULL;
+            ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS posicao_vencedor_leilao INT NULL DEFAULT 1;
 
             UPDATE produtos SET status = 1 WHERE quantidadeestoque > 0 AND status = 2;
             UPDATE produtos SET status = 2 WHERE quantidadeestoque = 0 AND status = 1;

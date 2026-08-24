@@ -43,12 +43,14 @@ public class PedidoRepository : IPedidoRepository
             p.compradoraniversario AS CompradorAniversario,
             p.urlavaliacao AS UrlAvaliacao,
             p.asaas_payment_id AS AsaasPaymentId,
+            p.leilaoid AS LeilaoId,
+            p.posicao_vencedor_leilao AS PosicaoVencedorLeilao,
             prod.nome AS ProdutoNome,
             prod.imagemurl AS ProdutoImagemUrl,
             vend.nome AS VendedorNome,
             vend.telefone AS VendedorTelefone
         FROM pedidos p
-        INNER JOIN produtos prod ON prod.id = p.produto_id
+        LEFT JOIN produtos prod ON prod.id = p.produto_id
         INNER JOIN usuarios vend ON vend.id = p.vendedor_id
     ";
 
@@ -95,12 +97,14 @@ public class PedidoRepository : IPedidoRepository
                 numero, comprador_id, vendedor_id, produto_id, statuspedido, tipopagamento,
                 datapedido, datapagamento, valorpedido, valor_frete, valor_seguro, valor_total,
                 urlcheckout, observacao, codigorastreio, urlrastreio, compradornome, compradoremail,
-                compradortelefone, compradorendereco, compradoraniversario, urlavaliacao, asaas_payment_id
+                compradortelefone, compradorendERECO, compradoraniversario, urlavaliacao, asaas_payment_id,
+                leilaoid, posicao_vencedor_leilao
             ) VALUES (
                 @Numero, @CompradorId, @VendedorId, @ProdutoId, @StatusPedido, @TipoPagamento,
                 @DataPedido, @DataPagamento, @ValorPedido, @ValorFrete, @ValorSeguro, @ValorTotal,
                 @UrlCheckout, @Observacao, @CodigoRastreio, @UrlRastreio, @CompradorNome, @CompradorEmail,
-                @CompradorTelefone, @CompradorEndereco, @CompradorAniversario, @UrlAvaliacao, @AsaasPaymentId
+                @CompradorTelefone, @CompradorEndereco, @CompradorAniversario, @UrlAvaliacao, @AsaasPaymentId,
+                @LeilaoId, @PosicaoVencedorLeilao
             )
             RETURNING id;
         ";
@@ -128,7 +132,9 @@ public class PedidoRepository : IPedidoRepository
                 compradorendereco = @CompradorEndereco,
                 compradoraniversario = @CompradorAniversario,
                 urlavaliacao = @UrlAvaliacao,
-                asaas_payment_id = @AsaasPaymentId
+                asaas_payment_id = @AsaasPaymentId,
+                leilaoid = @LeilaoId,
+                posicao_vencedor_leilao = @PosicaoVencedorLeilao
             WHERE id = @Id;
         ";
         var rows = await conn.ExecuteAsync(sql, pedido);

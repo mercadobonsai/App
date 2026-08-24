@@ -81,6 +81,13 @@ else
                     <div class="card-header bg-light d-flex align-items-center justify-content-between py-3 border-0">
                         <div>
                             <span class="fw-bold text-dark fs-5">Pedido #@pedido.Numero</span>
+                            @if (pedido.LeilaoId.HasValue && pedido.LeilaoId.Value > 0)
+                            {
+                                <span class="badge bg-warning text-dark ms-2">
+                                    <i class="icon-base ri ri-auction-line me-1"></i>
+                                    @(pedido.PosicaoVencedorLeilao == 1 ? "🏆 1º Colocado" : $"🔄 {pedido.PosicaoVencedorLeilao}º Colocado (Chamada Sequencial)")
+                                </span>
+                            }
                             <small class="text-muted d-block fs-7">Comprador: <strong>@pedido.CompradorNome</strong></small>
                         </div>
                         <div>
