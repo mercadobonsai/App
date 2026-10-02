@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Dapper;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Infrastructure.Data;
@@ -34,6 +35,16 @@ builder.Services.AddHttpClient<IAsaasService, AsaasService>();
 builder.Services.AddScoped<ILeilaoService, LeilaoService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHostedService<LeilaoEncerradoBackgroundService>();
+
+// Persistência de Chaves do DataProtection para evitar invalidação de Tokens Antiforgery e Cookies em Containers
+var keysFolder = Path.Combine(builder.Environment.ContentRootPath, "dp_keys");
+if (!Directory.Exists(keysFolder))
+{
+    Directory.CreateDirectory(keysFolder);
+}
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
+    .SetApplicationName("MercadoBonsai");
 
 // Autenticação por Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

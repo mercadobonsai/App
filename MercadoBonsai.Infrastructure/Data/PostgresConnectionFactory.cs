@@ -40,8 +40,14 @@ public class PostgresConnectionFactory
         builder.Timeout = 15;
         builder.CommandTimeout = 30;
 
+        var finalConnStr = builder.ConnectionString;
+        if (!finalConnStr.Contains("GssEncMode=", StringComparison.OrdinalIgnoreCase))
+        {
+            finalConnStr += ";GssEncMode=Disable";
+        }
+
         _logger.LogInformation("PostgresConnectionFactory conectando em Host={Host}, Database={Database}", builder.Host, builder.Database);
 
-        return new NpgsqlConnection(builder.ConnectionString);
+        return new NpgsqlConnection(finalConnStr);
     }
 }
