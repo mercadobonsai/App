@@ -3,7 +3,6 @@
 **/.vscode
 **/bin
 **/obj
-**/publish
 **/scratch
 .env
 .env.local
