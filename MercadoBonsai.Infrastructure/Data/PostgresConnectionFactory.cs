@@ -1,6 +1,5 @@
 using System;
 using System.Data;
-using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -29,20 +28,11 @@ public class PostgresConnectionFactory
 
         var builder = new NpgsqlConnectionStringBuilder(connectionString);
 
-        // Se o Host for 'db', 'localhost' ou qualquer nome não resolvível no DNS do container, usa fallback automático para o IP do Hetzner
-        if (!string.IsNullOrWhiteSpace(builder.Host))
-        {
-            try
-            {
-                Dns.GetHostAddresses(builder.Host);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Host '{Host}' não pôde ser resolvido via DNS no container. Utilizando fallback para Hetzner IP (167.233.55.149).", builder.Host);
-                builder.Host = "167.233.55.149";
-            }
-        }
-        else
+        // Se o Host for 'db', 'localhost' ou '127.0.0.1', direciona diretamente para o IP do PostgreSQL no Hetzner
+        if (string.IsNullOrWhiteSpace(builder.Host) || 
+            string.Equals(builder.Host, "db", StringComparison.OrdinalIgnoreCase) || 
+            string.Equals(builder.Host, "localhost", StringComparison.OrdinalIgnoreCase) || 
+            string.Equals(builder.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase))
         {
             builder.Host = "167.233.55.149";
         }
