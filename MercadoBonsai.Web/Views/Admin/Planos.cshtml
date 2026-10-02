@@ -23,7 +23,7 @@
     <div class="row g-4">
         @foreach (var plano in Model)
         {
-            <div class="col-lg-4">
+            <div class="col-lg-6 col-md-6 mb-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0 text-dark">Plano @plano.Nome</h5>
@@ -51,11 +51,14 @@
                             </div>
 
                             <div class="row g-2 mb-3">
+                                @* Descontinuado temporariamente: Rifas/Ações
                                 <div class="col-6">
                                     <label class="form-label fw-semibold">Limite Ações / 30d</label>
                                     <input type="number" name="LimiteRifas30Dias" value="@plano.LimiteRifas30Dias" class="form-control" required />
                                 </div>
-                                <div class="col-6">
+                                *@
+                                <input type="hidden" name="LimiteRifas30Dias" value="@plano.LimiteRifas30Dias" />
+                                <div class="col-12">
                                     <label class="form-label fw-semibold">Limite Leilões / 30d</label>
                                     <input type="number" name="LimiteLeiloes30Dias" value="@plano.LimiteLeiloes30Dias" class="form-control" required />
                                 </div>

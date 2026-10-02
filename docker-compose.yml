@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # 1. Aplicação ASP.NET Core (.NET 10)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mercadobonsai_web
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 2. Banco de Dados PostgreSQL com Volume Persistente
+  db:
+    image: postgres:16-alpine
+    container_name: mercadobonsai_db
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-mercadobonsai}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres_senha_segura}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-mercadobonsai}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
