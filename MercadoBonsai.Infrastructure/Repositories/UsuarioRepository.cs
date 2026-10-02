@@ -49,6 +49,7 @@ public class UsuarioRepository : IUsuarioRepository
         asaas_account_id AS AsaasAccountId,
         asaas_customer_id AS AsaasCustomerId,
         asaas_subscription_id AS AsaasSubscriptionId,
+        statusassinatura AS StatusAssinatura,
         percentualretencaopersonalizado AS PercentualRetencaoPersonalizado,
         webhook_url AS WebhookUrl,
         dataultimaalteracao AS DataUltimaAlteracao,
@@ -82,11 +83,11 @@ public class UsuarioRepository : IUsuarioRepository
         const string sql = @"
             INSERT INTO usuarios (
                 nome, email, senhahash, telefone, perfil, datacadastro,
-                razaosocial, cpfcnpj, inscricaoestadual, datanascimento, rendafaturamento, cep, logradouro, numero, complemento, bairro, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca, asaas_account_id, asaas_customer_id, asaas_subscription_id, percentualretencaopersonalizado, webhook_url
+                razaosocial, cpfcnpj, inscricaoestadual, datanascimento, rendafaturamento, cep, logradouro, numero, complemento, bairro, cidade, estado, chavepix, banco, agencia, conta, descricaoviveiro, logotipourl, planoid, reputacao, isentocobranca, asaas_account_id, asaas_customer_id, asaas_subscription_id, statusassinatura, percentualretencaopersonalizado, webhook_url
             )
             VALUES (
                 @Nome, LOWER(TRIM(@Email)), @SenhaHash, @Telefone, @Perfil, @DataCadastro,
-                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @DataNascimento, @RendaFaturamento, @Cep, @Logradouro, @Numero, @Complemento, @Bairro, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca, @AsaasAccountId, @AsaasCustomerId, @AsaasSubscriptionId, @PercentualRetencaoPersonalizado, @WebhookUrl
+                @RazaoSocial, @CpfCnpj, @InscricaoEstadual, @DataNascimento, @RendaFaturamento, @Cep, @Logradouro, @Numero, @Complemento, @Bairro, @Cidade, @Estado, @ChavePix, @Banco, @Agencia, @Conta, @DescricaoViveiro, @LogotipoUrl, @PlanoId, @Reputacao, @IsentoCobranca, @AsaasAccountId, @AsaasCustomerId, @AsaasSubscriptionId, @StatusAssinatura, @PercentualRetencaoPersonalizado, @WebhookUrl
             )
             RETURNING id;";
 
@@ -127,6 +128,7 @@ public class UsuarioRepository : IUsuarioRepository
                 asaas_account_id = @AsaasAccountId,
                 asaas_customer_id = @AsaasCustomerId,
                 asaas_subscription_id = @AsaasSubscriptionId,
+                statusassinatura = @StatusAssinatura,
                 percentualretencaopersonalizado = @PercentualRetencaoPersonalizado,
                 webhook_url = @WebhookUrl,
                 dataultimaalteracao = @DataUltimaAlteracao,

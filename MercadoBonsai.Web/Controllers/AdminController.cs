@@ -286,21 +286,57 @@ public class AdminController : Controller
     // POST: /Admin/SalvarPlano
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SalvarPlano(Plano plano)
+    public async Task<IActionResult> SalvarPlano([FromForm] Microsoft.AspNetCore.Http.IFormCollection form)
     {
-        if (!ModelState.IsValid)
+        int.TryParse(form["Id"], out int id);
+        var plano = await _planoRepository.ObterPorIdAsync(id);
+        if (plano == null)
         {
-            var planos = await _planoRepository.ListarTodosAsync();
-            return View("Planos", planos);
+            TempData["Erro"] = "Plano não localizado.";
+            return RedirectToAction("Planos");
         }
 
-        var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        int.TryParse(adminIdClaim, out int adminId);
+        var nome = form["Nome"].ToString().Trim();
+        if (!string.IsNullOrWhiteSpace(nome))
+        {
+            plano.Nome = nome;
+        }
+
+        plano.Preco = ParseDecimalFlex(form["Preco"], plano.Preco);
+        plano.PercentualComissao = ParseDecimalFlex(form["PercentualComissao"], plano.PercentualComissao);
+
+        if (int.TryParse(form["LimiteRifas30Dias"], out int limiteRifas)) plano.LimiteRifas30Dias = limiteRifas;
+        if (int.TryParse(form["LimiteLeiloes30Dias"], out int limiteLeiloes)) plano.LimiteLeiloes30Dias = limiteLeiloes;
+        if (int.TryParse(form["LimiteAnuncios"], out int limiteAnuncios)) plano.LimiteAnuncios = limiteAnuncios;
+        if (int.TryParse(form["LimiteFotos"], out int limiteFotos)) plano.LimiteFotos = limiteFotos;
+
+        var destaquesValues = form["DestaquesHome"];
+        plano.DestaquesHome = destaquesValues.Contains("true");
 
         await _planoRepository.AtualizarAsync(plano);
 
         TempData["Sucesso"] = $"Configurações do Plano '{plano.Nome}' atualizadas com sucesso!";
         return RedirectToAction("Planos");
+    }
+
+    private static decimal ParseDecimalFlex(string? input, decimal defaultValue = 0m)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return defaultValue;
+        input = input.Trim();
+        if (input.Contains(',') && !input.Contains('.'))
+        {
+            input = input.Replace(',', '.');
+        }
+        else if (input.Contains(',') && input.Contains('.'))
+        {
+            input = input.Replace(".", "").Replace(',', '.');
+        }
+
+        if (decimal.TryParse(input, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal val))
+        {
+            return val;
+        }
+        return defaultValue;
     }
 
     // GET: /Admin/Propagandas

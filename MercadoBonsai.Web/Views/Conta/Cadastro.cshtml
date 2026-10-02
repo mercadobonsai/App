@@ -83,6 +83,16 @@
                             </select>
                         </div>
 
+                        <div class="mb-4 form-check text-start">
+                            <input class="form-check-input" type="checkbox" id="terms-conditions" required checked>
+                            <label class="form-check-label small text-muted" for="terms-conditions">
+                                Ao criar a conta, você concorda com nossos 
+                                <a asp-controller="Home" asp-action="Termos" target="_blank" class="fw-bold text-success">Termos de Uso</a> e 
+                                <a asp-controller="Home" asp-action="Privacidade" target="_blank" class="fw-bold text-success">Política de Privacidade</a>. 
+                                Enviamos uma cópia por e-mail (remetente: <code>comercial@mercadobonsai.com.br</code>).
+                            </label>
+                        </div>
+
                         <button type="submit" class="btn btn-primary d-grid w-100 mb-4">Criar conta</button>
 
                         <p class="text-center mb-0">

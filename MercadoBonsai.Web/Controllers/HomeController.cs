@@ -134,9 +134,19 @@ public class HomeController : Controller
         return View(viewModel);
     }
 
-    public IActionResult Privacy()
+    public IActionResult Termos()
     {
         return View();
+    }
+
+    public IActionResult Privacidade()
+    {
+        return View();
+    }
+
+    public IActionResult Privacy()
+    {
+        return View("Privacidade");
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -66,10 +66,27 @@ public class ProdutoRepository : IProdutoRepository
     public async Task<IEnumerable<Produto>> ListarTodosAsync()
     {
         var sql = $@"
-            SELECT {SelectFields}
-            FROM produtos 
-            WHERE status = 1 AND quantidadeestoque > 0
-            ORDER BY datacriacao DESC;";
+            SELECT 
+                p.id AS Id, 
+                p.vendedorid AS VendedorId, 
+                p.nome AS Nome, 
+                p.descricao AS Descricao, 
+                p.preco AS Preco, 
+                p.quantidadeestoque AS QuantidadeEstoque, 
+                p.imagemurl AS ImagemUrl,
+                p.status AS Status,
+                p.altura AS Altura,
+                p.largura AS Largura,
+                p.comprimento AS Comprimento,
+                p.peso AS Peso,
+                p.formaenvio AS FormaEnvio,
+                p.categoria AS Categoria,
+                p.datacriacao AS DataCriacao
+            FROM produtos p
+            INNER JOIN usuarios u ON u.id = p.vendedorid
+            WHERE p.status = 1 AND p.quantidadeestoque > 0 
+              AND (u.isentocobranca = true OR LOWER(u.statusassinatura) = 'active')
+            ORDER BY p.datacriacao DESC;";
 
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<Produto>(sql);
@@ -93,10 +110,28 @@ public class ProdutoRepository : IProdutoRepository
             return Enumerable.Empty<Produto>();
 
         var sql = $@"
-            SELECT {SelectFields}
-            FROM produtos 
-            WHERE status = 1 AND quantidadeestoque > 0 AND LOWER(categoria) = ANY(@Categorias)
-            ORDER BY datacriacao DESC;";
+            SELECT 
+                p.id AS Id, 
+                p.vendedorid AS VendedorId, 
+                p.nome AS Nome, 
+                p.descricao AS Descricao, 
+                p.preco AS Preco, 
+                p.quantidadeestoque AS QuantidadeEstoque, 
+                p.imagemurl AS ImagemUrl,
+                p.status AS Status,
+                p.altura AS Altura,
+                p.largura AS Largura,
+                p.comprimento AS Comprimento,
+                p.peso AS Peso,
+                p.formaenvio AS FormaEnvio,
+                p.categoria AS Categoria,
+                p.datacriacao AS DataCriacao
+            FROM produtos p
+            INNER JOIN usuarios u ON u.id = p.vendedorid
+            WHERE p.status = 1 AND p.quantidadeestoque > 0 
+              AND (u.isentocobranca = true OR LOWER(u.statusassinatura) = 'active')
+              AND LOWER(p.categoria) = ANY(@Categorias)
+            ORDER BY p.datacriacao DESC;";
 
         var categoriasArray = categorias.Select(c => c.Trim().ToLower()).ToArray();
 

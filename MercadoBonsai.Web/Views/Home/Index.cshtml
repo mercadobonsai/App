@@ -328,9 +328,32 @@
                                     </div>
                                     <h6 class="fw-bold mb-1" style="color: #1E3A2B;">@(string.IsNullOrEmpty(v.RazaoSocial) ? v.Nome : v.RazaoSocial)</h6>
                                     <div class="mb-2">
-                                        <span class="badge bg-label-warning text-warning fw-semibold" style="font-size: 0.7rem;">
-                                            <i class="icon-base ri ri-star-fill me-1"></i>Reputação: @v.Reputacao pts
-                                        </span>
+                                        <div class="d-inline-flex align-items-center" title="Reputação do Viveiro: @v.Reputacao pts">
+                                            <div class="position-relative d-inline-block" style="font-size: 1.15rem; line-height: 1;">
+                                                <!-- Fundo: 5 Estrelas Cinzas -->
+                                                <div class="text-muted opacity-25 d-flex gap-1">
+                                                    <i class="icon-base ri ri-star-fill"></i>
+                                                    <i class="icon-base ri ri-star-fill"></i>
+                                                    <i class="icon-base ri ri-star-fill"></i>
+                                                    <i class="icon-base ri ri-star-fill"></i>
+                                                    <i class="icon-base ri ri-star-fill"></i>
+                                                </div>
+                                                <!-- Frente: 5 Estrelas Amarelas Recortadas por Percentual -->
+                                                @{
+                                                    double repPercent = v.Reputacao > 100 ? (v.Reputacao / 10.0) : (double)v.Reputacao;
+                                                    repPercent = Math.Clamp(repPercent, 0, 100);
+                                                }
+                                                <div class="position-absolute top-0 start-0 overflow-hidden text-warning" style="width: @(repPercent.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%;">
+                                                    <div class="d-flex gap-1 text-nowrap">
+                                                        <i class="icon-base ri ri-star-fill"></i>
+                                                        <i class="icon-base ri ri-star-fill"></i>
+                                                        <i class="icon-base ri ri-star-fill"></i>
+                                                        <i class="icon-base ri ri-star-fill"></i>
+                                                        <i class="icon-base ri ri-star-fill"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <p class="text-muted small mb-3 text-truncate-2" style="font-size: 0.8rem;">
                                         @(string.IsNullOrEmpty(v.DescricaoViveiro) ? "Viveiro parceiro credenciado no Mercado Bonsai com foco em plantas de alta qualidade." : v.DescricaoViveiro)
@@ -351,6 +374,26 @@
                                     <i class="icon-base ri ri-landscape-line text-success" style="font-size: 2.5rem;"></i>
                                 </div>
                                 <h6 class="fw-bold mb-1" style="color: #1E3A2B;">Viveiro Shokunin</h6>
+                                <div class="mb-2">
+                                    <div class="d-inline-flex align-items-center" title="Reputação do Viveiro: 100 pts">
+                                        <div class="position-relative d-inline-block text-nowrap" style="font-size: 1.15rem; line-height: 1;">
+                                            <div class="text-muted opacity-25">
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                            </div>
+                                            <div class="position-absolute top-0 start-0 overflow-hidden text-warning" style="width: 100%;">
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                                <i class="icon-base ri ri-star-fill"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <p class="text-muted small mb-3">Especialistas em pré-bonsais importados do Japão e ferramentas tradicionais.</p>
                                 <a asp-controller="Produto" asp-action="Index" class="btn btn-sm btn-outline-success w-100">Visitar Viveiro</a>
                             </div>

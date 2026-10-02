@@ -50,6 +50,8 @@ public class Usuario
     public string? AsaasAccountId { get; set; }
     public string? AsaasCustomerId { get; set; }
     public string? AsaasSubscriptionId { get; set; }
+    public string StatusAssinatura { get; set; } = "ACTIVE"; // ACTIVE, OVERDUE, INACTIVE
+    public bool TemAssinaturaValida => IsentoCobranca || (PlanoId >= 1 && string.Equals(StatusAssinatura, "ACTIVE", StringComparison.OrdinalIgnoreCase));
     public decimal? PercentualRetencaoPersonalizado { get; set; }
     public string? WebhookUrl { get; set; }
 

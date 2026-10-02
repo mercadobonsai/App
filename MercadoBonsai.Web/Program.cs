@@ -32,6 +32,7 @@ builder.Services.AddHttpClient<IMelhorEnvioService, MelhorEnvioService>();
 builder.Services.AddHttpClient<IEvendasWebhookService, EvendasWebhookService>();
 builder.Services.AddHttpClient<IAsaasService, AsaasService>();
 builder.Services.AddScoped<ILeilaoService, LeilaoService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHostedService<LeilaoEncerradoBackgroundService>();
 
 // Autenticação por Cookie
@@ -63,8 +64,10 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS datanascimento DATE NULL;
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS rendafaturamento NUMERIC(15,2) NULL;
             ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS webhook_url VARCHAR(500) NULL;
+            ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS statusassinatura VARCHAR(50) NOT NULL DEFAULT 'ACTIVE';
             ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS leilaoid INT NULL;
             ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS posicao_vencedor_leilao INT NULL DEFAULT 1;
+            ALTER TABLE planos ALTER COLUMN percentualcomissao TYPE NUMERIC(10,2);
 
             UPDATE produtos SET status = 1 WHERE quantidadeestoque > 0 AND status = 2;
             UPDATE produtos SET status = 2 WHERE quantidadeestoque = 0 AND status = 1;

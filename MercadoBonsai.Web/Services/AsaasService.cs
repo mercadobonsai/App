@@ -274,7 +274,7 @@ public class AsaasService : IAsaasService
 
         try
         {
-            if (string.IsNullOrEmpty(vendedor.AsaasCustomerId))
+            if (string.IsNullOrEmpty(vendedor.AsaasCustomerId) || vendedor.AsaasCustomerId.StartsWith("cus_simulado_"))
             {
                 var resCliente = await CriarClienteAsync(vendedor);
                 if (resCliente.Sucesso && !string.IsNullOrEmpty(resCliente.AsaasCustomerId))
@@ -289,7 +289,8 @@ public class AsaasService : IAsaasService
                 var walletValida = await ObterSubcontaExistenteAsync(vendedor.Email, SomenteNumeros(vendedor.CpfCnpj));
                 if (!string.IsNullOrEmpty(walletValida) && walletValida != vendedor.AsaasAccountId)
                 {
-                    _logger.LogInformation("Sincronizando Wallet ID real do vendedor #{VendedorId}: '{Antiga}' -> '{Nova}'", vendedor.Id, vendedor.AsaasAccountId, walletValida);
+                    _logger.LogInformation("Sincronizando Wallet ID real do vendedor #{VendedorId} no Asaas ({BaseUrl}): '{Antiga}' -> '{Nova}'", 
+                        vendedor.Id, baseUrl, vendedor.AsaasAccountId, walletValida);
                     vendedor.AsaasAccountId = walletValida;
                     await _usuarioRepository.AtualizarAsync(vendedor);
                 }
@@ -358,6 +359,26 @@ public class AsaasService : IAsaasService
             {
                 string erroDescrito = ExtrairErrosAsaas(responseBody);
                 _logger.LogWarning("Falha ao criar cobrança Asaas HTTP {Status}: {Body}", response.StatusCode, responseBody);
+
+                // Auto-recuperação se o Customer ID pertencer ao ambiente anterior (Sandbox vs Produção) ou não existir na API ativa
+                if (responseBody.Contains("Customer", StringComparison.OrdinalIgnoreCase) || 
+                    responseBody.Contains("cliente", StringComparison.OrdinalIgnoreCase) || 
+                    responseBody.Contains("invalid_customer", StringComparison.OrdinalIgnoreCase) ||
+                    (responseBody.Contains("inexistente", StringComparison.OrdinalIgnoreCase) && !responseBody.Contains("Wallet", StringComparison.OrdinalIgnoreCase)))
+                {
+                    _logger.LogWarning("Customer ID '{CustomerId}' do vendedor #{VendedorId} não é válido na API Asaas do ambiente ativo ({BaseUrl}). Revalidando/Criando novo cliente...", vendedor.AsaasCustomerId, vendedor.Id, baseUrl);
+                    
+                    vendedor.AsaasCustomerId = null;
+                    var resNovoCliente = await CriarClienteAsync(vendedor);
+                    if (resNovoCliente.Sucesso && !string.IsNullOrEmpty(resNovoCliente.AsaasCustomerId))
+                    {
+                        _logger.LogInformation("Novo Customer ID recuperado/criado no Asaas ({BaseUrl}): '{NovoCustomer}'. Atualizando cadastro e re-tentando cobrança...", 
+                            baseUrl, resNovoCliente.AsaasCustomerId);
+                        vendedor.AsaasCustomerId = resNovoCliente.AsaasCustomerId;
+                        await _usuarioRepository.AtualizarAsync(vendedor);
+                        return await CriarCobrancaAsync(pedido, vendedor, percentualComissao);
+                    }
+                }
 
                 // Auto-recuperação se a wallet/subconta tiver sido excluída ou for rejeitada no Asaas Sandbox
                 if (responseBody.Contains("Wallet", StringComparison.OrdinalIgnoreCase) && (responseBody.Contains("inexistente", StringComparison.OrdinalIgnoreCase) || responseBody.Contains("not found", StringComparison.OrdinalIgnoreCase)))

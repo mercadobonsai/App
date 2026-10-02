@@ -22,6 +22,7 @@ public class ContaController : Controller
     private readonly IPlanoRepository _planoRepository;
     private readonly VendedorTokenService _vendedorTokenService;
     private readonly IAsaasService _asaasService;
+    private readonly IEmailService _emailService;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
     public ContaController(
@@ -29,12 +30,14 @@ public class ContaController : Controller
         IPlanoRepository planoRepository,
         VendedorTokenService vendedorTokenService,
         IAsaasService asaasService,
+        IEmailService emailService,
         IWebHostEnvironment webHostEnvironment)
     {
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
         _vendedorTokenService = vendedorTokenService;
         _asaasService = asaasService;
+        _emailService = emailService;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -125,15 +128,19 @@ public class ContaController : Controller
             DataCadastro = DateTime.UtcNow
         };
 
-        await _usuarioRepository.InserirAsync(usuario);
+        var usuarioId = await _usuarioRepository.InserirAsync(usuario);
+        usuario.Id = usuarioId;
+
+        // Disparo Automático do E-mail de Termos de Uso e Política de Privacidade (remetente oficial comercial@mercadobonsai.com.br)
+        _ = _emailService.EnviarTermosEPrivacidadeAsync(usuario.Email, usuario.Nome);
 
         if (usuario.Perfil == PerfilUsuario.Vendedor)
         {
-            TempData["Sucesso"] = "Cadastro de Vendedor realizado com sucesso! Efetue login para preencher seus dados e ativar sua conta no Asaas.";
+            TempData["Sucesso"] = "Cadastro de Vendedor realizado com sucesso! Enviamos a cópia digital dos Termos de Uso e Política de Privacidade para seu e-mail. Efetue login para ativar sua conta.";
         }
         else
         {
-            TempData["Sucesso"] = "Cadastro efetuado com sucesso! Efetue login para acessar sua conta.";
+            TempData["Sucesso"] = "Cadastro efetuado com sucesso! Enviamos a cópia digital dos Termos de Uso e Política de Privacidade para seu e-mail.";
         }
         return RedirectToAction("Login");
     }
@@ -348,21 +355,29 @@ public class ContaController : Controller
         return RedirectToAction("MeuPerfil");
     }
 
-    // GET: /Conta/Assinatura
+    // GET: /Planos e /Conta/Assinatura (Livre Acesso Público)
     [HttpGet]
-    [Authorize]
+    [AllowAnonymous]
+    [Route("Planos")]
+    [Route("Conta/Assinatura")]
     public async Task<IActionResult> Assinatura()
     {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+        Usuario? usuario = null;
+
+        if (isAuthenticated)
         {
-            return Unauthorized();
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+            {
+                usuario = await _usuarioRepository.ObterPorIdAsync(userId);
+            }
         }
 
-        var usuario = await _usuarioRepository.ObterPorIdAsync(userId);
         var planos = await _planoRepository.ListarTodosAsync();
 
-        ViewData["PlanoAtualId"] = usuario?.PlanoId ?? 1;
+        ViewData["IsAuthenticated"] = isAuthenticated;
+        ViewData["PlanoAtualId"] = usuario?.PlanoId ?? (isAuthenticated ? 1 : 0);
         ViewData["IsentoCobranca"] = usuario?.IsentoCobranca ?? false;
         return View(planos);
     }

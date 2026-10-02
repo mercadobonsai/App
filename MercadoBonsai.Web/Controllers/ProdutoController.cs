@@ -111,6 +111,11 @@ public class ProdutoController : Controller
                 TempData["Erro"] = "Sua conta de Vendedor ainda não possui a Subconta Asaas ativada. Por favor, preencha seus dados cadastrais e fiscais no 'Meu Perfil' para habilitar publicações de anúncios.";
                 return RedirectToAction("MeuPerfil", "Conta");
             }
+            if (vendedor != null && !vendedor.TemAssinaturaValida)
+            {
+                TempData["Erro"] = "Para publicar novos anúncios é necessário ter uma assinatura ativa com plano regularizado. Por favor, regularize sua assinatura.";
+                return RedirectToAction("Assinatura", "Conta");
+            }
         }
 
         return View(new CriarProdutoViewModel { FormaEnvio = "Frete por conta comprador" });
@@ -133,6 +138,11 @@ public class ProdutoController : Controller
         {
             TempData["Erro"] = "Sua conta de Vendedor ainda não possui a Subconta Asaas ativada. Por favor, preencha seus dados cadastrais e fiscais no 'Meu Perfil' para habilitar publicações de anúncios.";
             return RedirectToAction("MeuPerfil", "Conta");
+        }
+        if (vendedorObj != null && !vendedorObj.TemAssinaturaValida)
+        {
+            TempData["Erro"] = "Para publicar novos anúncios é necessário ter uma assinatura ativa com plano regularizado. Por favor, regularize sua assinatura.";
+            return RedirectToAction("Assinatura", "Conta");
         }
 
         if (!ModelState.IsValid)

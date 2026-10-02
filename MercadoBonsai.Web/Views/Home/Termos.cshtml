@@ -1,0 +1,68 @@
+@{
+    ViewData["Title"] = "Termos de Uso e Condições de Serviço";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card border-0 shadow-sm p-4 p-md-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold" style="color: #4A7C59;">
+                <i class="icon-base ri ri-file-text-line me-2"></i>Termos de Uso e Condições de Serviço
+            </h2>
+            <p class="text-muted">Última atualização: @DateTime.Now.ToString("dd/MM/yyyy") | Mercado Bonsai Marketplace</p>
+        </div>
+
+        <div class="legal-content text-body fs-6" style="line-height: 1.8;">
+            <h4 class="fw-bold mt-4" style="color: #4A7C59;">1. Aceitação dos Termos</h4>
+            <p>
+                Ao se cadastrar, acessar ou utilizar a plataforma <strong>Mercado Bonsai</strong> (disponível através do domínio <code>mercadobonsai.com.br</code>), o usuário (seja Comprador ou Vendedor) concorda expressa e integralmente com os presentes Termos de Uso e com a nossa Política de Privacidade. Caso não concorde com qualquer disposição aqui estabelecida, o usuário não deverá utilizar a plataforma.
+            </p>
+
+            <h4 class="fw-bold mt-4" style="color: #4A7C59;">2. Definição do Serviço</h4>
+            <p>
+                O <strong>Mercado Bonsai</strong> atua como um marketplace especializado na aproximação entre cultivadores, viveiristas e compradores apaixonados pela arte Bonsai. A plataforma disponibiliza a infraestrutura tecnológica para anúncio de plantas, vasos, insumos, ferramentas, ações e leilões, bem como a intermediação de pagamentos com split automatizado via instituição financeira parceira (Asaas).
+            </p>
+
+            <h4 class="fw-bold mt-4" style="color: #4A7C59;">3. Obrigatoriedade de Assinatura Ativa para Vendedores</h4>
+            <p>
+                Para veicular ofertas, publicar anúncios de produtos, insumos ou vasos, ou participar de leilões na plataforma, os <strong>Vendedores</strong> devem manter uma assinatura de plano válida e regularizada (equivalente no mínimo ao Plano Bronze).
+            </p>
+            <ul>
+                <li>Vendedores inadimplentes ou com assinaturas inativas/vencidas terão a visibilidade pública de seus anúncios automaticamente suspensa/ocultada até a efetiva regularização financeira.</li>
+                <li>A contratação e cobrança das assinaturas recorrentes são processadas de forma transparente via integração oficial Asaas.</li>
+            </ul>
+
+            <h4 class="fw-bold mt-4" style="color: #4A7C59;">4. Processamento de Pagamentos e Split Financeiro</h4>
+            <p>
+                Todas as vendas realizadas no Mercado Bonsai são processadas via gateway Asaas. O valor pago pelo comprador será dividido automaticamente (split de comissão) aplicando a alíquota correspondente ao plano contratado do vendedor (ou taxa customizada negociada), sendo a parcela líquida repassada diretamente para a subconta do vendedor.
+            </p>
+
+            <h4 class="fw-bold mt-4" style="color: #4A7C59;">5. Responsabilidades do Vendedor</h4>
+            <ul>
+                <li>Garantir a veracidade, autenticidade e estoque físico real de todos os produtos anunciados.</li>
+                <li>Acondicionar adequadamente plantas vivas, vasos e insumos para envio seguro.</li>
+                <li>Informar o código de rastreamento válido no painel da plataforma dentro do prazo de postagem estipulado.</li>
+                <li>Responder com presteza a dúvidas e suportes solicitados pelos compradores.</li>
+            </ul>
+
+            <h4 class="fw-bold mt-4" style="color: #4A7C59;">6. Regras dos Leilões e Chamada Sequencial</h4>
+            <p>
+                Nos leilões promovidos no Mercado Bonsai:
+            </p>
+            <ul>
+                <li>Ao encerramento do leilão, o maior lance válido (1º Colocado) é convertido imediatamente em pedido de venda oficial.</li>
+                <li>Caso o comprador vencedor não efetue o pagamento dentro do prazo ou a venda seja recusada justificadamente pelo vendedor, o sistema ativará em cascata o próximo arrematante da fila (2º, 3º colocados...), emitindo a cobrança com o valor do respectivo lance.</li>
+            </ul>
+
+            <h4 class="fw-bold mt-4" style="color: #4A7C59;">7. Alterações e Contato</h4>
+            <p>
+                O Mercado Bonsai reserva-se o direito de atualizar estes termos a qualquer momento. Em caso de dúvidas, nossa equipe de atendimento oficial está disponível através do e-mail comercial: <a href="mailto:comercial@mercadobonsai.com.br" class="fw-bold text-success">comercial@mercadobonsai.com.br</a>.
+            </p>
+        </div>
+
+        <div class="text-center mt-5 pt-3 border-top">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-success">
+                <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar para a Página Inicial
+            </a>
+        </div>
+    </div>
+</div>
