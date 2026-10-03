@@ -381,4 +381,96 @@ public class ContaController : Controller
         ViewData["IsentoCobranca"] = usuario?.IsentoCobranca ?? false;
         return View(planos);
     }
+
+    // GET: /Conta/EsqueciSenha
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult EsqueciSenha()
+    {
+        return View();
+    }
+
+    // POST: /Conta/EsqueciSenha
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EsqueciSenha(EsqueciSenhaViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var usuario = await _usuarioRepository.ObterPorEmailAsync(model.Email);
+        if (usuario != null)
+        {
+            string token = $"{Guid.NewGuid():N}{Guid.NewGuid():N}";
+            DateTime expiracao = DateTime.UtcNow.AddHours(2);
+
+            await _usuarioRepository.SalvarResetTokenAsync(usuario.Id, token, expiracao);
+
+            string linkRedefinicao = Url.Action(
+                "RedefinirSenha", 
+                "Conta", 
+                new { token = token, email = usuario.Email }, 
+                Request.Scheme) ?? string.Empty;
+
+            _ = _emailService.EnviarRecuperacaoSenhaAsync(usuario.Email, usuario.Nome, linkRedefinicao);
+        }
+
+        ViewBag.MensagemSucesso = "Se o e-mail informado estiver cadastrado em nossa plataforma, enviamos as instruções e o link seguro para redefinição de sua senha.";
+        return View();
+    }
+
+    // GET: /Conta/RedefinirSenha
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> RedefinirSenha(string token, string? email)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            TempData["Erro"] = "Link de redefinição inválido ou incompleto.";
+            return RedirectToAction("Login");
+        }
+
+        var usuario = await _usuarioRepository.ObterPorResetTokenAsync(token);
+        if (usuario == null || !usuario.ResetTokenExpiracao.HasValue || usuario.ResetTokenExpiracao.Value < DateTime.UtcNow)
+        {
+            TempData["Erro"] = "Este link de redefinição de senha expirou ou é inválido. Por favor, solicite um novo link.";
+            return RedirectToAction("EsqueciSenha");
+        }
+
+        var model = new RedefinirSenhaViewModel
+        {
+            Token = token,
+            Email = usuario.Email
+        };
+
+        return View(model);
+    }
+
+    // POST: /Conta/RedefinirSenha
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RedefinirSenha(RedefinirSenhaViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var usuario = await _usuarioRepository.ObterPorResetTokenAsync(model.Token);
+        if (usuario == null || !usuario.ResetTokenExpiracao.HasValue || usuario.ResetTokenExpiracao.Value < DateTime.UtcNow)
+        {
+            TempData["Erro"] = "Este link de redefinição de senha expirou ou é inválido. Por favor, solicite um novo link.";
+            return RedirectToAction("EsqueciSenha");
+        }
+
+        string novaSenhaHash = BCrypt.Net.BCrypt.HashPassword(model.Senha);
+        await _usuarioRepository.AtualizarSenhaEResetTokenAsync(usuario.Id, novaSenhaHash);
+
+        TempData["Sucesso"] = "Sua senha foi redefinida com sucesso! Efetue login com sua nova senha.";
+        return RedirectToAction("Login");
+    }
 }

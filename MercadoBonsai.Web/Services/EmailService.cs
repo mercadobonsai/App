@@ -100,4 +100,73 @@ public class EmailService : IEmailService
             _logger.LogError(ex, "[EmailService] Falha ao enviar e-mail de Termos e Privacidade para {Destino}.", destinoEmail);
         }
     }
+
+    public async Task EnviarRecuperacaoSenhaAsync(string destinoEmail, string usuarioNome, string linkRedefinicao)
+    {
+        if (string.IsNullOrWhiteSpace(destinoEmail)) return;
+
+        string senderEmail = _configuration["Smtp:SenderEmail"] ?? "comercial@mercadobonsai.com.br";
+        string senderName = _configuration["Smtp:SenderName"] ?? "Mercado Bonsai Comercial";
+        string smtpServer = _configuration["Smtp:Server"] ?? "smtp.mercadobonsai.com.br";
+        int smtpPort = int.TryParse(_configuration["Smtp:Port"], out int port) ? port : 587;
+        string smtpUser = _configuration["Smtp:Username"] ?? "comercial@mercadobonsai.com.br";
+        string smtpPass = _configuration["Smtp:Password"] ?? "";
+        bool enableSsl = bool.TryParse(_configuration["Smtp:EnableSsl"], out bool ssl) ? ssl : true;
+
+        string assunto = "Recuperação de Senha - Mercado Bonsai";
+
+        StringBuilder bodyBuilder = new StringBuilder();
+        bodyBuilder.AppendLine("<!DOCTYPE html>");
+        bodyBuilder.AppendLine("<html lang='pt-BR'>");
+        bodyBuilder.AppendLine("<head><meta charset='UTF-8'><style>");
+        bodyBuilder.AppendLine("body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 650px; margin: 0 auto; padding: 20px; }");
+        bodyBuilder.AppendLine(".header { background-color: #4A7C59; color: #fff; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }");
+        bodyBuilder.AppendLine(".content { border: 1px solid #e0e0e0; padding: 25px; background: #ffffff; border-radius: 0 0 8px 8px; }");
+        bodyBuilder.AppendLine(".btn-reset { display: inline-block; background-color: #4A7C59; color: #ffffff !important; text-decoration: none; padding: 12px 25px; font-weight: bold; border-radius: 6px; margin: 20px 0; }");
+        bodyBuilder.AppendLine(".footer { text-align: center; margin-top: 25px; font-size: 12px; color: #777; }");
+        bodyBuilder.AppendLine("</style></head>");
+        bodyBuilder.AppendLine("<body>");
+        bodyBuilder.AppendLine("<div class='header'><h1>🌱 Mercado Bonsai</h1><p>Recuperação de Acesso à Conta</p></div>");
+        bodyBuilder.AppendLine("<div class='content'>");
+        bodyBuilder.AppendLine($"<p>Olá, <strong>{WebUtility.HtmlEncode(usuarioNome)}</strong>!</p>");
+        bodyBuilder.AppendLine("<p>Recebemos uma solicitação para redefinir a senha de acesso à sua conta no <strong>Mercado Bonsai</strong>.</p>");
+        bodyBuilder.AppendLine("<p>Clique no botão abaixo para criar uma nova senha. Este link é válido por <strong>2 horas</strong>:</p>");
+        bodyBuilder.AppendLine($"<p style='text-align: center;'><a href='{WebUtility.HtmlEncode(linkRedefinicao)}' class='btn-reset'>Redefinir Minha Senha</a></p>");
+        bodyBuilder.AppendLine("<p>Se o botão acima não funcionar, você também pode copiar e colar o link abaixo em seu navegador:</p>");
+        bodyBuilder.AppendLine($"<p style='word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 13px;'><a href='{WebUtility.HtmlEncode(linkRedefinicao)}' style='color: #4A7C59;'>{WebUtility.HtmlEncode(linkRedefinicao)}</a></p>");
+        bodyBuilder.AppendLine("<p style='margin-top: 20px; color: #777; font-size: 13px;'>Se você não solicitou a redefinição de senha, por favor ignore este e-mail. Sua senha atual permanecerá segura e inalterada.</p>");
+        bodyBuilder.AppendLine("<p style='margin-top: 30px;'>Atenciosamente,<br><strong>Equipe Mercado Bonsai</strong><br><small>comercial@mercadobonsai.com.br</small></p>");
+        bodyBuilder.AppendLine("</div>");
+        bodyBuilder.AppendLine("<div class='footer'><p>© Mercado Bonsai - Todos os direitos reservados.<br>Este é um e-mail automático de segurança.</p></div>");
+        bodyBuilder.AppendLine("</body></html>");
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(smtpPass))
+            {
+                _logger.LogInformation("[EmailService] E-mail de Recuperação de Senha gerado com sucesso para {Destino}. Link: {Link}. (SMTP aguardando credenciais em produção).", 
+                    destinoEmail, linkRedefinicao);
+                return;
+            }
+
+            using var message = new MailMessage();
+            message.From = new MailAddress(senderEmail, senderName);
+            message.To.Add(new MailAddress(destinoEmail, usuarioNome));
+            message.Subject = assunto;
+            message.Body = bodyBuilder.ToString();
+            message.IsBodyHtml = true;
+            message.BodyEncoding = Encoding.UTF8;
+
+            using var client = new SmtpClient(smtpServer, smtpPort);
+            client.Credentials = new NetworkCredential(smtpUser, smtpPass);
+            client.EnableSsl = enableSsl;
+
+            await client.SendMailAsync(message);
+            _logger.LogInformation("[EmailService] E-mail de Recuperação de Senha enviado com sucesso para {Destino}.", destinoEmail);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[EmailService] Falha ao enviar e-mail de Recuperação de Senha para {Destino}.", destinoEmail);
+        }
+    }
 }

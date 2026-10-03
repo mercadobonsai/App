@@ -55,6 +55,10 @@ public class Usuario
     public decimal? PercentualRetencaoPersonalizado { get; set; }
     public string? WebhookUrl { get; set; }
 
+    // Expansão: Token de Recuperação de Senha
+    public string? ResetToken { get; set; }
+    public DateTime? ResetTokenExpiracao { get; set; }
+
     // Expansão: Auditoria de Alteração
     public DateTime? DataUltimaAlteracao { get; set; }
     public int? UsuarioAlteracaoId { get; set; }

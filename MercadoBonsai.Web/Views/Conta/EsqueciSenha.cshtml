@@ -1,7 +1,7 @@
-@model MercadoBonsai.Web.Models.LoginViewModel
+@model MercadoBonsai.Web.Models.EsqueciSenhaViewModel
 @{
     Layout = null;
-    ViewData["Title"] = "Login - Mercado Bonsai";
+    ViewData["Title"] = "Recuperar Senha - Mercado Bonsai";
 }
 
 <!doctype html>
@@ -39,18 +39,24 @@
                         </a>
                     </div>
 
-                    <h4 class="mb-1">Bem-vindo de volta! 👋</h4>
-                    <p class="mb-6">Faça login para acessar sua conta.</p>
+                    <h4 class="mb-1">Esqueceu a Senha? 🔒</h4>
+                    <p class="mb-6">Digite seu e-mail cadastrado e enviaremos as instruções para redefinir sua senha.</p>
 
-                    @if (TempData["Sucesso"] != null)
+                    @if (TempData["Erro"] != null)
                     {
-                        <div class="alert alert-success mb-4" role="alert">
-                            <i class="ri ri-checkbox-circle-line me-2"></i>@TempData["Sucesso"]
+                        <div class="alert alert-danger mb-4" role="alert">
+                            <i class="ri ri-error-warning-line me-2"></i>@TempData["Erro"]
                         </div>
                     }
 
-                    <form asp-action="Login" method="post">
-                        <input type="hidden" name="ReturnUrl" value="@ViewData["ReturnUrl"]" />
+                    @if (ViewBag.MensagemSucesso != null)
+                    {
+                        <div class="alert alert-success mb-4" role="alert">
+                            <i class="ri ri-checkbox-circle-line me-2"></i>@ViewBag.MensagemSucesso
+                        </div>
+                    }
+
+                    <form asp-action="EsqueciSenha" method="post">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4" role="alert"></div>
 
                         <div class="mb-4">
@@ -59,30 +65,12 @@
                             <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-4">
-                            <label asp-for="Senha" class="form-label"></label>
-                            <div class="input-group input-group-merge">
-                                <input asp-for="Senha" id="senha-input" class="form-control" placeholder="••••••••" />
-                                <span class="input-group-text cursor-pointer" onclick="toggleSenha()">
-                                    <i id="senha-icon" class="icon-base ri ri-eye-off-line icon-sm"></i>
-                                </span>
-                            </div>
-                            <span asp-validation-for="Senha" class="text-danger small"></span>
-                        </div>
-
-                        <div class="mb-6 d-flex justify-content-between align-items-center">
-                            <div class="form-check">
-                                <input asp-for="LembrarMe" class="form-check-input" type="checkbox" id="lembrarMe" />
-                                <label asp-for="LembrarMe" class="form-check-label">Lembrar-me</label>
-                            </div>
-                            <a asp-controller="Conta" asp-action="EsqueciSenha" class="text-body fw-medium">Esqueceu a senha?</a>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary d-grid w-100 mb-4">Entrar</button>
+                        <button type="submit" class="btn btn-primary d-grid w-100 mb-4">Enviar Link de Recuperação</button>
 
                         <p class="text-center mb-0">
-                            Ainda não tem conta?
-                            <a asp-controller="Conta" asp-action="Cadastro" class="fw-medium">Cadastre-se</a>
+                            <a asp-controller="Conta" asp-action="Login" class="fw-medium text-primary">
+                                <i class="ri ri-arrow-left-line me-1"></i> Voltar para o Login
+                            </a>
                         </p>
                     </form>
                 </div>
@@ -95,19 +83,6 @@
     <script src="~/starter-kit/assets/vendor/js/bootstrap.js"></script>
     <script src="~/starter-kit/assets/vendor/libs/node-waves/node-waves.js"></script>
     <script src="~/starter-kit/assets/js/main.js"></script>
-    <script>
-        function toggleSenha() {
-            const input = document.getElementById('senha-input');
-            const icon = document.getElementById('senha-icon');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.replace('ri-eye-off-line', 'ri-eye-line');
-            } else {
-                input.type = 'password';
-                icon.classList.replace('ri-eye-line', 'ri-eye-off-line');
-            }
-        }
-    </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 </body>
 </html>

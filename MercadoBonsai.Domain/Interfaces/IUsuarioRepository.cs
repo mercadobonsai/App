@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MercadoBonsai.Domain.Entities;
@@ -12,4 +13,7 @@ public interface IUsuarioRepository
     Task AtualizarAsync(Usuario usuario);
     Task<IEnumerable<Usuario>> ListarTodosAsync(string? busca, int? perfil);
     Task<IEnumerable<Usuario>> ListarViveirosEmDestaqueAsync();
+    Task<Usuario?> ObterPorResetTokenAsync(string token);
+    Task SalvarResetTokenAsync(int usuarioId, string token, DateTime expiracao);
+    Task AtualizarSenhaEResetTokenAsync(int usuarioId, string novaSenhaHash);
 }

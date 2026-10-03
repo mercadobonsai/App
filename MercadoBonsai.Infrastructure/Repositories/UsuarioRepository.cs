@@ -52,6 +52,8 @@ public class UsuarioRepository : IUsuarioRepository
         statusassinatura AS StatusAssinatura,
         percentualretencaopersonalizado AS PercentualRetencaoPersonalizado,
         webhook_url AS WebhookUrl,
+        reset_token AS ResetToken,
+        reset_token_expiracao AS ResetTokenExpiracao,
         dataultimaalteracao AS DataUltimaAlteracao,
         usuarioalteracaoid AS UsuarioAlteracaoId,
         usuarioalteracaonome AS UsuarioAlteracaoNome";
@@ -178,5 +180,44 @@ public class UsuarioRepository : IUsuarioRepository
 
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<Usuario>(sql);
+    }
+
+    public async Task<Usuario?> ObterPorResetTokenAsync(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return null;
+
+        var sql = $@"
+            SELECT {SelectFields}
+            FROM usuarios
+            WHERE reset_token = @Token;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<Usuario>(sql, new { Token = token.Trim() });
+    }
+
+    public async Task SalvarResetTokenAsync(int usuarioId, string token, DateTime expiracao)
+    {
+        const string sql = @"
+            UPDATE usuarios
+            SET reset_token = @Token,
+                reset_token_expiracao = @Expiracao
+            WHERE id = @UsuarioId;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, new { UsuarioId = usuarioId, Token = token, Expiracao = expiracao });
+    }
+
+    public async Task AtualizarSenhaEResetTokenAsync(int usuarioId, string novaSenhaHash)
+    {
+        const string sql = @"
+            UPDATE usuarios
+            SET senhahash = @NovaSenhaHash,
+                reset_token = NULL,
+                reset_token_expiracao = NULL,
+                dataultimaalteracao = NOW()
+            WHERE id = @UsuarioId;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, new { UsuarioId = usuarioId, NovaSenhaHash = novaSenhaHash });
     }
 }
