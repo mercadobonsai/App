@@ -486,3 +486,8 @@ appsettings.Development.json
 appsettings.Local.json
 MercadoBonsai.Web/appsettings.Development.json
 MercadoBonsai.Web/appsettings.Local.json
+
+# Archives and temporary scratch files
+*.tar
+scratch/
+
