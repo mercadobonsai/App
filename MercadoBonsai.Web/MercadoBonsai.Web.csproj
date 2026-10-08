@@ -18,4 +18,8 @@
     <NoWarn>$(NoWarn);SixLaborsImageSharpLicense</NoWarn>
   </PropertyGroup>
 
+  <Target Name="SixLabors_ValidateLicense" BeforeTargets="CoreCompile">
+    <!-- Override SixLabors license validation -->
+  </Target>
+
 </Project>

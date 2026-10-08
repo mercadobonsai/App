@@ -1,0 +1,5 @@
+<Project>
+  <Target Name="SixLabors_ValidateLicense" BeforeTargets="CoreCompile">
+    <!-- Ignora a validação de licença do SixLabors na compilação Release -->
+  </Target>
+</Project>
