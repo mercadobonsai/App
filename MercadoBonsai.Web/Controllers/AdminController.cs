@@ -194,7 +194,9 @@ public class AdminController : Controller
 
         if (dadosCompletos && (usuario.Perfil == PerfilUsuario.Vendedor || usuario.Perfil == PerfilUsuario.Administrador))
         {
-            if (string.IsNullOrEmpty(usuario.AsaasCustomerId))
+            var msgsAsaas = new List<string>();
+
+            if (string.IsNullOrEmpty(usuario.AsaasCustomerId) || usuario.AsaasCustomerId.StartsWith("cus_simulado_"))
             {
                 var resCliente = await _asaasService.CriarClienteAsync(usuario);
                 if (resCliente.Sucesso && !string.IsNullOrEmpty(resCliente.AsaasCustomerId))
@@ -202,9 +204,13 @@ public class AdminController : Controller
                     usuario.AsaasCustomerId = resCliente.AsaasCustomerId;
                     await _usuarioRepository.AtualizarAsync(usuario);
                 }
+                else if (!resCliente.Sucesso && !string.IsNullOrEmpty(resCliente.MensagemErro))
+                {
+                    msgsAsaas.Add($"[Cliente]: {resCliente.MensagemErro}");
+                }
             }
 
-            if (string.IsNullOrEmpty(usuario.AsaasAccountId))
+            if (string.IsNullOrEmpty(usuario.AsaasAccountId) || usuario.AsaasAccountId.StartsWith("acc_simulada_") || usuario.AsaasAccountId.StartsWith("sub_simulada_"))
             {
                 var resSubconta = await _asaasService.CriarSubcontaVendedorAsync(usuario);
                 if (resSubconta.Sucesso && !string.IsNullOrEmpty(resSubconta.AsaasAccountId))
@@ -212,6 +218,15 @@ public class AdminController : Controller
                     usuario.AsaasAccountId = resSubconta.AsaasAccountId;
                     await _usuarioRepository.AtualizarAsync(usuario);
                 }
+                else if (!resSubconta.Sucesso && !string.IsNullOrEmpty(resSubconta.MensagemErro))
+                {
+                    msgsAsaas.Add($"[Subconta]: {resSubconta.MensagemErro}");
+                }
+            }
+
+            if (msgsAsaas.Count > 0)
+            {
+                TempData["Aviso"] = "Dados salvos, porém a integração Asaas alertou: " + string.Join(" | ", msgsAsaas);
             }
         }
 
