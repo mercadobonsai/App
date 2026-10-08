@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Claims;
@@ -24,6 +25,7 @@ public class ContaController : Controller
     private readonly IAsaasService _asaasService;
     private readonly IEmailService _emailService;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly ILogger<ContaController> _logger;
 
     public ContaController(
         IUsuarioRepository usuarioRepository,
@@ -31,7 +33,8 @@ public class ContaController : Controller
         VendedorTokenService vendedorTokenService,
         IAsaasService asaasService,
         IEmailService emailService,
-        IWebHostEnvironment webHostEnvironment)
+        IWebHostEnvironment webHostEnvironment,
+        ILogger<ContaController> logger)
     {
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
@@ -39,6 +42,7 @@ public class ContaController : Controller
         _asaasService = asaasService;
         _emailService = emailService;
         _webHostEnvironment = webHostEnvironment;
+        _logger = logger;
     }
 
     // GET: /Conta/Login
@@ -132,7 +136,14 @@ public class ContaController : Controller
         usuario.Id = usuarioId;
 
         // Disparo Automático do E-mail de Termos de Uso e Política de Privacidade (remetente oficial comercial@mercadobonsai.com.br)
-        _ = _emailService.EnviarTermosEPrivacidadeAsync(usuario.Email, usuario.Nome);
+        try
+        {
+            await _emailService.EnviarTermosEPrivacidadeAsync(usuario.Email, usuario.Nome);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[ContaController] Falha ao enviar e-mail de Termos e Privacidade para {Email}", usuario.Email);
+        }
 
         if (usuario.Perfil == PerfilUsuario.Vendedor)
         {
@@ -415,7 +426,18 @@ public class ContaController : Controller
                 new { token = token, email = usuario.Email }, 
                 Request.Scheme) ?? string.Empty;
 
-            _ = _emailService.EnviarRecuperacaoSenhaAsync(usuario.Email, usuario.Nome, linkRedefinicao);
+            try
+            {
+                await _emailService.EnviarRecuperacaoSenhaAsync(usuario.Email, usuario.Nome, linkRedefinicao);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[ContaController] Falha ao enviar e-mail de recuperação de senha para {Email}", usuario.Email);
+            }
+        }
+        else
+        {
+            _logger.LogWarning("[ContaController] EsqueciSenha: O e-mail informado '{Email}' não foi encontrado no banco de dados.", model.Email);
         }
 
         ViewBag.MensagemSucesso = "Se o e-mail informado estiver cadastrado em nossa plataforma, enviamos as instruções e o link seguro para redefinição de sua senha.";
@@ -473,4 +495,32 @@ public class ContaController : Controller
         TempData["Sucesso"] = "Sua senha foi redefinida com sucesso! Efetue login com sua nova senha.";
         return RedirectToAction("Login");
     }
+
+    // GET: /Conta/TestarEnvioEmail?email=destino@exemplo.com
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> TestarEnvioEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return Content("Por favor informe o e-mail de destino no formato: /Conta/TestarEnvioEmail?email=seu-email@dominio.com");
+        }
+
+        try
+        {
+            await _emailService.EnviarEmailAsync(
+                "no-reply@e-vendas.net.br",
+                "E-Vendas Marketing",
+                email,
+                "Teste de Entrega Postal - Mercado Bonsai",
+                $"<h2>Teste de Envio Postal Realizado com Sucesso</h2><p>Data e Hora: {DateTime.Now:dd/MM/yyyy HH:mm:ss}</p><p>Destino: <strong>{WebUtility.HtmlEncode(email)}</strong></p><p>Servidor SMTP Postal (178.105.206.82:25).</p>"
+            );
+            return Content($"[SUCESSO] O e-mail de teste foi transmitido e aceito pelo servidor Postal com destino a '{email}'. Verifique sua Caixa de Entrada e também a pasta de Lixo Eletrônico/Spam.");
+        }
+        catch (Exception ex)
+        {
+            return Content($"[ERRO] Falha ao enviar e-mail: {ex.Message}");
+        }
+    }
 }
+

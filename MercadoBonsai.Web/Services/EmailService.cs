@@ -1,40 +1,191 @@
 using System;
 using System.Net;
-using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using MercadoBonsai.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MimeKit;
 
 namespace MercadoBonsai.Web.Services;
 
+/// <summary>
+/// Serviço de envio de e-mails via servidor Postal (SMTP) utilizando MailKit.
+/// Suporta credenciais globais (Host, Port, Token/Password) e remetentes dinâmicos a cada chamada.
+/// </summary>
 public class EmailService : IEmailService
 {
-    private readonly IConfiguration _configuration;
+    private readonly PostalSettings _settings;
     private readonly ILogger<EmailService> _logger;
 
-    public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+    public EmailService(
+        IOptions<PostalSettings> postalOptions,
+        IConfiguration configuration,
+        ILogger<EmailService> logger)
     {
-        _configuration = configuration;
         _logger = logger;
+        _settings = postalOptions?.Value ?? new PostalSettings();
+
+        // Vincula configurações caso não tenham vindo via IOptions
+        var section = configuration.GetSection("PostalSettings").Exists()
+            ? configuration.GetSection("PostalSettings")
+            : configuration.GetSection("Postal");
+
+        if (section.Exists())
+        {
+            if (string.IsNullOrWhiteSpace(_settings.Host) || _settings.Host == "178.105.206.82")
+            {
+                var h = section["Host"] ?? section["Server"];
+                if (!string.IsNullOrWhiteSpace(h)) _settings.Host = h;
+            }
+
+            var portStr = section["Port"] ?? section["Porta"];
+            if (int.TryParse(portStr, out var p) && p > 0)
+            {
+                _settings.Port = p;
+            }
+
+            var token = section["Token"];
+            if (!string.IsNullOrWhiteSpace(token)) _settings.Token = token;
+
+            var user = section["Username"] ?? section["Usuario"];
+            if (!string.IsNullOrWhiteSpace(user)) _settings.Username = user;
+
+            var pass = section["Password"] ?? section["Senha"];
+            if (!string.IsNullOrWhiteSpace(pass)) _settings.Password = pass;
+
+            var senderEmail = section["SenderEmail"];
+            if (!string.IsNullOrWhiteSpace(senderEmail)) _settings.SenderEmail = senderEmail;
+
+            var senderName = section["SenderName"];
+            if (!string.IsNullOrWhiteSpace(senderName)) _settings.SenderName = senderName;
+
+            var apiUrl = section["ApiUrl"];
+            if (!string.IsNullOrWhiteSpace(apiUrl)) _settings.ApiUrl = apiUrl;
+        }
     }
 
+    /// <summary>
+    /// Dispara e-mail permitindo passar dinamicamente o e-mail e o nome do remetente (senderEmail e senderName).
+    /// </summary>
+    public async Task EnviarEmailAsync(
+        string senderEmail,
+        string senderName,
+        string destinoEmail,
+        string destinoNome,
+        string assunto,
+        string mensagemHtml)
+    {
+        if (string.IsNullOrWhiteSpace(destinoEmail))
+        {
+            _logger.LogWarning("[EmailService] Tentativa de envio com e-mail de destino em branco.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(senderEmail))
+        {
+            senderEmail = !string.IsNullOrWhiteSpace(_settings.SenderEmail) 
+                ? _settings.SenderEmail 
+                : "no-reply@e-vendas.net.br";
+        }
+
+        if (string.IsNullOrWhiteSpace(senderName))
+        {
+            senderName = !string.IsNullOrWhiteSpace(_settings.SenderName) 
+                ? _settings.SenderName 
+                : "Mercado Bonsai";
+        }
+
+        // Se o Host ou as credenciais não estiverem informadas, registra log informativo
+        if (string.IsNullOrWhiteSpace(_settings.Host))
+        {
+            _logger.LogWarning("[EmailService] Host do Postal não configurado. Disparo cancelado.");
+            return;
+        }
+
+        try
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(senderName, senderEmail));
+            message.To.Add(new MailboxAddress(string.IsNullOrWhiteSpace(destinoNome) ? destinoEmail : destinoNome, destinoEmail));
+            message.Subject = assunto ?? string.Empty;
+
+            var bodyBuilder = new BodyBuilder
+            {
+                HtmlBody = mensagemHtml ?? string.Empty
+            };
+            message.Body = bodyBuilder.ToMessageBody();
+
+            using var client = new SmtpClient();
+            client.Timeout = 15000;
+            client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+            client.CheckCertificateRevocation = false;
+
+            SecureSocketOptions socketOptions = _settings.Port switch
+            {
+                465 => SecureSocketOptions.SslOnConnect,
+                587 => SecureSocketOptions.StartTls,
+                25 => SecureSocketOptions.Auto,
+                _ => SecureSocketOptions.Auto
+            };
+
+            await client.ConnectAsync(_settings.Host, _settings.Port, socketOptions);
+
+            var authUser = _settings.Username;
+            var authPass = _settings.Password;
+
+            if (!string.IsNullOrWhiteSpace(authUser) && !string.IsNullOrWhiteSpace(authPass))
+            {
+                await client.AuthenticateAsync(authUser, authPass);
+            }
+
+            var response = await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+
+            _logger.LogInformation(
+                "[EmailService] E-mail disparado com sucesso para {Destino} via Postal ({Host}:{Port}). Remetente: {SenderName} <{SenderEmail}>. Resposta: {Resposta}",
+                destinoEmail, _settings.Host, _settings.Port, senderName, senderEmail, response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "[EmailService] Falha ao enviar e-mail para {Destino} via Postal ({Host}:{Port}) com remetente {SenderEmail}.",
+                destinoEmail, _settings.Host, _settings.Port, senderEmail);
+        }
+    }
+
+    /// <summary>
+    /// Sobrecarga conveniente para disparo sem especificação de nome do destinatário.
+    /// </summary>
+    public Task EnviarEmailAsync(
+        string senderEmail,
+        string senderName,
+        string destinoEmail,
+        string assunto,
+        string mensagemHtml)
+    {
+        return EnviarEmailAsync(senderEmail, senderName, destinoEmail, destinoEmail, assunto, mensagemHtml);
+    }
+
+    /// <summary>
+    /// Envia e-mail contendo os Termos de Uso e Política de Privacidade.
+    /// </summary>
     public async Task EnviarTermosEPrivacidadeAsync(string destinoEmail, string usuarioNome)
     {
         if (string.IsNullOrWhiteSpace(destinoEmail)) return;
 
-        string senderEmail = _configuration["Smtp:SenderEmail"] ?? "comercial@mercadobonsai.com.br";
-        string senderName = _configuration["Smtp:SenderName"] ?? "Mercado Bonsai Comercial";
-        string smtpServer = _configuration["Smtp:Server"] ?? "smtp.mercadobonsai.com.br";
-        int smtpPort = int.TryParse(_configuration["Smtp:Port"], out int port) ? port : 587;
-        string smtpUser = _configuration["Smtp:Username"] ?? "comercial@mercadobonsai.com.br";
-        string smtpPass = _configuration["Smtp:Password"] ?? "";
-        bool enableSsl = bool.TryParse(_configuration["Smtp:EnableSsl"], out bool ssl) ? ssl : true;
-
+        string senderEmail = !string.IsNullOrWhiteSpace(_settings.SenderEmail)
+            ? _settings.SenderEmail
+            : "comercial@mercadobonsai.com.br";
+        string senderName = !string.IsNullOrWhiteSpace(_settings.SenderName)
+            ? _settings.SenderName
+            : "Mercado Bonsai Comercial";
         string assunto = "Bem-vindo ao Mercado Bonsai - Termos de Uso e Política de Privacidade";
 
-        StringBuilder bodyBuilder = new StringBuilder();
+        var bodyBuilder = new StringBuilder();
         bodyBuilder.AppendLine("<!DOCTYPE html>");
         bodyBuilder.AppendLine("<html lang='pt-BR'>");
         bodyBuilder.AppendLine("<head><meta charset='UTF-8'><style>");
@@ -71,51 +222,25 @@ public class EmailService : IEmailService
         bodyBuilder.AppendLine("<div class='footer'><p>© Mercado Bonsai - Todos os direitos reservados.<br>Este é um e-mail automático enviado para a confirmação cadastral.</p></div>");
         bodyBuilder.AppendLine("</body></html>");
 
-        try
-        {
-            if (string.IsNullOrWhiteSpace(smtpPass))
-            {
-                _logger.LogInformation("[EmailService] E-mail institucional de Termos e Privacidade gerado com sucesso para {Destino} (Remetente: {Remetente}). Credenciais SMTP pendentes de preenchimento em produção.", 
-                    destinoEmail, senderEmail);
-                return;
-            }
-
-            using var message = new MailMessage();
-            message.From = new MailAddress(senderEmail, senderName);
-            message.To.Add(new MailAddress(destinoEmail, usuarioNome));
-            message.Subject = assunto;
-            message.Body = bodyBuilder.ToString();
-            message.IsBodyHtml = true;
-            message.BodyEncoding = Encoding.UTF8;
-
-            using var client = new SmtpClient(smtpServer, smtpPort);
-            client.Credentials = new NetworkCredential(smtpUser, smtpPass);
-            client.EnableSsl = enableSsl;
-
-            await client.SendMailAsync(message);
-            _logger.LogInformation("[EmailService] E-mail de Termos e Privacidade enviado com sucesso para {Destino} via {SenderEmail}.", destinoEmail, senderEmail);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "[EmailService] Falha ao enviar e-mail de Termos e Privacidade para {Destino}.", destinoEmail);
-        }
+        await EnviarEmailAsync(senderEmail, senderName, destinoEmail, usuarioNome, assunto, bodyBuilder.ToString());
     }
 
+    /// <summary>
+    /// Envia e-mail de recuperação/redefinição de senha com link temporário seguro.
+    /// </summary>
     public async Task EnviarRecuperacaoSenhaAsync(string destinoEmail, string usuarioNome, string linkRedefinicao)
     {
         if (string.IsNullOrWhiteSpace(destinoEmail)) return;
 
-        string senderEmail = _configuration["Smtp:SenderEmail"] ?? "comercial@mercadobonsai.com.br";
-        string senderName = _configuration["Smtp:SenderName"] ?? "Mercado Bonsai Comercial";
-        string smtpServer = _configuration["Smtp:Server"] ?? "smtp.mercadobonsai.com.br";
-        int smtpPort = int.TryParse(_configuration["Smtp:Port"], out int port) ? port : 587;
-        string smtpUser = _configuration["Smtp:Username"] ?? "comercial@mercadobonsai.com.br";
-        string smtpPass = _configuration["Smtp:Password"] ?? "";
-        bool enableSsl = bool.TryParse(_configuration["Smtp:EnableSsl"], out bool ssl) ? ssl : true;
-
+        string senderEmail = !string.IsNullOrWhiteSpace(_settings.SenderEmail)
+            ? _settings.SenderEmail
+            : "suporte@mercadobonsai.com.br";
+        string senderName = !string.IsNullOrWhiteSpace(_settings.SenderName)
+            ? _settings.SenderName
+            : "Mercado Bonsai Suporte";
         string assunto = "Recuperação de Senha - Mercado Bonsai";
 
-        StringBuilder bodyBuilder = new StringBuilder();
+        var bodyBuilder = new StringBuilder();
         bodyBuilder.AppendLine("<!DOCTYPE html>");
         bodyBuilder.AppendLine("<html lang='pt-BR'>");
         bodyBuilder.AppendLine("<head><meta charset='UTF-8'><style>");
@@ -135,38 +260,11 @@ public class EmailService : IEmailService
         bodyBuilder.AppendLine("<p>Se o botão acima não funcionar, você também pode copiar e colar o link abaixo em seu navegador:</p>");
         bodyBuilder.AppendLine($"<p style='word-break: break-all; background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 13px;'><a href='{WebUtility.HtmlEncode(linkRedefinicao)}' style='color: #4A7C59;'>{WebUtility.HtmlEncode(linkRedefinicao)}</a></p>");
         bodyBuilder.AppendLine("<p style='margin-top: 20px; color: #777; font-size: 13px;'>Se você não solicitou a redefinição de senha, por favor ignore este e-mail. Sua senha atual permanecerá segura e inalterada.</p>");
-        bodyBuilder.AppendLine("<p style='margin-top: 30px;'>Atenciosamente,<br><strong>Equipe Mercado Bonsai</strong><br><small>comercial@mercadobonsai.com.br</small></p>");
+        bodyBuilder.AppendLine("<p style='margin-top: 30px;'>Atenciosamente,<br><strong>Equipe Mercado Bonsai</strong><br><small>suporte@mercadobonsai.com.br</small></p>");
         bodyBuilder.AppendLine("</div>");
         bodyBuilder.AppendLine("<div class='footer'><p>© Mercado Bonsai - Todos os direitos reservados.<br>Este é um e-mail automático de segurança.</p></div>");
         bodyBuilder.AppendLine("</body></html>");
 
-        try
-        {
-            if (string.IsNullOrWhiteSpace(smtpPass))
-            {
-                _logger.LogInformation("[EmailService] E-mail de Recuperação de Senha gerado com sucesso para {Destino}. Link: {Link}. (SMTP aguardando credenciais em produção).", 
-                    destinoEmail, linkRedefinicao);
-                return;
-            }
-
-            using var message = new MailMessage();
-            message.From = new MailAddress(senderEmail, senderName);
-            message.To.Add(new MailAddress(destinoEmail, usuarioNome));
-            message.Subject = assunto;
-            message.Body = bodyBuilder.ToString();
-            message.IsBodyHtml = true;
-            message.BodyEncoding = Encoding.UTF8;
-
-            using var client = new SmtpClient(smtpServer, smtpPort);
-            client.Credentials = new NetworkCredential(smtpUser, smtpPass);
-            client.EnableSsl = enableSsl;
-
-            await client.SendMailAsync(message);
-            _logger.LogInformation("[EmailService] E-mail de Recuperação de Senha enviado com sucesso para {Destino}.", destinoEmail);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "[EmailService] Falha ao enviar e-mail de Recuperação de Senha para {Destino}.", destinoEmail);
-        }
+        await EnviarEmailAsync(senderEmail, senderName, destinoEmail, usuarioNome, assunto, bodyBuilder.ToString());
     }
 }

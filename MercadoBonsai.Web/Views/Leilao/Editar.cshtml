@@ -23,9 +23,50 @@
                         </div>
                     }
 
-                    <form asp-action="Editar" asp-route-id="@Model.Id" method="post">
+                    <form asp-action="Editar" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="FotoPrincipalUrl" />
+                        <input type="hidden" asp-for="FotoDetalheUrl" />
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Foto Principal</label>
+                                <div class="mb-2">
+                                    @if (!string.IsNullOrEmpty(Model.FotoPrincipalUrl))
+                                    {
+                                        <img src="@Model.FotoPrincipalUrl" alt="Foto Principal" class="img-fluid rounded shadow-sm border" style="max-height: 150px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light rounded p-3 text-muted small border">Sem foto principal</div>
+                                    }
+                                </div>
+                                @if (podeEditarGeral)
+                                {
+                                    <input type="file" name="fotoPrincipal" class="form-control" accept="image/*" />
+                                    <small class="text-muted">Selecione para substituir a foto principal.</small>
+                                }
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Foto de Detalhe</label>
+                                <div class="mb-2">
+                                    @if (!string.IsNullOrEmpty(Model.FotoDetalheUrl))
+                                    {
+                                        <img src="@Model.FotoDetalheUrl" alt="Foto de Detalhe" class="img-fluid rounded shadow-sm border" style="max-height: 150px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light rounded p-3 text-muted small border">Sem foto de detalhe</div>
+                                    }
+                                </div>
+                                @if (podeEditarGeral)
+                                {
+                                    <input type="file" name="fotoDetalhe" class="form-control" accept="image/*" />
+                                    <small class="text-muted">Selecione para substituir a foto de detalhe.</small>
+                                }
+                            </div>
+                        </div>
 
                         <div class="mb-3">
                             <label asp-for="Titulo" class="form-label fw-semibold"></label>

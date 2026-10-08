@@ -491,3 +491,10 @@ MercadoBonsai.Web/appsettings.Local.json
 *.tar
 scratch/
 
+# Runtime Data Protection Keys
+dp_keys/
+**/dp_keys/
+
+# Uploads
+**/wwwroot/uploads/
+

@@ -7,6 +7,7 @@ using MercadoBonsai.Domain.Entities;
 using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
 using MercadoBonsai.Web.Models;
+using MercadoBonsai.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -18,15 +19,18 @@ public class ProdutoController : Controller
     private readonly IProdutoRepository _produtoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly IStorageService _storageService;
 
     public ProdutoController(
         IProdutoRepository produtoRepository, 
         IUsuarioRepository usuarioRepository,
-        IWebHostEnvironment webHostEnvironment)
+        IWebHostEnvironment webHostEnvironment,
+        IStorageService storageService)
     {
         _produtoRepository = produtoRepository;
         _usuarioRepository = usuarioRepository;
         _webHostEnvironment = webHostEnvironment;
+        _storageService = storageService;
     }
 
     // GET: /Produto (Vitrine de Plantas: apenas Pré-bonsai e Bonsai)
@@ -154,22 +158,7 @@ public class ProdutoController : Controller
 
         if (model.Imagem != null && model.Imagem.Length > 0)
         {
-            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "produtos");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            var extension = Path.GetExtension(model.Imagem.FileName);
-            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await model.Imagem.CopyToAsync(stream);
-            }
-
-            imagemUrl = $"/uploads/produtos/{uniqueFileName}";
+            imagemUrl = await _storageService.UploadImagemOtimizadaAsync(model.Imagem, "produtos", $"prod_{vendedorId}");
         }
 
         var produto = new Produto
@@ -263,22 +252,7 @@ public class ProdutoController : Controller
 
         if (model.NovaImagem != null && model.NovaImagem.Length > 0)
         {
-            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "produtos");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            var extension = Path.GetExtension(model.NovaImagem.FileName);
-            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await model.NovaImagem.CopyToAsync(stream);
-            }
-
-            produto.ImagemUrl = $"/uploads/produtos/{uniqueFileName}";
+            produto.ImagemUrl = await _storageService.UploadImagemOtimizadaAsync(model.NovaImagem, "produtos", $"prod_{produto.VendedorId}");
         }
 
         produto.Nome = model.Nome;

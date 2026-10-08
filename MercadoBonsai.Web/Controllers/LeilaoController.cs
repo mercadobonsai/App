@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MercadoBonsai.Domain.Entities;
 using MercadoBonsai.Domain.Enums;
 using MercadoBonsai.Domain.Interfaces;
+using MercadoBonsai.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,7 @@ public class LeilaoController : Controller
     private readonly IPedidoRepository _pedidoRepository;
     private readonly ILeilaoService _leilaoService;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly IStorageService _storageService;
 
     public LeilaoController(
         ILeilaoRepository leilaoRepository,
@@ -29,7 +31,8 @@ public class LeilaoController : Controller
         IPlanoRepository planoRepository,
         IPedidoRepository pedidoRepository,
         ILeilaoService leilaoService,
-        IWebHostEnvironment webHostEnvironment)
+        IWebHostEnvironment webHostEnvironment,
+        IStorageService storageService)
     {
         _leilaoRepository = leilaoRepository;
         _rifaRepository = rifaRepository;
@@ -38,6 +41,7 @@ public class LeilaoController : Controller
         _pedidoRepository = pedidoRepository;
         _leilaoService = leilaoService;
         _webHostEnvironment = webHostEnvironment;
+        _storageService = storageService;
     }
 
     // GET: /Leilao/Encerrados (Consulta de leilões e ações entre amigos, em andamento ou encerrados)
@@ -202,39 +206,20 @@ public class LeilaoController : Controller
 
         if (fotoPrincipal != null && fotoPrincipal.Length > 0)
         {
-            var folder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "leiloes");
-            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-            var ext = Path.GetExtension(fotoPrincipal.FileName);
-            var name = $"leilao_{vendedorId}_{Guid.NewGuid()}{ext}";
-            var path = Path.Combine(folder, name);
-
-            using (var stream = new FileStream(path, FileMode.Create))
-            {
-                await fotoPrincipal.CopyToAsync(stream);
-            }
-            leilao.FotoPrincipalUrl = $"/uploads/leiloes/{name}";
+            leilao.FotoPrincipalUrl = await _storageService.UploadImagemOtimizadaAsync(fotoPrincipal, "leiloes", $"leilao_{vendedorId}");
         }
 
         if (fotoDetalhe != null && fotoDetalhe.Length > 0)
         {
-            var folder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "leiloes");
-            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-            var ext = Path.GetExtension(fotoDetalhe.FileName);
-            var name = $"leilao_detalhe_{vendedorId}_{Guid.NewGuid()}{ext}";
-            var path = Path.Combine(folder, name);
-
-            using (var stream = new FileStream(path, FileMode.Create))
-            {
-                await fotoDetalhe.CopyToAsync(stream);
-            }
-            leilao.FotoDetalheUrl = $"/uploads/leiloes/{name}";
+            leilao.FotoDetalheUrl = await _storageService.UploadImagemOtimizadaAsync(fotoDetalhe, "leiloes", $"leilao_detalhe_{vendedorId}");
         }
 
         leilao.VendedorId = vendedorId;
         leilao.VendedorNome = usuario?.RazaoSocial ?? usuario?.Nome ?? User.Identity?.Name;
+        leilao.LanceInicial = leilao.LanceAtual;
         leilao.ProximoLanceMinimo = leilao.LanceAtual + leilao.IncrementoMinimo;
+        leilao.DataInicio = DateTime.UtcNow;
+        leilao.DataFim = leilao.DataFinalizacao;
         leilao.DataCriacao = DateTime.UtcNow;
 
         await _leilaoRepository.InserirAsync(leilao);
@@ -264,7 +249,7 @@ public class LeilaoController : Controller
     [HttpPost]
     [Authorize(Roles = "Vendedor, Administrador")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Editar(int id, Leilao model)
+    public async Task<IActionResult> Editar(int id, Leilao model, IFormFile? fotoPrincipal, IFormFile? fotoDetalhe)
     {
         var leilao = await _leilaoRepository.ObterPorIdAsync(id);
         if (leilao == null) return NotFound();
@@ -291,14 +276,29 @@ public class LeilaoController : Controller
             return RedirectToAction("MeusLeiloes");
         }
 
+        if (fotoPrincipal != null && fotoPrincipal.Length > 0)
+        {
+            leilao.FotoPrincipalUrl = await _storageService.UploadImagemOtimizadaAsync(fotoPrincipal, "leiloes", $"leilao_{leilao.VendedorId}");
+        }
+
+        if (fotoDetalhe != null && fotoDetalhe.Length > 0)
+        {
+            leilao.FotoDetalheUrl = await _storageService.UploadImagemOtimizadaAsync(fotoDetalhe, "leiloes", $"leilao_detalhe_{leilao.VendedorId}");
+        }
+
         leilao.Titulo = model.Titulo;
         leilao.Subtitulo = model.Subtitulo;
         leilao.Descricao = model.Descricao;
         leilao.Badge = model.Badge;
+        if (!leilao.TemLances)
+        {
+            leilao.LanceInicial = model.LanceAtual;
+        }
         leilao.LanceAtual = model.LanceAtual;
         leilao.IncrementoMinimo = model.IncrementoMinimo;
         leilao.ProximoLanceMinimo = leilao.LanceAtual + leilao.IncrementoMinimo;
         leilao.DataFinalizacao = model.DataFinalizacao;
+        leilao.DataFim = model.DataFinalizacao;
         leilao.Status = model.Status;
 
         await _leilaoRepository.AtualizarAsync(leilao);

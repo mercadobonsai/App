@@ -26,11 +26,14 @@ public class LeilaoRepository : ILeilaoRepository
         fotoprincipalurl AS FotoPrincipalUrl,
         fotodetalheurl AS FotoDetalheUrl,
         badge AS Badge,
+        COALESCE(lanceinicial, lanceatual) AS LanceInicial,
         lanceatual AS LanceAtual,
         proximolanceminimo AS ProximoLanceMinimo,
         incrementominimo AS IncrementoMinimo,
         vendedorid AS VendedorId,
         vendedornome AS VendedorNome,
+        COALESCE(datainicio, datacriacao) AS DataInicio,
+        COALESCE(datafim, datafinalizacao) AS DataFim,
         datafinalizacao AS DataFinalizacao,
         status AS Status,
         datacriacao AS DataCriacao";
@@ -163,13 +166,13 @@ public class LeilaoRepository : ILeilaoRepository
         const string sql = @"
             INSERT INTO leiloes (
                 titulo, subtitulo, descricao, fotoprincipalurl, fotodetalheurl, badge, 
-                lanceatual, proximolanceminimo, incrementominimo, vendedorid, vendedornome, 
-                datafinalizacao, status, datacriacao
+                lanceinicial, lanceatual, proximolanceminimo, incrementominimo, vendedorid, vendedornome, 
+                datainicio, datafim, datafinalizacao, status, datacriacao
             )
             VALUES (
                 @Titulo, @Subtitulo, @Descricao, @FotoPrincipalUrl, @FotoDetalheUrl, @Badge, 
-                @LanceAtual, @ProximoLanceMinimo, @IncrementoMinimo, @VendedorId, @VendedorNome, 
-                @DataFinalizacao, @Status, @DataCriacao
+                @LanceInicial, @LanceAtual, @ProximoLanceMinimo, @IncrementoMinimo, @VendedorId, @VendedorNome, 
+                @DataInicio, @DataFim, @DataFinalizacao, @Status, @DataCriacao
             )
             RETURNING id;";
 
@@ -188,9 +191,12 @@ public class LeilaoRepository : ILeilaoRepository
                 fotoprincipalurl = @FotoPrincipalUrl,
                 fotodetalheurl = @FotoDetalheUrl,
                 badge = @Badge,
+                lanceinicial = @LanceInicial,
                 lanceatual = @LanceAtual,
                 proximolanceminimo = @ProximoLanceMinimo,
                 incrementominimo = @IncrementoMinimo,
+                datainicio = @DataInicio,
+                datafim = @DataFim,
                 datafinalizacao = @DataFinalizacao,
                 status = @Status
             WHERE id = @Id;";

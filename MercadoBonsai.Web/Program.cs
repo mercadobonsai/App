@@ -33,7 +33,13 @@ builder.Services.AddHttpClient<IMelhorEnvioService, MelhorEnvioService>();
 builder.Services.AddHttpClient<IEvendasWebhookService, EvendasWebhookService>();
 builder.Services.AddHttpClient<IAsaasService, AsaasService>();
 builder.Services.AddScoped<ILeilaoService, LeilaoService>();
+var postalConfig = builder.Configuration.GetSection("PostalSettings").Exists()
+    ? builder.Configuration.GetSection("PostalSettings")
+    : builder.Configuration.GetSection("Postal");
+builder.Services.Configure<PostalSettings>(postalConfig);
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.Configure<R2Settings>(builder.Configuration.GetSection("CloudflareR2"));
+builder.Services.AddScoped<IStorageService, R2StorageService>();
 builder.Services.AddHostedService<LeilaoEncerradoBackgroundService>();
 
 // Persistência de Chaves do DataProtection para evitar invalidação de Tokens Antiforgery e Cookies em Containers
@@ -81,6 +87,21 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS leilaoid INT NULL;
             ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS posicao_vencedor_leilao INT NULL DEFAULT 1;
             ALTER TABLE planos ALTER COLUMN percentualcomissao TYPE NUMERIC(10,2);
+
+            ALTER TABLE leiloes ALTER COLUMN lanceinicial DROP NOT NULL;
+            ALTER TABLE leiloes ALTER COLUMN datainicio DROP NOT NULL;
+            ALTER TABLE leiloes ALTER COLUMN datafim DROP NOT NULL;
+            ALTER TABLE leiloes ALTER COLUMN lanceinicial SET DEFAULT 0;
+
+            CREATE TABLE IF NOT EXISTS lancesleilao (
+                id SERIAL PRIMARY KEY,
+                leilaoid INT NOT NULL REFERENCES leiloes(id) ON DELETE CASCADE,
+                usuarioid INT NULL REFERENCES usuarios(id) ON DELETE SET NULL,
+                usuarionome VARCHAR(100) NOT NULL,
+                valor DECIMAL(18,2) NOT NULL,
+                datalance TIMESTAMP NOT NULL DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_lancesleilao_leilaoid ON lancesleilao(leilaoid);
 
             UPDATE produtos SET status = 1 WHERE quantidadeestoque > 0 AND status = 2;
             UPDATE produtos SET status = 2 WHERE quantidadeestoque = 0 AND status = 1;
