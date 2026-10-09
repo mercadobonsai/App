@@ -23,7 +23,7 @@
                         </div>
                     }
 
-                    <form asp-action="Editar" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                    <form id="formEditarLeilao" asp-action="Editar" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Id" />
                         <input type="hidden" asp-for="FotoPrincipalUrl" />
@@ -35,7 +35,7 @@
                                 <div class="mb-2">
                                     @if (!string.IsNullOrEmpty(Model.FotoPrincipalUrl))
                                     {
-                                        <img src="@Model.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" alt="Foto Principal" class="img-fluid rounded shadow-sm border" style="max-height: 150px; object-fit: cover;" />
+                                        <img id="imgPrincipalAtual" src="@Model.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" alt="Foto Principal" class="img-fluid rounded shadow-sm border" style="max-height: 150px; width: 100%; object-fit: cover;" />
                                     }
                                     else
                                     {
@@ -44,8 +44,12 @@
                                 </div>
                                 @if (podeEditarGeral)
                                 {
-                                    <input type="file" name="fotoPrincipal" class="form-control" accept="image/*" />
-                                    <small class="text-muted">Selecione para substituir a foto principal.</small>
+                                    <input type="file" name="fotoPrincipal" id="fotoPrincipal" class="form-control" accept="image/*" />
+                                    <small class="text-muted d-block mt-1">Selecione para substituir a foto principal (otimizada no navegador).</small>
+                                    <div id="previewPrincipalContainer" class="mt-2 d-none">
+                                        <small class="fw-semibold text-success d-block mb-1">Nova Foto Selecionada:</small>
+                                        <img id="imgPreviewPrincipal" src="" class="img-fluid rounded border shadow-sm" style="max-height: 140px; width: 100%; object-fit: cover;" alt="Prévia da Nova Foto Principal" />
+                                    </div>
                                 }
                             </div>
                             <div class="col-md-6">
@@ -53,7 +57,7 @@
                                 <div class="mb-2">
                                     @if (!string.IsNullOrEmpty(Model.FotoDetalheUrl))
                                     {
-                                        <img src="@Model.FotoDetalheUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_detalhe.webp';" alt="Foto de Detalhe" class="img-fluid rounded shadow-sm border" style="max-height: 150px; object-fit: cover;" />
+                                        <img id="imgDetalheAtual" src="@Model.FotoDetalheUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_detalhe.webp';" alt="Foto de Detalhe" class="img-fluid rounded shadow-sm border" style="max-height: 150px; width: 100%; object-fit: cover;" />
                                     }
                                     else
                                     {
@@ -62,8 +66,12 @@
                                 </div>
                                 @if (podeEditarGeral)
                                 {
-                                    <input type="file" name="fotoDetalhe" class="form-control" accept="image/*" />
-                                    <small class="text-muted">Selecione para substituir a foto de detalhe.</small>
+                                    <input type="file" name="fotoDetalhe" id="fotoDetalhe" class="form-control" accept="image/*" />
+                                    <small class="text-muted d-block mt-1">Selecione para substituir a foto de detalhe.</small>
+                                    <div id="previewDetalheContainer" class="mt-2 d-none">
+                                        <small class="fw-semibold text-success d-block mb-1">Nova Foto Selecionada:</small>
+                                        <img id="imgPreviewDetalhe" src="" class="img-fluid rounded border shadow-sm" style="max-height: 140px; width: 100%; object-fit: cover;" alt="Prévia da Nova Foto de Detalhe" />
+                                    </div>
                                 }
                             </div>
                         </div>
@@ -106,9 +114,11 @@
                             <textarea asp-for="Descricao" class="form-control" rows="4" readonly="@(!podeEditarGeral)"></textarea>
                         </div>
 
-                        <div class="d-flex justify-content-end gap-2 pt-2">
+                        <div class="d-flex justify-content-end gap-2 pt-2 border-top">
                             <a asp-action="MeusLeiloes" class="btn btn-outline-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-primary px-4"><i class="icon-base ri ri-save-line me-1"></i> Salvar Alterações</button>
+                            <button type="submit" id="btnSubmitEditarLeilao" class="btn btn-primary px-4">
+                                <i class="icon-base ri ri-save-line me-1"></i> Salvar Alterações
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -116,3 +126,105 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <script>
+        async function otimizarInputImagem(fileInput, imgPreview, previewContainer) {
+            if (!fileInput) return;
+
+            fileInput.addEventListener('change', async function (e) {
+                let file = e.target.files[0];
+                if (!file) {
+                    if (previewContainer) previewContainer.classList.add('d-none');
+                    return;
+                }
+
+                // Suporte para fotos Apple (HEIC / HEIF)
+                const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic';
+                if (isHeic && typeof heic2any !== 'undefined') {
+                    try {
+                        const blobResult = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+                        const singleBlob = Array.isArray(blobResult) ? blobResult[0] : blobResult;
+                        file = new File([singleBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        fileInput.files = dt.files;
+                    } catch (heicErr) {
+                        console.warn('Conversão de HEIC no cliente ignorada:', heicErr);
+                    }
+                }
+
+                if (!file.type.startsWith('image/')) return;
+
+                if (imgPreview && previewContainer) {
+                    imgPreview.src = URL.createObjectURL(file);
+                    previewContainer.classList.remove('d-none');
+                }
+
+                if (file.size > 800 * 1024) {
+                    try {
+                        const img = new Image();
+                        img.src = URL.createObjectURL(file);
+                        await img.decode();
+
+                        const maxDim = 1600;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) {
+                                height = Math.round((height * maxDim) / width);
+                                width = maxDim;
+                            } else {
+                                width = Math.round((width * maxDim) / height);
+                                height = maxDim;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob(function (blob) {
+                            if (blob && blob.size < file.size) {
+                                const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+                                const dt = new DataTransfer();
+                                dt.items.add(newFile);
+                                fileInput.files = dt.files;
+                                if (imgPreview) imgPreview.src = URL.createObjectURL(newFile);
+                            }
+                        }, 'image/jpeg', 0.85);
+                    } catch (err) {
+                        console.warn('Otimização de imagem no navegador ignorada:', err);
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            otimizarInputImagem(
+                document.getElementById('fotoPrincipal'),
+                document.getElementById('imgPreviewPrincipal'),
+                document.getElementById('previewPrincipalContainer')
+            );
+
+            otimizarInputImagem(
+                document.getElementById('fotoDetalhe'),
+                document.getElementById('imgPreviewDetalhe'),
+                document.getElementById('previewDetalheContainer')
+            );
+
+            const form = document.getElementById('formEditarLeilao');
+            const btn = document.getElementById('btnSubmitEditarLeilao');
+            if (form && btn) {
+                form.addEventListener('submit', function () {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Salvando alterações...';
+                });
+            }
+        });
+    </script>
+}

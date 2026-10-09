@@ -99,14 +99,17 @@
 
                         <div class="mb-4">
                             <label asp-for="Imagem" class="form-label fw-semibold"></label>
-                            <input asp-for="Imagem" type="file" class="form-control" accept="image/*" />
-                            <div class="form-text">Envie uma foto nítida do seu produto (JPG, PNG ou WebP).</div>
+                            <input asp-for="Imagem" type="file" id="fotoProdutoInput" class="form-control" accept="image/*" />
+                            <div class="form-text">Envie uma foto nítida do seu produto (otimizada automaticamente antes do envio).</div>
                             <span asp-validation-for="Imagem" class="text-danger small"></span>
+                            <div id="previewProdutoContainer" class="mt-2 d-none">
+                                <img id="imgPreviewProduto" src="" class="img-fluid rounded border shadow-sm" style="max-height: 180px; object-fit: cover;" alt="Prévia da Foto" />
+                            </div>
                         </div>
 
-                        <div class="d-flex justify-content-end gap-2 pt-2">
+                        <div class="d-flex justify-content-end gap-2 pt-2 border-top">
                             <a asp-action="MeusProdutos" class="btn btn-outline-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-success px-4">
+                            <button type="submit" id="btnSubmitProduto" class="btn btn-success px-4">
                                 <i class="icon-base ri ri-save-line me-1"></i> Publicar Anúncio
                             </button>
                         </div>
@@ -119,4 +122,78 @@
 
 @section Scripts {
     <script src="~/starter-kit/assets/js/masks.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('fotoProdutoInput');
+            const preview = document.getElementById('imgPreviewProduto');
+            const container = document.getElementById('previewProdutoContainer');
+            if (input) {
+                input.addEventListener('change', async function (e) {
+                    let file = e.target.files[0];
+                    if (!file) {
+                        if (container) container.classList.add('d-none');
+                        return;
+                    }
+
+                    const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic';
+                    if (isHeic && typeof heic2any !== 'undefined') {
+                        try {
+                            const blobResult = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+                            const singleBlob = Array.isArray(blobResult) ? blobResult[0] : blobResult;
+                            file = new File([singleBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+                            const dt = new DataTransfer();
+                            dt.items.add(file);
+                            input.files = dt.files;
+                        } catch (heicErr) {
+                            console.warn('HEIC ignorado:', heicErr);
+                        }
+                    }
+
+                    if (!file.type.startsWith('image/')) return;
+                    if (preview && container) {
+                        preview.src = URL.createObjectURL(file);
+                        container.classList.remove('d-none');
+                    }
+
+                    if (file.size > 800 * 1024) {
+                        try {
+                            const img = new Image();
+                            img.src = URL.createObjectURL(file);
+                            await img.decode();
+                            const maxDim = 1600;
+                            let width = img.width, height = img.height;
+                            if (width > maxDim || height > maxDim) {
+                                if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
+                                else { width = Math.round((width * maxDim) / height); height = maxDim; }
+                            }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width; canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            canvas.toBlob(function (blob) {
+                                if (blob && blob.size < file.size) {
+                                    const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+                                    const dt = new DataTransfer();
+                                    dt.items.add(newFile);
+                                    input.files = dt.files;
+                                    if (preview) preview.src = URL.createObjectURL(newFile);
+                                }
+                            }, 'image/jpeg', 0.85);
+                        } catch (err) {
+                            console.warn('Compressão ignorada:', err);
+                        }
+                    }
+                });
+            }
+
+            const btn = document.getElementById('btnSubmitProduto');
+            if (btn && input && input.form) {
+                input.form.addEventListener('submit', function () {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publicando produto...';
+                });
+            }
+        });
+    </script>
 }

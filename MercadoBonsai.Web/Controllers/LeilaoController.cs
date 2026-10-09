@@ -180,6 +180,8 @@ public class LeilaoController : Controller
     [HttpPost]
     [Authorize(Roles = "Vendedor, Administrador")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
     public async Task<IActionResult> Criar(Leilao leilao, Microsoft.AspNetCore.Http.IFormFile? fotoPrincipal, Microsoft.AspNetCore.Http.IFormFile? fotoDetalhe)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -249,6 +251,8 @@ public class LeilaoController : Controller
     [HttpPost]
     [Authorize(Roles = "Vendedor, Administrador")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
     public async Task<IActionResult> Editar(int id, Leilao model, IFormFile? fotoPrincipal, IFormFile? fotoDetalhe)
     {
         var leilao = await _leilaoRepository.ObterPorIdAsync(id);

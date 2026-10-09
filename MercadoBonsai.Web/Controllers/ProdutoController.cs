@@ -129,6 +129,8 @@ public class ProdutoController : Controller
     [HttpPost]
     [Authorize(Roles = "Vendedor, Administrador")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
     public async Task<IActionResult> Criar(CriarProdutoViewModel model)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -226,6 +228,8 @@ public class ProdutoController : Controller
     [HttpPost]
     [Authorize(Roles = "Vendedor, Administrador")]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
     public async Task<IActionResult> Editar(int id, EditarProdutoViewModel model)
     {
         if (id != model.Id)
