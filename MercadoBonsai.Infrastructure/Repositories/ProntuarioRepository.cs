@@ -178,4 +178,39 @@ public class ProntuarioRepository : IProntuarioRepository
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<ProntuarioEvento>(sql, new { PlantaId = plantaId });
     }
+
+    public async Task<ProntuarioEvento?> ObterEventoPorIdAsync(int id)
+    {
+        var sql = $@"
+            SELECT {EventoSelectFields}
+            FROM prontuarioeventos
+            WHERE id = @Id;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<ProntuarioEvento>(sql, new { Id = id });
+    }
+
+    public async Task AtualizarEventoAsync(ProntuarioEvento evento)
+    {
+        const string sql = @"
+            UPDATE prontuarioeventos
+            SET
+                titulo = @Titulo,
+                descricao = @Descricao,
+                dataevento = @DataEvento,
+                fotourl = @FotoUrl,
+                nomeadubo = @NomeAdubo,
+                nomeremedio = @NomeRemedio
+            WHERE id = @Id;";
+
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, evento);
+    }
+
+    public async Task DeletarEventoAsync(int id)
+    {
+        const string sql = "DELETE FROM prontuarioeventos WHERE id = @Id;";
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, new { Id = id });
+    }
 }

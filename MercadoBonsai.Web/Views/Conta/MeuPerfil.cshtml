@@ -221,7 +221,7 @@
                         <div class="mb-3">
                             @if (!string.IsNullOrEmpty(Model.LogotipoUrl))
                             {
-                                <img src="@Model.LogotipoUrl" alt="Logotipo do Viveiro" class="img-fluid rounded shadow-sm mb-3" style="max-height: 180px; object-fit: contain;" />
+                                <img src="@Model.LogotipoUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/logo.webp';" alt="Logotipo do Viveiro" class="img-fluid rounded shadow-sm mb-3" style="max-height: 180px; object-fit: contain;" />
                             }
                             else
                             {

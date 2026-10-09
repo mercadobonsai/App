@@ -105,7 +105,7 @@
                             <div class="mb-3">
                                 @if (!string.IsNullOrEmpty(Model.ImagemUrlAtual))
                                 {
-                                    <img src="@Model.ImagemUrlAtual" alt="@Model.Nome" class="img-fluid rounded shadow-sm" style="max-height: 180px; object-fit: cover;" />
+                                    <img src="@Model.ImagemUrlAtual" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" alt="@Model.Nome" class="img-fluid rounded shadow-sm" style="max-height: 180px; object-fit: cover;" />
                                 }
                                 else
                                 {

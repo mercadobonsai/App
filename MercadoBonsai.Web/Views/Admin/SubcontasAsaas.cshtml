@@ -68,7 +68,7 @@
                                         <div class="avatar me-3">
                                             @if (!string.IsNullOrEmpty(item.LogotipoUrl))
                                             {
-                                                <img src="@item.LogotipoUrl" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
+                                                <img src="@item.LogotipoUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/logo.webp';" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
                                             }
                                             else
                                             {

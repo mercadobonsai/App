@@ -41,7 +41,7 @@
                     {
                         <div>
                             <div class="d-flex gap-3 mb-3">
-                                <img src="@leilaoAtivo.FotoPrincipalUrl" class="rounded shadow-sm" alt="@leilaoAtivo.Titulo" style="width: 100px; height: 100px; object-fit: cover;" />
+                                <img src="@leilaoAtivo.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="rounded shadow-sm" alt="@leilaoAtivo.Titulo" style="width: 100px; height: 100px; object-fit: cover;" />
                                 <div>
                                     <h5 class="fw-bold mb-1">@leilaoAtivo.Titulo</h5>
                                     <p class="text-muted small mb-1">@leilaoAtivo.Subtitulo</p>
@@ -169,7 +169,7 @@
                 <div class="col-sm-6 col-md-4 col-lg-3">
                     <div class="card h-100 shadow-sm border-0 overflow-hidden">
                         <div class="position-relative overflow-hidden" style="aspect-ratio: 4/3;">
-                            <img src="@l.FotoPrincipalUrl" class="card-img-top w-100 h-100" alt="@l.Titulo" style="object-fit: cover; filter: grayscale(20%);" />
+                            <img src="@l.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="card-img-top w-100 h-100" alt="@l.Titulo" style="object-fit: cover; filter: grayscale(20%);" />
                             <span class="badge bg-secondary position-absolute top-0 end-0 m-3 shadow-sm">Encerrado</span>
                         </div>
                         <div class="card-body d-flex flex-column justify-content-between p-3">

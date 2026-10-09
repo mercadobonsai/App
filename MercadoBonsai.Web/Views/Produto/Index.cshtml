@@ -92,7 +92,7 @@
                             <div class="position-relative overflow-hidden" style="aspect-ratio: 4/3;">
                                 @if (!string.IsNullOrEmpty(p.ImagemUrl))
                                 {
-                                    <img src="@p.ImagemUrl" class="card-img-top w-100 h-100" alt="@p.Nome" style="object-fit: cover;" />
+                                    <img src="@p.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="card-img-top w-100 h-100" alt="@p.Nome" style="object-fit: cover;" />
                                 }
                                 else
                                 {

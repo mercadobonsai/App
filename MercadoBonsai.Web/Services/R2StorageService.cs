@@ -92,14 +92,40 @@ public class R2StorageService : IStorageService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[R2StorageService] Falha ao processar/otimizar imagem. Usando stream original.");
-            memoryStreamWebp.SetLength(0);
-            await arquivo.CopyToAsync(memoryStreamWebp);
-            memoryStreamWebp.Position = 0;
-            // Mantém extensão original caso o ImageSharp não tenha conseguido ler
-            var extOriginal = Path.GetExtension(arquivo.FileName);
-            nomeArquivo = $"{prefixo}{Guid.NewGuid():N}{extOriginal}";
-            chaveR2 = string.IsNullOrWhiteSpace(pastaDestino) ? nomeArquivo : $"{pastaDestino}/{nomeArquivo}";
+            _logger.LogWarning(ex, "[R2StorageService] ImageSharp não conseguiu decodificar '{OriginalName}'. Tentando com Magick.NET (suporte a HEIC/HEIF/outros)...", arquivo.FileName);
+            try
+            {
+                using var fallbackStream = new MemoryStream();
+                await arquivo.CopyToAsync(fallbackStream);
+                fallbackStream.Position = 0;
+
+                using var magickImage = new ImageMagick.MagickImage(fallbackStream);
+                if (magickImage.Width > 1200 || magickImage.Height > 1200)
+                {
+                    magickImage.Resize(new ImageMagick.MagickGeometry(1200, 1200) { Greater = true });
+                }
+                magickImage.Format = ImageMagick.MagickFormat.WebP;
+                magickImage.Quality = 80;
+
+                memoryStreamWebp.SetLength(0);
+                magickImage.Write(memoryStreamWebp);
+                memoryStreamWebp.Position = 0;
+
+                nomeArquivo = $"{prefixo}{Guid.NewGuid():N}.webp";
+                chaveR2 = string.IsNullOrWhiteSpace(pastaDestino) ? nomeArquivo : $"{pastaDestino}/{nomeArquivo}";
+
+                _logger.LogInformation("[R2StorageService] Imagem convertida via Magick.NET para WebP com sucesso ({TamanhoWebp} KB).", memoryStreamWebp.Length / 1024);
+            }
+            catch (Exception magickEx)
+            {
+                _logger.LogError(magickEx, "[R2StorageService] Falha também no Magick.NET. Usando stream original.");
+                memoryStreamWebp.SetLength(0);
+                await arquivo.CopyToAsync(memoryStreamWebp);
+                memoryStreamWebp.Position = 0;
+                var extOriginal = Path.GetExtension(arquivo.FileName);
+                nomeArquivo = $"{prefixo}{Guid.NewGuid():N}{extOriginal}";
+                chaveR2 = string.IsNullOrWhiteSpace(pastaDestino) ? nomeArquivo : $"{pastaDestino}/{nomeArquivo}";
+            }
         }
 
         // 2. Upload para o Cloudflare R2 (se configurado)

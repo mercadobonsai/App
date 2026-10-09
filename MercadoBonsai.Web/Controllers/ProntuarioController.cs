@@ -156,7 +156,7 @@ public class ProntuarioController : Controller
         }
         else
         {
-            model.FotoPrincipalUrl = "/starter-kit/assets/img/shimpaku_leilao.png";
+            model.FotoPrincipalUrl = "https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp";
         }
 
         model.UsuarioId = userId;
@@ -271,6 +271,226 @@ public class ProntuarioController : Controller
         return RedirectToAction("Detalhes", new { id = id });
     }
 
+    // GET: /Prontuario/Editar/{id}
+    public async Task<IActionResult> Editar(int id)
+    {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            TempData["Erro"] = "Faça login para editar os dados da planta.";
+            return RedirectToAction("Login", "Conta");
+        }
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int.TryParse(userIdClaim, out int userId);
+
+        if (id == 0 || id == 999)
+        {
+            TempData["Erro"] = "No modo de demonstração não é possível editar a planta de exemplo.";
+            return RedirectToAction("Index");
+        }
+
+        var planta = await _prontuarioRepository.ObterPlantaPorIdAsync(id);
+        if (planta == null)
+        {
+            return NotFound();
+        }
+
+        if (planta.UsuarioId != userId)
+        {
+            TempData["Erro"] = "Você só pode editar plantas cadastradas no seu próprio prontuário.";
+            return RedirectToAction("Index");
+        }
+
+        // Verifica concorrência
+        bool lockAtivoPorOutro = planta.LockUsuarioId.HasValue 
+            && planta.LockUsuarioId.Value != userId 
+            && planta.LockTimestamp.HasValue 
+            && planta.LockTimestamp.Value > DateTime.Now.AddMinutes(-10);
+
+        if (lockAtivoPorOutro)
+        {
+            TempData["Erro"] = $"Esta planta está sendo editada pelo cultivador '{planta.LockUsuarioNome}' no momento.";
+            return RedirectToAction("Detalhes", new { id = id });
+        }
+
+        await _prontuarioRepository.AdquirirOuRenovarLockAsync(id, userId, User.Identity?.Name ?? "Cultivador");
+        return View(planta);
+    }
+
+    // POST: /Prontuario/Editar
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
+    public async Task<IActionResult> Editar(ProntuarioPlanta model, IFormFile? novaFoto)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            TempData["Erro"] = "Sua sessão expirou. Faça login novamente.";
+            return RedirectToAction("Login", "Conta");
+        }
+
+        if (model.Id == 0 || model.Id == 999)
+        {
+            TempData["Erro"] = "A planta de demonstração não pode ser alterada.";
+            return RedirectToAction("Index");
+        }
+
+        var plantaExistente = await _prontuarioRepository.ObterPlantaPorIdAsync(model.Id);
+        if (plantaExistente == null)
+        {
+            return NotFound();
+        }
+
+        if (plantaExistente.UsuarioId != userId)
+        {
+            return Unauthorized();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        // Se uma nova foto foi enviada, faz upload otimizado para o Cloudflare R2
+        if (novaFoto != null && novaFoto.Length > 0)
+        {
+            string urlFoto = await _storageService.UploadImagemOtimizadaAsync(novaFoto, "prontuario", $"planta_{model.Id}");
+            if (!string.IsNullOrEmpty(urlFoto))
+            {
+                plantaExistente.FotoPrincipalUrl = urlFoto;
+            }
+        }
+        else if (!string.IsNullOrEmpty(model.FotoPrincipalUrl))
+        {
+            plantaExistente.FotoPrincipalUrl = model.FotoPrincipalUrl;
+        }
+
+        // Atualiza campos
+        plantaExistente.NomePopular = model.NomePopular;
+        plantaExistente.NomeCientifico = model.NomeCientifico;
+        plantaExistente.Especie = model.Especie;
+        plantaExistente.Altura = model.Altura;
+        plantaExistente.Largura = model.Largura;
+        plantaExistente.Comprimento = model.Comprimento;
+        plantaExistente.Peso = model.Peso;
+        plantaExistente.DescricaoLivre = model.DescricaoLivre;
+        plantaExistente.DataInicial = model.DataInicial;
+        plantaExistente.DataProximaManutencao = model.DataProximaManutencao;
+        plantaExistente.DataProximaAdubacao = model.DataProximaAdubacao;
+
+        await _prontuarioRepository.AtualizarPlantaAsync(plantaExistente);
+        await _prontuarioRepository.LiberarLockAsync(model.Id, userId);
+
+        TempData["Sucesso"] = $"Dados e foto de '{plantaExistente.NomePopular}' atualizados com sucesso!";
+        return RedirectToAction("Detalhes", new { id = model.Id });
+    }
+
+    // POST: /Prontuario/EditarEvento
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
+    public async Task<IActionResult> EditarEvento(
+        int id, 
+        int plantaId, 
+        string titulo, 
+        string descricao, 
+        DateTime dataEvento, 
+        string? nomeAdubo, 
+        string? nomeRemedio, 
+        string? nomeremedio, 
+        IFormFile? novaFotoEvento, 
+        bool removerFoto = false)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var planta = await _prontuarioRepository.ObterPlantaPorIdAsync(plantaId);
+        if (planta == null)
+        {
+            return NotFound();
+        }
+
+        if (planta.UsuarioId != userId)
+        {
+            return Unauthorized();
+        }
+
+        var evento = await _prontuarioRepository.ObterEventoPorIdAsync(id);
+        if (evento == null || evento.PlantaId != plantaId)
+        {
+            return NotFound();
+        }
+
+        var usuario = await _usuarioRepository.ObterPorIdAsync(userId);
+        bool planoPago = (usuario?.PlanoId ?? 0) >= 1;
+
+        if (removerFoto)
+        {
+            evento.FotoUrl = null;
+        }
+        else if (planoPago && novaFotoEvento != null && novaFotoEvento.Length > 0)
+        {
+            string fotoUrl = await _storageService.UploadImagemOtimizadaAsync(novaFotoEvento, "prontuario", $"evento_{plantaId}");
+            if (!string.IsNullOrEmpty(fotoUrl))
+            {
+                evento.FotoUrl = fotoUrl;
+            }
+        }
+
+        string? remedioFinal = !string.IsNullOrWhiteSpace(nomeRemedio) ? nomeRemedio : nomeremedio;
+
+        evento.Titulo = string.IsNullOrWhiteSpace(titulo) ? "Manutenção Registrada" : titulo.Trim();
+        evento.Descricao = descricao;
+        evento.DataEvento = dataEvento != default ? dataEvento : DateTime.Now;
+        evento.NomeAdubo = string.IsNullOrWhiteSpace(nomeAdubo) ? null : nomeAdubo.Trim();
+        evento.NomeRemedio = string.IsNullOrWhiteSpace(remedioFinal) ? null : remedioFinal.Trim();
+
+        await _prontuarioRepository.AtualizarEventoAsync(evento);
+
+        TempData["Sucesso"] = "Ação de manutenção atualizada com sucesso!";
+        return RedirectToAction("Detalhes", new { id = plantaId });
+    }
+
+    // POST: /Prontuario/ExcluirEvento
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ExcluirEvento(int id, int plantaId)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var planta = await _prontuarioRepository.ObterPlantaPorIdAsync(plantaId);
+        if (planta == null)
+        {
+            return NotFound();
+        }
+
+        if (planta.UsuarioId != userId)
+        {
+            return Unauthorized();
+        }
+
+        var evento = await _prontuarioRepository.ObterEventoPorIdAsync(id);
+        if (evento == null || evento.PlantaId != plantaId)
+        {
+            return NotFound();
+        }
+
+        await _prontuarioRepository.DeletarEventoAsync(id);
+
+        TempData["Sucesso"] = "Ação de manutenção excluída do histórico com sucesso!";
+        return RedirectToAction("Detalhes", new { id = plantaId });
+    }
+
     // GET: /Prontuario/VenderPlanta/{id}
     public async Task<IActionResult> VenderPlanta(int id)
     {
@@ -319,7 +539,7 @@ public class ProntuarioController : Controller
                 Comprimento = 52.00m,
                 Peso = 8.500m,
                 DescricaoLivre = "Exemplar de demonstração do Prontuário. Importado com estilo Moyogi (Ereto Informal), casca craquelada bem definida e agulhas compactadas.",
-                FotoPrincipalUrl = "/starter-kit/assets/img/pinus_detalhe.png",
+                FotoPrincipalUrl = "https://cdn.mercadobonsai.com.br/padrao/pinus_detalhe.webp",
                 DataInicial = DateTime.Now.AddYears(-3),
                 DataUltimaManutencao = DateTime.Now.AddDays(-15),
                 DataProximaManutencao = DateTime.Now.AddDays(45),
@@ -341,7 +561,7 @@ public class ProntuarioController : Controller
                 Titulo = "✂️ Poda Estrutural e Desfolha de Primavera",
                 Descricao = "Realizada poda de seleção dos brotos fortes do topo para balancear o vigor com os galhos inferiores. Retirada de agulhas velhas de 2 anos.",
                 DataEvento = DateTime.Now.AddDays(-15),
-                FotoUrl = "/starter-kit/assets/img/pinus_rifa.png",
+                FotoUrl = "https://cdn.mercadobonsai.com.br/padrao/pinus_rifa.webp",
                 NomeAdubo = "Hanagokoro Orgânico 5-5-5",
                 NomeRemedio = "Calda Sulfocálcica (Preventivo)",
                 DataCriacao = DateTime.Now.AddDays(-15)
@@ -353,7 +573,7 @@ public class ProntuarioController : Controller
                 Titulo = "🪴 Transplante com Substrato Importado (Akadama + Kiryu)",
                 Descricao = "Troca de vaso tradicional de cerâmica Yixing. Limpeza de 30% da macega de raízes e renovação do substrato (70% Akadama + 30% Kiryu).",
                 DataEvento = DateTime.Now.AddMonths(-6),
-                FotoUrl = "/starter-kit/assets/img/shimpaku_detalhe.png",
+                FotoUrl = "https://cdn.mercadobonsai.com.br/padrao/shimpaku_detalhe.webp",
                 NomeAdubo = "Osmocote Plus 15-9-12",
                 NomeRemedio = null,
                 DataCriacao = DateTime.Now.AddMonths(-6)

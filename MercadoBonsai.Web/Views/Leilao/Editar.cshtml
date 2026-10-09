@@ -35,7 +35,7 @@
                                 <div class="mb-2">
                                     @if (!string.IsNullOrEmpty(Model.FotoPrincipalUrl))
                                     {
-                                        <img src="@Model.FotoPrincipalUrl" alt="Foto Principal" class="img-fluid rounded shadow-sm border" style="max-height: 150px; object-fit: cover;" />
+                                        <img src="@Model.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" alt="Foto Principal" class="img-fluid rounded shadow-sm border" style="max-height: 150px; object-fit: cover;" />
                                     }
                                     else
                                     {
@@ -53,7 +53,7 @@
                                 <div class="mb-2">
                                     @if (!string.IsNullOrEmpty(Model.FotoDetalheUrl))
                                     {
-                                        <img src="@Model.FotoDetalheUrl" alt="Foto de Detalhe" class="img-fluid rounded shadow-sm border" style="max-height: 150px; object-fit: cover;" />
+                                        <img src="@Model.FotoDetalheUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_detalhe.webp';" alt="Foto de Detalhe" class="img-fluid rounded shadow-sm border" style="max-height: 150px; object-fit: cover;" />
                                     }
                                     else
                                     {

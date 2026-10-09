@@ -16,17 +16,20 @@
         <h4 class="fw-bold mb-1" style="color: #4A7C59;">@Model.NomePopular</h4>
         <p class="text-muted mb-0">@(string.IsNullOrEmpty(Model.NomeCientifico) ? Model.Especie : Model.NomeCientifico) • Registrada em @Model.DataInicial.ToString("dd/MM/yyyy")</p>
     </div>
-    <div class="col-md-5 text-md-end mt-3 mt-md-0">
-        <a asp-controller="Prontuario" asp-action="VenderPlanta" asp-route-id="@Model.Id" class="btn btn-success shadow-sm me-2">
+    <div class="col-md-5 text-md-end mt-3 mt-md-0 d-flex flex-wrap justify-content-md-end gap-2">
+        <a asp-controller="Prontuario" asp-action="VenderPlanta" asp-route-id="@Model.Id" class="btn btn-success shadow-sm">
             <i class="icon-base ri ri-store-2-line me-1"></i> Vender Esta Planta
         </a>
-        @if (!somenteLeitura)
+        @if (!somenteLeitura && !modoDemonstracao)
         {
+            <a asp-controller="Prontuario" asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-outline-primary shadow-sm">
+                <i class="icon-base ri ri-edit-box-line me-1"></i> Editar Planta
+            </a>
             <button type="button" class="btn btn-outline-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
                 <i class="icon-base ri ri-add-line me-1"></i> Nova Ação
             </button>
         }
-        else
+        else if (somenteLeitura)
         {
             <button type="button" class="btn btn-secondary shadow-sm" disabled title="Edição bloqueada por concorrência">
                 <i class="icon-base ri ri-lock-line me-1"></i> Somente Leitura
@@ -62,10 +65,23 @@ else if (modoDemonstracao)
     <!-- Coluna Esquerda: Ficha Técnica da Planta -->
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm mb-4">
-            <div class="overflow-hidden bg-light position-relative rounded-top" style="height: 280px;">
-                <img src="@(string.IsNullOrEmpty(Model.FotoPrincipalUrl) ? "/starter-kit/assets/img/shimpaku_leilao.png" : Model.FotoPrincipalUrl)" class="w-100 h-100" style="object-fit: cover;" alt="@Model.NomePopular" />
+            <div class="overflow-hidden bg-light position-relative rounded-top d-flex align-items-center justify-content-center" style="height: 320px; cursor: pointer;" onclick="ampliarFoto('@(string.IsNullOrEmpty(Model.FotoPrincipalUrl) ? "https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp" : Model.FotoPrincipalUrl)', '@Model.NomePopular', 'Foto Oficial da Planta')">
+                <img src="@(string.IsNullOrEmpty(Model.FotoPrincipalUrl) ? "https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp" : Model.FotoPrincipalUrl)" 
+                     onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" 
+                     class="w-100 h-100" 
+                     style="object-fit: cover;" 
+                     alt="@Model.NomePopular" />
                 <span class="badge bg-success position-absolute top-0 end-0 m-3 px-3 py-2 shadow-sm">
                     @Model.Especie
+                </span>
+                @if (!somenteLeitura && !modoDemonstracao)
+                {
+                    <a asp-controller="Prontuario" asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-xs btn-light position-absolute top-0 start-0 m-3 shadow-xs" onclick="event.stopPropagation();" title="Editar dados e foto da planta">
+                        <i class="icon-base ri ri-camera-switch-line me-1"></i>Alterar Foto
+                    </a>
+                }
+                <span class="badge bg-dark bg-opacity-75 text-white position-absolute bottom-0 end-0 m-2 px-2 py-1 small">
+                    <i class="icon-base ri ri-zoom-in-line me-1"></i>Clique para ampliar
                 </span>
             </div>
             <div class="card-body p-4">
@@ -163,10 +179,23 @@ else if (modoDemonstracao)
                                 <!-- Card do Evento com margem lateral ms-3 para amplo respiro visual -->
                                 <div class="card border border-light shadow-sm bg-light p-3 p-md-4 rounded ms-3 ms-md-4">
                                     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-2 gap-2">
-                                        <h6 class="fw-bold text-success mb-0 fs-6">@ev.Titulo</h6>
-                                        <span class="badge bg-white text-dark border shadow-xs px-3 py-2 small">
-                                            <i class="icon-base ri ri-calendar-line text-success me-1"></i> @ev.DataEvento.ToString("dd/MM/yyyy")
-                                        </span>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <h6 class="fw-bold text-success mb-0 fs-6">@ev.Titulo</h6>
+                                            <span class="badge bg-white text-dark border shadow-xs px-2 py-1 small">
+                                                <i class="icon-base ri ri-calendar-line text-success me-1"></i> @ev.DataEvento.ToString("dd/MM/yyyy")
+                                            </span>
+                                        </div>
+                                        @if (!somenteLeitura && !modoDemonstracao)
+                                        {
+                                            <div class="d-flex gap-1">
+                                                <button type="button" class="btn btn-xs btn-outline-primary shadow-xs" title="Editar Ação" onclick='abrirModalEditarEvento(@ev.Id, @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ev.Titulo)), "@ev.DataEvento.ToString("yyyy-MM-dd")", @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ev.Descricao)), @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ev.NomeAdubo ?? "")), @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ev.NomeRemedio ?? "")), @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ev.FotoUrl ?? "")))'>
+                                                    <i class="icon-base ri ri-edit-line me-1"></i>Editar
+                                                </button>
+                                                <button type="button" class="btn btn-xs btn-outline-danger shadow-xs" title="Excluir Ação" onclick='abrirModalExcluirEvento(@ev.Id, @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ev.Titulo)))'>
+                                                    <i class="icon-base ri ri-delete-bin-line me-1"></i>Excluir
+                                                </button>
+                                            </div>
+                                        }
                                     </div>
                                     <p class="text-dark small mb-3" style="white-space: pre-line;">@ev.Descricao</p>
 
@@ -191,8 +220,15 @@ else if (modoDemonstracao)
 
                                     @if (!string.IsNullOrEmpty(ev.FotoUrl))
                                     {
-                                        <div class="mt-2 rounded overflow-hidden shadow-xs border" style="max-width: 360px; height: 200px;">
-                                            <img src="@ev.FotoUrl" class="w-100 h-100" style="object-fit: cover;" alt="Foto do evento" />
+                                        <div class="mt-2 rounded overflow-hidden shadow-xs border position-relative" style="max-width: 380px; height: 220px; cursor: pointer;" onclick="ampliarFoto('@ev.FotoUrl', '@ev.Titulo', '@ev.DataEvento.ToString("dd/MM/yyyy")')">
+                                            <img src="@ev.FotoUrl" 
+                                                 onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_detalhe.webp';" 
+                                                 class="w-100 h-100" 
+                                                 style="object-fit: cover;" 
+                                                 alt="Foto do evento" />
+                                            <span class="badge bg-dark bg-opacity-75 text-white position-absolute bottom-0 end-0 m-2 px-2 py-1 small">
+                                                <i class="icon-base ri ri-zoom-in-line me-1"></i>Ampliar Foto
+                                            </span>
                                         </div>
                                     }
                                 </div>
@@ -287,17 +323,218 @@ else if (modoDemonstracao)
             </div>
         </div>
     </div>
+
+    <!-- Modal de Edição de Evento / Ação -->
+    <div class="modal fade" id="modalEditarEvento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold text-white"><i class="icon-base ri ri-edit-line me-2"></i>Editar Ação / Manutenção</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-controller="Prontuario" asp-action="EditarEvento" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="editEventoId" />
+                    <input type="hidden" name="plantaId" value="@Model.Id" />
+
+                    <div class="modal-body p-4">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold text-dark">Título da Ação / Evento *</label>
+                                <input type="text" name="titulo" id="editEventoTitulo" class="form-control" placeholder="Ex: Poda de Seleção, Transplante, Adubação..." required />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-dark">Data da Realização *</label>
+                                <input type="date" name="dataEvento" id="editEventoData" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-dark">Descrição / Observações *</label>
+                            <textarea name="descricao" id="editEventoDescricao" class="form-control" rows="3" placeholder="Detalhes da intervenção realizada..." required></textarea>
+                        </div>
+
+                        <div class="p-3 bg-light rounded border mb-3">
+                            <h6 class="fw-bold text-success mb-3 d-flex align-items-center">
+                                <i class="icon-base ri ri-flask-line me-2 fs-5"></i> Insumos & Tratamentos Aplicados
+                            </h6>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">
+                                        <i class="icon-base ri ri-leaf-line text-warning me-1"></i> Nome do Adubo Utilizado (Opcional)
+                                    </label>
+                                    <input type="text" name="nomeAdubo" id="editEventoAdubo" class="form-control" placeholder="Ex: Osmocote 15-9-12, Hanagokoro, Bokashi Orgânico" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-dark">
+                                        <i class="icon-base ri ri-capsule-line text-info me-1"></i> Nome do Defensivo / Remédio Aplicado (Opcional)
+                                    </label>
+                                    <input type="text" name="nomeRemedio" id="editEventoRemedio" class="form-control" placeholder="Ex: Calda Sulfocálcica, Óleo de Neem, Manzate" />
+                                </div>
+                            </div>
+
+                            @if (planoPago)
+                            {
+                                <div>
+                                    <label class="form-label small fw-semibold text-dark">
+                                        <i class="icon-base ri ri-image-edit-line text-success me-1"></i> Foto do Evento (Substituir ou Remover)
+                                    </label>
+                                    <div id="editEventoFotoAtualContainer" class="d-none mb-2 p-2 bg-white rounded border d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img id="editEventoFotoAtualImg" src="" class="rounded" style="width: 50px; height: 50px; object-fit: cover;" alt="Foto atual" />
+                                            <small class="text-muted">Foto atualmente vinculada a esta ação</small>
+                                        </div>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" name="removerFoto" value="true" id="editEventoRemoverFoto">
+                                            <label class="form-check-label text-danger small fw-semibold" for="editEventoRemoverFoto">Remover Foto</label>
+                                        </div>
+                                    </div>
+                                    <input type="file" name="novaFotoEvento" id="editEventoNovaFotoInput" class="form-control" accept="image/*" />
+                                    <small class="text-muted">Selecione uma nova imagem para substituir a foto existente desta ação.</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="icon-base ri ri-save-line me-1"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão de Ação -->
+    <div class="modal fade" id="modalExcluirEvento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white py-3">
+                    <h5 class="modal-title fw-bold text-white"><i class="icon-base ri ri-alert-line me-2"></i>Confirmar Exclusão de Ação</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-controller="Prontuario" asp-action="ExcluirEvento" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteEventoId" />
+                    <input type="hidden" name="plantaId" value="@Model.Id" />
+
+                    <div class="modal-body p-4 text-center">
+                        <i class="icon-base ri ri-delete-bin-2-line fs-1 text-danger d-block mb-3"></i>
+                        <h6 class="fw-bold text-dark mb-2">Deseja realmente excluir esta ação do histórico?</h6>
+                        <p class="text-muted small mb-0">
+                            A ação <strong id="deleteEventoTitulo" class="text-dark"></strong> será removida permanentemente da linha do tempo. Esta operação não pode ser desfeita.
+                        </p>
+                    </div>
+                    <div class="modal-footer bg-light py-2">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="icon-base ri ri-delete-bin-line me-1"></i> Sim, Excluir Ação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 }
 
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const fileInput = document.querySelector('input[name="fotoEvento"]');
-            if (!fileInput) return;
+<!-- Modal de Visualização Ampliada de Foto (Padrão CDN Cloudflare R2) -->
+<div class="modal fade" id="modalFotoAmpliada" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white py-2 px-3">
+                <div>
+                    <h6 class="modal-title fw-bold text-white mb-0" id="modalFotoTitulo">Visualização da Imagem</h6>
+                    <small class="text-white-50" id="modalFotoSubtitulo"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-2 text-center bg-dark d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                <img id="modalFotoImg" src="" class="img-fluid rounded shadow-sm" style="max-height: 75vh; object-fit: contain;" alt="Foto ampliada" />
+            </div>
+            <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                <small class="text-muted"><i class="icon-base ri ri-cloud-line text-success me-1"></i>Hospedado via CDN Cloudflare R2</small>
+                <a id="modalFotoLinkDireto" href="#" target="_blank" class="btn btn-sm btn-outline-success">
+                    <i class="icon-base ri ri-external-link-line me-1"></i>Abrir em Alta Resolução
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
-            fileInput.addEventListener('change', async function (e) {
-                const file = e.target.files[0];
-                if (!file || !file.type.startsWith('image/')) return;
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <script>
+        function ampliarFoto(url, titulo, subtitulo) {
+            if (!url) return;
+            document.getElementById('modalFotoImg').src = url;
+            document.getElementById('modalFotoTitulo').innerText = titulo || 'Visualização da Foto';
+            document.getElementById('modalFotoSubtitulo').innerText = subtitulo || '';
+            document.getElementById('modalFotoLinkDireto').href = url;
+            var modalEl = document.getElementById('modalFotoAmpliada');
+            var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        function abrirModalEditarEvento(id, titulo, dataEvento, descricao, adubo, remedio, fotoUrl) {
+            document.getElementById('editEventoId').value = id;
+            document.getElementById('editEventoTitulo').value = titulo;
+            document.getElementById('editEventoData').value = dataEvento;
+            document.getElementById('editEventoDescricao').value = descricao;
+            document.getElementById('editEventoAdubo').value = adubo || '';
+            document.getElementById('editEventoRemedio').value = remedio || '';
+
+            const fotoContainer = document.getElementById('editEventoFotoAtualContainer');
+            const fotoImg = document.getElementById('editEventoFotoAtualImg');
+            const removerFotoCheck = document.getElementById('editEventoRemoverFoto');
+            if (removerFotoCheck) removerFotoCheck.checked = false;
+
+            if (fotoContainer && fotoImg) {
+                if (fotoUrl && fotoUrl.trim() !== '') {
+                    fotoImg.src = fotoUrl;
+                    fotoContainer.classList.remove('d-none');
+                } else {
+                    fotoContainer.classList.add('d-none');
+                }
+            }
+
+            const modalEl = document.getElementById('modalEditarEvento');
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        function abrirModalExcluirEvento(id, titulo) {
+            document.getElementById('deleteEventoId').value = id;
+            document.getElementById('deleteEventoTitulo').innerText = `"${titulo}"`;
+            const modalEl = document.getElementById('modalExcluirEvento');
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        // Compressor de imagens compartilhado
+        async function otimizarFileInput(inputElement) {
+            if (!inputElement) return;
+            inputElement.addEventListener('change', async function (e) {
+                let file = e.target.files[0];
+                if (!file) return;
+
+                const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic';
+                if (isHeic && typeof heic2any !== 'undefined') {
+                    try {
+                        const blobResult = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+                        const singleBlob = Array.isArray(blobResult) ? blobResult[0] : blobResult;
+                        file = new File([singleBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        inputElement.files = dt.files;
+                    } catch (heicErr) {
+                        console.warn('Conversão de HEIC no cliente ignorada:', heicErr);
+                    }
+                }
+
+                if (!file.type.startsWith('image/')) return;
 
                 if (file.size > 1024 * 1024) {
                     try {
@@ -330,7 +567,7 @@ else if (modoDemonstracao)
                                 const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
                                 const dt = new DataTransfer();
                                 dt.items.add(newFile);
-                                fileInput.files = dt.files;
+                                inputElement.files = dt.files;
                             }
                         }, 'image/jpeg', 0.85);
                     } catch (err) {
@@ -338,6 +575,11 @@ else if (modoDemonstracao)
                     }
                 }
             });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            otimizarFileInput(document.querySelector('input[name="fotoEvento"]'));
+            otimizarFileInput(document.getElementById('editEventoNovaFotoInput'));
         });
     </script>
 }

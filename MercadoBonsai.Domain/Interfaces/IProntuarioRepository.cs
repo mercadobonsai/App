@@ -17,5 +17,8 @@ public interface IProntuarioRepository
     Task LiberarLockAsync(int plantaId, int usuarioId);
 
     Task<int> InserirEventoAsync(ProntuarioEvento evento);
+    Task<ProntuarioEvento?> ObterEventoPorIdAsync(int id);
     Task<IEnumerable<ProntuarioEvento>> ListarEventosPorPlantaAsync(int plantaId);
+    Task AtualizarEventoAsync(ProntuarioEvento evento);
+    Task DeletarEventoAsync(int id);
 }

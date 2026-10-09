@@ -75,7 +75,7 @@ else
                             <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
                                 @if (!string.IsNullOrEmpty(pedido.ProdutoImagemUrl))
                                 {
-                                    <img src="@pedido.ProdutoImagemUrl" class="img-fluid rounded border" style="max-height: 90px; object-fit: cover;" alt="@pedido.ProdutoNome" />
+                                    <img src="@pedido.ProdutoImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="img-fluid rounded border" style="max-height: 90px; object-fit: cover;" alt="@pedido.ProdutoNome" />
                                 }
                                 else
                                 {

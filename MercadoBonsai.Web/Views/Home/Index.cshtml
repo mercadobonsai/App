@@ -87,7 +87,7 @@
                                 <div class="position-relative overflow-hidden bg-light" style="aspect-ratio: 4/3; width: 100%;">
                                     @if (!string.IsNullOrEmpty(p.ImagemUrl))
                                     {
-                                        <img src="@p.ImagemUrl" class="card-img-top w-100 h-100" alt="@p.Nome" style="object-fit: cover; object-position: center;" />
+                                        <img src="@p.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="card-img-top w-100 h-100" alt="@p.Nome" style="object-fit: cover; object-position: center;" />
                                     }
                                     else
                                     {
@@ -431,7 +431,7 @@
                                     <small class="fw-medium text-white-50"><i class="icon-base ri ri-time-line me-1"></i>@(l.Badge ?? "Em Andamento")</small>
                                 </div>
                                 <div class="position-relative cursor-pointer" onclick="abrirModalEngajamentoItem('leilao', @l.Id)" title="Clique para abrir galeria e dar lance">
-                                    <img src="@l.FotoPrincipalUrl" class="card-img-top img-zoom" alt="@l.Titulo" style="height: 160px; object-fit: cover;" />
+                                    <img src="@l.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="card-img-top img-zoom" alt="@l.Titulo" style="height: 160px; object-fit: cover;" />
                                     <span class="badge bg-dark bg-opacity-75 text-white position-absolute bottom-0 start-0 m-2">Leilão #@l.Id</span>
                                 </div>
                                 <div class="card-body p-3">
@@ -945,12 +945,12 @@
                     <div class="col-md-6">
                         <!-- Foto Principal Display -->
                         <div class="position-relative overflow-hidden rounded mb-3 shadow-sm" style="height: 280px; background-color: #f8f9fa;">
-                            <img id="modalFotoPrincipalDisplay" src="${item.fotoPrincipal}" class="w-100 h-100" style="object-fit: cover;" alt="${item.titulo}" />
+                            <img id="modalFotoPrincipalDisplay" src="${item.fotoPrincipal}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="w-100 h-100" style="object-fit: cover;" alt="${item.titulo}" />
                         </div>
                         <!-- Miniaturas de Galeria -->
                         <div class="d-flex gap-2">
-                            <img src="${item.fotoPrincipal}" class="thumb-gallery rounded active" style="width: 70px; height: 70px; object-fit: cover;" onclick="trocarFotoModal('${item.fotoPrincipal}', this)" />
-                            <img src="${item.fotoDetalhe}" class="thumb-gallery rounded" style="width: 70px; height: 70px; object-fit: cover;" onclick="trocarFotoModal('${item.fotoDetalhe}', this)" />
+                            <img src="${item.fotoPrincipal}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="thumb-gallery rounded active" style="width: 70px; height: 70px; object-fit: cover;" onclick="trocarFotoModal('${item.fotoPrincipal}', this)" />
+                            <img src="${item.fotoDetalhe}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_detalhe.webp';" class="thumb-gallery rounded" style="width: 70px; height: 70px; object-fit: cover;" onclick="trocarFotoModal('${item.fotoDetalhe}', this)" />
                         </div>
                     </div>
                     <div class="col-md-6 d-flex flex-column justify-content-between">

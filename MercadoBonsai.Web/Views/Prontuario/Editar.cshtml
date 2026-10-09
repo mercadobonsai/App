@@ -1,0 +1,214 @@
+@model MercadoBonsai.Domain.Entities.ProntuarioPlanta
+@{
+    ViewData["Title"] = $"Editar Planta - {Model.NomePopular}";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <a asp-controller="Prontuario" asp-action="Detalhes" asp-route-id="@Model.Id" class="text-success text-decoration-none small mb-3 d-inline-block">
+            <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar aos Detalhes da Planta
+        </a>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="fw-bold text-success mb-1">
+                        <i class="icon-base ri ri-edit-2-line me-2"></i>Editar Dados & Foto da Planta
+                    </h4>
+                    <p class="text-muted mb-0 small">Atualize as informações cadastrais, dimensões e a foto oficial do seu exemplar.</p>
+                </div>
+                <span class="badge bg-label-success px-3 py-2">ID #@Model.Id</span>
+            </div>
+            <div class="card-body p-4">
+                <form asp-controller="Prontuario" asp-action="Editar" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="FotoPrincipalUrl" />
+
+                    <!-- Informações Básicas -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nome Popular da Planta *</label>
+                            <input type="text" asp-for="NomePopular" class="form-control" placeholder="Ex: Pinus Negro Kuromatsu, Shimpaku Itoigawa" required />
+                            <span asp-validation-for="NomePopular" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nome Científico (Opcional)</label>
+                            <input type="text" asp-for="NomeCientifico" class="form-control" placeholder="Ex: Juniperus chinensis 'Itoigawa'" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Espécie / Categoria *</label>
+                            <input type="text" asp-for="Especie" class="form-control" placeholder="Ex: Pinus, Conífera, Caducifólia, Perene" required />
+                            <span asp-validation-for="Especie" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Data de Início / Aquisição *</label>
+                            <input type="date" asp-for="DataInicial" class="form-control" value="@Model.DataInicial.ToString("yyyy-MM-dd")" required />
+                        </div>
+                    </div>
+
+                    <!-- Dimensões & Peso -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Dimensões & Peso (Padrão de Produtos)</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3 col-6">
+                            <label class="form-label fw-semibold">Altura (cm)</label>
+                            <input type="number" step="0.01" asp-for="Altura" class="form-control" placeholder="0.00" />
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label fw-semibold">Largura (cm)</label>
+                            <input type="number" step="0.01" asp-for="Largura" class="form-control" placeholder="0.00" />
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label fw-semibold">Comprimento (cm)</label>
+                            <input type="number" step="0.01" asp-for="Comprimento" class="form-control" placeholder="0.00" />
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label fw-semibold">Peso (kg)</label>
+                            <input type="number" step="0.001" asp-for="Peso" class="form-control" placeholder="0.000" />
+                        </div>
+                    </div>
+
+                    <!-- Agendamento de Cuidados -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Agendamento & Calendário de Cuidados</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Próxima Manutenção Programada</label>
+                            <input type="date" asp-for="DataProximaManutencao" class="form-control" value="@(Model.DataProximaManutencao?.ToString("yyyy-MM-dd"))" />
+                            <small class="text-muted">Previsão para podas, aramação ou desfolha.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Próxima Adubação Programada</label>
+                            <input type="date" asp-for="DataProximaAdubacao" class="form-control" value="@(Model.DataProximaAdubacao?.ToString("yyyy-MM-dd"))" />
+                            <small class="text-muted">Previsão para ciclo de fertilização orgânica ou química.</small>
+                        </div>
+                    </div>
+
+                    <!-- Foto Principal & Troca de Foto -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Foto Principal da Planta (Cloudflare R2)</h5>
+                    <div class="mb-4">
+                        <div class="row align-items-center g-3 mb-3">
+                            <div class="col-sm-4 text-center">
+                                <label class="form-label d-block small fw-bold text-muted mb-2">Foto Atual Cadastrada:</label>
+                                <div class="rounded border p-2 bg-light shadow-xs position-relative overflow-hidden" style="max-height: 200px;">
+                                    <img src="@(string.IsNullOrEmpty(Model.FotoPrincipalUrl) ? "https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp" : Model.FotoPrincipalUrl)" 
+                                         onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" 
+                                         class="img-fluid rounded" 
+                                         style="max-height: 180px; object-fit: contain;" 
+                                         alt="@Model.NomePopular" />
+                                </div>
+                            </div>
+                            <div class="col-sm-8">
+                                <label class="form-label fw-semibold">Substituir Foto Principal (Opcional)</label>
+                                <input type="file" name="novaFoto" id="novaFoto" class="form-control mb-2" accept="image/*" />
+                                <small class="text-muted d-block mb-3">
+                                    Selecione um novo arquivo para substituir a foto atual. Ela será convertida automaticamente para WebP compactado e salva no Cloudflare R2.
+                                </small>
+                                <div id="previewNovaFotoContainer" class="d-none p-2 border rounded bg-white shadow-xs">
+                                    <small class="text-success fw-bold d-block mb-1"><i class="icon-base ri ri-check-line me-1"></i>Prévia da Nova Foto:</small>
+                                    <img id="imgNovaFotoPreview" src="#" alt="Preview" class="img-fluid rounded" style="max-height: 150px; object-fit: contain;" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observações Livres -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Descrição Livre / Notas do Cultivador</label>
+                        <textarea asp-for="DescricaoLivre" class="form-control" rows="4" placeholder="Descreva a procedência da planta, estilo (Moyogi, Kengai, Chokkan...), tipo de vaso e substrato utilizado..."></textarea>
+                    </div>
+
+                    <!-- Ações -->
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                        <a asp-controller="Prontuario" asp-action="Detalhes" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                            <i class="icon-base ri ri-close-line me-1"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success px-4 shadow-sm">
+                            <i class="icon-base ri ri-save-line me-1"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.getElementById('novaFoto');
+            const previewContainer = document.getElementById('previewNovaFotoContainer');
+            const imgPreview = document.getElementById('imgNovaFotoPreview');
+            if (!fileInput) return;
+
+            fileInput.addEventListener('change', async function (e) {
+                let file = e.target.files[0];
+                if (!file) return;
+
+                // Suporte para fotos Apple (HEIC / HEIF)
+                const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic';
+                if (isHeic && typeof heic2any !== 'undefined') {
+                    try {
+                        const blobResult = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+                        const singleBlob = Array.isArray(blobResult) ? blobResult[0] : blobResult;
+                        file = new File([singleBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        fileInput.files = dt.files;
+                    } catch (heicErr) {
+                        console.warn('Conversão de HEIC no cliente ignorada:', heicErr);
+                    }
+                }
+
+                if (!file.type.startsWith('image/')) return;
+
+                if (imgPreview && previewContainer) {
+                    imgPreview.src = URL.createObjectURL(file);
+                    previewContainer.classList.remove('d-none');
+                }
+
+                if (file.size > 1024 * 1024) {
+                    try {
+                        const img = new Image();
+                        img.src = URL.createObjectURL(file);
+                        await img.decode();
+
+                        const maxDim = 1600;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) {
+                                height = Math.round((height * maxDim) / width);
+                                width = maxDim;
+                            } else {
+                                width = Math.round((width * maxDim) / height);
+                                height = maxDim;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob(function (blob) {
+                            if (blob && blob.size < file.size) {
+                                const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+                                const dt = new DataTransfer();
+                                dt.items.add(newFile);
+                                fileInput.files = dt.files;
+                            }
+                        }, 'image/jpeg', 0.85);
+                    } catch (err) {
+                        console.warn('Otimização ignorada:', err);
+                    }
+                }
+            });
+        });
+    </script>
+}

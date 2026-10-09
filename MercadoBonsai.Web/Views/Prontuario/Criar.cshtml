@@ -92,6 +92,7 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const fileInput = document.getElementById('fotoArquivo') || document.querySelector('input[name="fotoArquivo"]');
@@ -100,8 +101,25 @@
             if (!fileInput) return;
 
             fileInput.addEventListener('change', async function (e) {
-                const file = e.target.files[0];
-                if (!file || !file.type.startsWith('image/')) return;
+                let file = e.target.files[0];
+                if (!file) return;
+
+                // Suporte para fotos Apple (HEIC / HEIF)
+                const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic';
+                if (isHeic && typeof heic2any !== 'undefined') {
+                    try {
+                        const blobResult = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+                        const singleBlob = Array.isArray(blobResult) ? blobResult[0] : blobResult;
+                        file = new File([singleBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        fileInput.files = dt.files;
+                    } catch (heicErr) {
+                        console.warn('Conversão de HEIC no cliente ignorada:', heicErr);
+                    }
+                }
+
+                if (!file.type.startsWith('image/')) return;
 
                 if (imgPreview && previewContainer) {
                     imgPreview.src = URL.createObjectURL(file);

@@ -40,12 +40,22 @@
     {
         <div class="col-md-4 col-sm-6">
             <div class="card h-100 border-0 shadow-sm hover-top transition overflow-hidden">
-                <div class="position-relative overflow-hidden bg-light" style="height: 220px;">
-                    <img src="@(string.IsNullOrEmpty(p.FotoPrincipalUrl) ? "/starter-kit/assets/img/shimpaku_leilao.png" : p.FotoPrincipalUrl)" class="card-img-top w-100 h-100" style="object-fit: cover;" alt="@p.NomePopular" />
+                <div class="position-relative overflow-hidden bg-light" style="aspect-ratio: 4/3; width: 100%;">
+                    <img src="@(string.IsNullOrEmpty(p.FotoPrincipalUrl) ? "https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp" : p.FotoPrincipalUrl)" 
+                         onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" 
+                         class="card-img-top w-100 h-100" 
+                         style="object-fit: cover;" 
+                         alt="@p.NomePopular" />
                     <span class="badge bg-success position-absolute top-0 end-0 m-3 shadow-sm px-3 py-2">
                         @p.Especie
                     </span>
-                    @if (modoDemonstracao)
+                    @if (!modoDemonstracao)
+                    {
+                        <a asp-controller="Prontuario" asp-action="Editar" asp-route-id="@p.Id" class="btn btn-xs btn-light position-absolute top-0 start-0 m-3 shadow-xs" title="Editar dados e foto da planta">
+                            <i class="icon-base ri ri-edit-line me-1"></i>Editar
+                        </a>
+                    }
+                    else
                     {
                         <span class="badge bg-info position-absolute bottom-0 start-0 m-3 shadow-sm">
                             Demonstração
@@ -81,9 +91,17 @@
                         <a asp-controller="Prontuario" asp-action="Detalhes" asp-route-id="@p.Id" class="btn btn-outline-success btn-sm">
                             <i class="icon-base ri ri-history-line me-1"></i> Linha do Tempo & Saúde
                         </a>
-                        <a asp-controller="Prontuario" asp-action="VenderPlanta" asp-route-id="@p.Id" class="btn btn-success btn-sm">
-                            <i class="icon-base ri ri-store-2-line me-1"></i> Vender Esta Planta
-                        </a>
+                        <div class="d-flex gap-2">
+                            @if (!modoDemonstracao)
+                            {
+                                <a asp-controller="Prontuario" asp-action="Editar" asp-route-id="@p.Id" class="btn btn-outline-primary btn-sm flex-fill">
+                                    <i class="icon-base ri ri-edit-line me-1"></i> Editar
+                                </a>
+                            }
+                            <a asp-controller="Prontuario" asp-action="VenderPlanta" asp-route-id="@p.Id" class="btn btn-success btn-sm flex-fill">
+                                <i class="icon-base ri ri-store-2-line me-1"></i> Vender
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
