@@ -43,6 +43,16 @@ builder.Services.Configure<R2Settings>(builder.Configuration.GetSection("Cloudfl
 builder.Services.AddScoped<IStorageService, R2StorageService>();
 builder.Services.AddHostedService<LeilaoEncerradoBackgroundService>();
 
+// Limite de upload de fotos e requisições (50 MB)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 52428800; // 50 MB
+});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 52428800; // 50 MB
+});
+
 // Persistência de Chaves do DataProtection para evitar invalidação de Tokens Antiforgery e Cookies em Containers
 var keysFolder = Path.Combine(builder.Environment.ContentRootPath, "dp_keys");
 if (!Directory.Exists(keysFolder))

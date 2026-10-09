@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using MercadoBonsai.Domain.Entities;
 using MercadoBonsai.Domain.Interfaces;
+using MercadoBonsai.Web.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,15 +17,18 @@ public class ProntuarioController : Controller
 {
     private readonly IProntuarioRepository _prontuarioRepository;
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IStorageService _storageService;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
     public ProntuarioController(
         IProntuarioRepository prontuarioRepository,
         IUsuarioRepository usuarioRepository,
+        IStorageService storageService,
         IWebHostEnvironment webHostEnvironment)
     {
         _prontuarioRepository = prontuarioRepository;
         _usuarioRepository = usuarioRepository;
+        _storageService = storageService;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -130,6 +134,8 @@ public class ProntuarioController : Controller
     // POST: /Prontuario/Criar
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
     public async Task<IActionResult> Criar(ProntuarioPlanta model, IFormFile? fotoArquivo)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -146,21 +152,7 @@ public class ProntuarioController : Controller
 
         if (fotoArquivo != null && fotoArquivo.Length > 0)
         {
-            var folder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "prontuario");
-            if (!Directory.Exists(folder))
-            {
-                Directory.CreateDirectory(folder);
-            }
-
-            var uniqueFileName = $"planta_{userId}_{Guid.NewGuid()}{Path.GetExtension(fotoArquivo.FileName)}";
-            var filePath = Path.Combine(folder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await fotoArquivo.CopyToAsync(stream);
-            }
-
-            model.FotoPrincipalUrl = $"/uploads/prontuario/{uniqueFileName}";
+            model.FotoPrincipalUrl = await _storageService.UploadImagemOtimizadaAsync(fotoArquivo, "prontuario", $"planta_{userId}");
         }
         else
         {
@@ -190,6 +182,8 @@ public class ProntuarioController : Controller
     // POST: /Prontuario/AdicionarEvento
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
     public async Task<IActionResult> AdicionarEvento(
         int plantaId, 
         string titulo, 
@@ -231,21 +225,7 @@ public class ProntuarioController : Controller
         string? fotoUrl = null;
         if (planoPago && fotoEvento != null && fotoEvento.Length > 0)
         {
-            var folder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "prontuario");
-            if (!Directory.Exists(folder))
-            {
-                Directory.CreateDirectory(folder);
-            }
-
-            var uniqueFileName = $"evento_{plantaId}_{Guid.NewGuid()}{Path.GetExtension(fotoEvento.FileName)}";
-            var filePath = Path.Combine(folder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await fotoEvento.CopyToAsync(stream);
-            }
-
-            fotoUrl = $"/uploads/prontuario/{uniqueFileName}";
+            fotoUrl = await _storageService.UploadImagemOtimizadaAsync(fotoEvento, "prontuario", $"evento_{plantaId}");
         }
 
         string? remedioFinal = !string.IsNullOrWhiteSpace(nomeRemedio) ? nomeRemedio : nomeremedio;
