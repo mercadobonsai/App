@@ -393,6 +393,40 @@ public class ContaController : Controller
         return View(planos);
     }
 
+    // POST: /Conta/TrocarPlano
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TrocarPlano(int planoId)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return RedirectToAction("Login", "Conta");
+        }
+
+        var usuario = await _usuarioRepository.ObterPorIdAsync(userId);
+        if (usuario == null)
+        {
+            return NotFound();
+        }
+
+        var plano = await _planoRepository.ObterPorIdAsync(planoId);
+        if (plano == null)
+        {
+            TempData["Erro"] = "O plano selecionado é inválido.";
+            return RedirectToAction("Assinatura");
+        }
+
+        usuario.PlanoId = plano.Id;
+        usuario.DataUltimaAlteracao = DateTime.UtcNow;
+        await _usuarioRepository.AtualizarAsync(usuario);
+
+        TempData["Sucesso"] = $"Parabéns! Seu plano foi alterado com sucesso para o Plano {plano.Nome}.";
+        return RedirectToAction("Assinatura");
+    }
+
+
     // GET: /Conta/EsqueciSenha
     [HttpGet]
     [AllowAnonymous]
