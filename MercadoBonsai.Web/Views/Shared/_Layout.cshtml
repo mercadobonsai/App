@@ -84,6 +84,40 @@
 
                             @if (User.Identity != null && User.Identity.IsAuthenticated)
                             {
+                                <!-- Dropdown de Notificações (Sino no Canto Superior Direito) -->
+                                <li class="nav-item navbar-dropdown dropdown-notifications dropdown me-3 me-xl-2 position-relative">
+                                    <a class="nav-link dropdown-toggle hide-arrow position-relative p-2" href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="btnNotificationBell" title="Notificações">
+                                        <i class="icon-base ri ri-notification-3-line fs-4 text-dark"></i>
+                                        <span class="badge rounded-pill bg-danger badge-notifications d-none" id="bellNotificationCount" style="position: absolute; top: 0px; right: 0px; font-size: 0.68rem; padding: 0.2em 0.45em;">0</span>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end py-0 shadow border-0" style="width: 340px; max-width: 90vw; border-radius: 10px; overflow: hidden;">
+                                        <li class="dropdown-menu-header bg-light border-bottom p-3">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <h6 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-notification-3-line me-1 text-success"></i> Notificações</h6>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-label-success rounded-pill" id="headerNotificationCount">0 novas</span>
+                                                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none text-muted" id="btnMarcarTodasLidas" title="Marcar todas como lidas" onclick="window.marcarTodasNotificacoesLidas(event)">
+                                                        <i class="icon-base ri ri-check-double-line fs-5"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-notifications-list" style="max-height: 350px; overflow-y: auto;">
+                                            <ul class="list-group list-group-flush" id="notificationDropdownList">
+                                                <li class="list-group-item text-center text-muted py-4 small">
+                                                    <div class="spinner-border spinner-border-sm text-success mb-2" role="status"></div>
+                                                    <div>Carregando notificações...</div>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li class="dropdown-menu-footer border-top p-2 text-center bg-light">
+                                            <a asp-controller="Notificacao" asp-action="Index" class="btn btn-sm btn-outline-success w-100 fw-semibold">
+                                                Ver todas as notificações
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+
                                 <!-- Dropdown do Perfil de Usuário -->
                                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                                     <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
@@ -134,6 +168,15 @@
                                             </a>
                                         </li>
                                         <li>
+                                            <a class="dropdown-item d-flex justify-content-between align-items-center" asp-controller="Notificacao" asp-action="Index">
+                                                <div>
+                                                    <i class="icon-base ri ri-notification-3-line icon-md me-3"></i>
+                                                    <span>Notificações</span>
+                                                </div>
+                                                <span class="badge rounded-pill bg-danger d-none" id="userDropdownBadgeNotificacoes">0</span>
+                                            </a>
+                                        </li>
+                                        <li>
                                             <a class="dropdown-item" asp-controller="Conta" asp-action="Assinatura">
                                                 <i class="icon-base ri ri-vip-crown-line icon-md me-3"></i>
                                                 <span>Minha Assinatura</span>
@@ -145,6 +188,7 @@
                                                 <span>Financeiro / Cobranças</span>
                                             </a>
                                         </li>
+
                                         <li><div class="dropdown-divider my-1"></div></li>
                                         <li>
                                             <a class="dropdown-item" asp-controller="Conta" asp-action="Logout">
@@ -296,10 +340,16 @@
                                             <div>Administrador</div>
                                         </a>
                                         <ul class="menu-sub">
-                                            <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Clientes" ? "active" : "")">
+                                            <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && (ViewContext.RouteData.Values["action"]?.ToString() is "Clientes" or "Usuarios" or "EditarCliente" or "EditarUsuario") ? "active" : "")">
                                                 <a asp-controller="Admin" asp-action="Clientes" class="menu-link">
                                                     <i class="menu-icon icon-base ri ri-user-settings-line me-2"></i>
-                                                    <div>Gestão de Clientes</div>
+                                                    <div>Gestão de Usuários</div>
+                                                </a>
+                                            </li>
+                                            <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Notificacoes" ? "active" : "")">
+                                                <a asp-controller="Admin" asp-action="Notificacoes" class="menu-link">
+                                                    <i class="menu-icon icon-base ri ri-notification-3-line me-2"></i>
+                                                    <div>Central de Notificações</div>
                                                 </a>
                                             </li>
                                             <li class="menu-item @(ViewContext.RouteData.Values["action"]?.ToString() == "SubcontasAsaas" ? "active" : "")">
@@ -399,6 +449,137 @@
     <!-- SweetAlert2 (Para modais elegantes de feedback e upload de propaganda) -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <script>
+            (function() {
+                function carregarNotificacoes() {
+                    fetch('/Notificacao/ObterResumo')
+                        .then(function(res) { return res.json(); })
+                        .then(function(data) {
+                            atualizarDropdown(data);
+                        })
+                        .catch(function(err) { console.error('Erro ao buscar notificações:', err); });
+                }
+
+                function atualizarDropdown(data) {
+                    var count = data.totalNaoLidas || 0;
+                    var bellCount = document.getElementById('bellNotificationCount');
+                    var headerCount = document.getElementById('headerNotificationCount');
+                    var userBadge = document.getElementById('userDropdownBadgeNotificacoes');
+
+                    if (bellCount) {
+                        if (count > 0) {
+                            bellCount.textContent = count > 99 ? '99+' : count;
+                            bellCount.classList.remove('d-none');
+                        } else {
+                            bellCount.classList.add('d-none');
+                        }
+                    }
+
+                    if (headerCount) {
+                        headerCount.textContent = count + ' ' + (count === 1 ? 'nova' : 'novas');
+                    }
+
+                    if (userBadge) {
+                        if (count > 0) {
+                            userBadge.textContent = count > 99 ? '99+' : count;
+                            userBadge.classList.remove('d-none');
+                        } else {
+                            userBadge.classList.add('d-none');
+                        }
+                    }
+
+                    var listEl = document.getElementById('notificationDropdownList');
+                    if (!listEl) return;
+
+                    if (!data.notificacoes || data.notificacoes.length === 0) {
+                        listEl.innerHTML = '<li class="list-group-item text-center text-muted py-4 small">' +
+                            '<i class="icon-base ri ri-notification-off-line fs-3 d-block mb-1 text-muted"></i>' +
+                            'Nenhuma notificação no momento.' +
+                            '</li>';
+                        return;
+                    }
+
+                    var html = '';
+                    data.notificacoes.forEach(function(item) {
+                        var iconClass = 'ri-information-line text-info';
+                        var bgClass = 'bg-label-info';
+                        if (item.tipo === 'Alerta') {
+                            iconClass = 'ri-alert-line text-warning';
+                            bgClass = 'bg-label-warning';
+                        } else if (item.tipo === 'Sucesso') {
+                            iconClass = 'ri-checkbox-circle-line text-success';
+                            bgClass = 'bg-label-success';
+                        } else if (item.tipo === 'Urgente') {
+                            iconClass = 'ri-alarm-warning-line text-danger';
+                            bgClass = 'bg-label-danger';
+                        }
+
+                        var unreadDot = !item.lida ? '<span class="badge badge-dot bg-danger ms-2 flex-shrink-0" style="width: 8px; height: 8px; border-radius: 50%;"></span>' : '';
+                        var itemBg = !item.lida ? 'bg-light' : '';
+
+                        html += '<li class="list-group-item list-group-item-action p-3 border-bottom ' + itemBg + '" style="cursor: pointer;" onclick="window.clicarNotificacao(' + item.id + ', \'' + (item.linkUrl || '') + '\')">' +
+                            '<div class="d-flex align-items-start">' +
+                                '<div class="avatar avatar-sm me-3 flex-shrink-0">' +
+                                    '<span class="avatar-initial rounded-circle ' + bgClass + '">' +
+                                        '<i class="icon-base ri ' + iconClass + '"></i>' +
+                                    '</span>' +
+                                '</div>' +
+                                '<div class="flex-grow-1 overflow-hidden">' +
+                                    '<div class="d-flex align-items-center justify-content-between mb-1">' +
+                                        '<h6 class="mb-0 text-truncate fw-semibold small text-dark">' + escapeHtml(item.titulo) + '</h6>' +
+                                        '<small class="text-muted ms-2 flex-shrink-0" style="font-size: 0.72rem;">' + item.tempoAtras + '</small>' +
+                                    '</div>' +
+                                    '<p class="mb-0 text-muted small text-break" style="font-size: 0.8rem; line-height: 1.3;">' + escapeHtml(item.mensagem) + '</p>' +
+                                '</div>' +
+                                unreadDot +
+                            '</div>' +
+                        '</li>';
+                    });
+
+                    listEl.innerHTML = html;
+                }
+
+                function escapeHtml(text) {
+                    if (!text) return '';
+                    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+                }
+
+                window.clicarNotificacao = function(id, linkUrl) {
+                    fetch('/Notificacao/MarcarLida', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: id })
+                    }).then(function() {
+                        if (linkUrl && linkUrl !== 'null' && linkUrl.trim() !== '') {
+                            window.location.href = linkUrl;
+                        } else {
+                            carregarNotificacoes();
+                        }
+                    }).catch(function() {
+                        if (linkUrl && linkUrl !== 'null' && linkUrl.trim() !== '') {
+                            window.location.href = linkUrl;
+                        }
+                    });
+                };
+
+                window.marcarTodasNotificacoesLidas = function(e) {
+                    if (e) e.stopPropagation();
+                    fetch('/Notificacao/MarcarTodasLidas', {
+                        method: 'POST'
+                    }).then(function() {
+                        carregarNotificacoes();
+                    });
+                };
+
+                document.addEventListener('DOMContentLoaded', carregarNotificacoes);
+                setInterval(carregarNotificacoes, 60000);
+            })();
+        </script>
+    }
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+

@@ -30,10 +30,12 @@ builder.Services.AddScoped<IPlanoRepository, PlanoRepository>();
 builder.Services.AddScoped<IPropagandaRepository, PropagandaRepository>();
 builder.Services.AddScoped<IProntuarioRepository, ProntuarioRepository>();
 builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
+builder.Services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
 builder.Services.AddHttpClient<IMelhorEnvioService, MelhorEnvioService>();
 builder.Services.AddHttpClient<IEvendasWebhookService, EvendasWebhookService>();
 builder.Services.AddHttpClient<IAsaasService, AsaasService>();
 builder.Services.AddScoped<ILeilaoService, LeilaoService>();
+
 var postalConfig = builder.Configuration.GetSection("PostalSettings").Exists()
     ? builder.Configuration.GetSection("PostalSettings")
     : builder.Configuration.GetSection("Postal");
@@ -124,7 +126,27 @@ using (var scope = app.Services.CreateScope())
             SET nome = EXCLUDED.nome, valor = EXCLUDED.valor, preco = EXCLUDED.preco, percentualcomissao = EXCLUDED.percentualcomissao,
                 limitelifas30dias = EXCLUDED.limitelifas30dias, limiteleiloes30dias = EXCLUDED.limiteleiloes30dias, 
                 limiteanuncios = EXCLUDED.limiteanuncios, limitefotos = EXCLUDED.limitefotos, destaqueshome = EXCLUDED.destaqueshome;
+
+            CREATE TABLE IF NOT EXISTS notificacoes (
+                id SERIAL PRIMARY KEY,
+                usuarioid INT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                titulo VARCHAR(200) NOT NULL,
+                mensagem TEXT NOT NULL,
+                tipo VARCHAR(50) NOT NULL DEFAULT 'Info',
+                linkurl VARCHAR(255) NULL,
+                lida BOOLEAN NOT NULL DEFAULT FALSE,
+                datacriacao TIMESTAMP NOT NULL DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_notificacoes_usuarioid ON notificacoes(usuarioid);
+
+            CREATE TABLE IF NOT EXISTS notificacao_leituras (
+                notificacaoid INT NOT NULL REFERENCES notificacoes(id) ON DELETE CASCADE,
+                usuarioid INT NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                datalida TIMESTAMP NOT NULL DEFAULT NOW(),
+                PRIMARY KEY (notificacaoid, usuarioid)
+            );
         ");
+
     }
     catch (Exception ex)
     {

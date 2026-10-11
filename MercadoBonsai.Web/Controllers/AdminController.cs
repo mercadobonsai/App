@@ -21,6 +21,8 @@ public class AdminController : Controller
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPlanoRepository _planoRepository;
     private readonly IPropagandaRepository _propagandaRepository;
+    private readonly INotificacaoRepository _notificacaoRepository;
+    private readonly IEmailService _emailService;
     private readonly IAsaasService _asaasService;
     private readonly VendedorTokenService _vendedorTokenService;
     private readonly IWebHostEnvironment _webHostEnvironment;
@@ -29,6 +31,8 @@ public class AdminController : Controller
         IUsuarioRepository usuarioRepository, 
         IPlanoRepository planoRepository, 
         IPropagandaRepository propagandaRepository,
+        INotificacaoRepository notificacaoRepository,
+        IEmailService emailService,
         IAsaasService asaasService,
         VendedorTokenService vendedorTokenService,
         IWebHostEnvironment webHostEnvironment)
@@ -36,13 +40,18 @@ public class AdminController : Controller
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
         _propagandaRepository = propagandaRepository;
+        _notificacaoRepository = notificacaoRepository;
+        _emailService = emailService;
         _asaasService = asaasService;
         _vendedorTokenService = vendedorTokenService;
         _webHostEnvironment = webHostEnvironment;
     }
 
-    // GET: /Admin/Clientes
+
+    // GET: /Admin/Usuarios ou /Admin/Clientes
     [HttpGet]
+    [Route("Admin/Usuarios")]
+    [Route("Admin/Clientes")]
     public async Task<IActionResult> Clientes(string? busca, int? perfil)
     {
         var usuarios = await _usuarioRepository.ListarTodosAsync(busca, perfil);
@@ -51,9 +60,12 @@ public class AdminController : Controller
         return View(usuarios);
     }
 
-    // GET: /Admin/EditarCliente/{id}
+    // GET: /Admin/EditarUsuario/{id} ou /Admin/EditarCliente/{id}
     [HttpGet]
+    [Route("Admin/EditarUsuario/{id}")]
+    [Route("Admin/EditarCliente/{id}")]
     public async Task<IActionResult> EditarCliente(int id)
+
     {
         var usuario = await _usuarioRepository.ObterPorIdAsync(id);
         if (usuario == null)
@@ -113,10 +125,13 @@ public class AdminController : Controller
         return View(viewModel);
     }
 
-    // POST: /Admin/EditarCliente/{id}
+    // POST: /Admin/EditarUsuario/{id} ou /Admin/EditarCliente/{id}
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Route("Admin/EditarUsuario/{id}")]
+    [Route("Admin/EditarCliente/{id}")]
     public async Task<IActionResult> EditarCliente(int id, PerfilViewModel model)
+
     {
         if (id != model.Id)
         {
@@ -400,4 +415,115 @@ public class AdminController : Controller
         TempData["Sucesso"] = $"Solicitação de propaganda #{id} de {prop.UsuarioNome} foi rejeitada.";
         return RedirectToAction("Propagandas");
     }
+
+    // POST: /Admin/ResetarSenhaUsuario
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetarSenhaUsuario(int id, string novaSenha, bool enviarEmail = false, string? returnUrl = null)
+    {
+        if (string.IsNullOrWhiteSpace(novaSenha) || novaSenha.Trim().Length < 6)
+        {
+            TempData["Erro"] = "A nova senha deve ter no mínimo 6 caracteres.";
+            return string.IsNullOrEmpty(returnUrl) ? RedirectToAction("Clientes") : Redirect(returnUrl);
+        }
+
+        var usuario = await _usuarioRepository.ObterPorIdAsync(id);
+        if (usuario == null)
+        {
+            TempData["Erro"] = "Usuário não encontrado.";
+            return string.IsNullOrEmpty(returnUrl) ? RedirectToAction("Clientes") : Redirect(returnUrl);
+        }
+
+        string hash = BCrypt.Net.BCrypt.HashPassword(novaSenha.Trim());
+        await _usuarioRepository.AtualizarSenhaEResetTokenAsync(usuario.Id, hash);
+
+        if (enviarEmail && !string.IsNullOrWhiteSpace(usuario.Email))
+        {
+            try
+            {
+                string html = $@"
+                    <div style='font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;'>
+                        <h2 style='color: #4A7C59; margin-top: 0;'>Sua senha foi redefinida</h2>
+                        <p>Olá, <strong>{usuario.Nome}</strong>,</p>
+                        <p>Sua senha de acesso à plataforma <strong>Mercado Bonsai</strong> foi redefinida pela equipe de administração.</p>
+                        <div style='background-color: #f8f9fa; border-left: 4px solid #4A7C59; padding: 15px; margin: 20px 0; border-radius: 4px;'>
+                            <p style='margin: 0;'><strong>E-mail de acesso:</strong> {usuario.Email}</p>
+                            <p style='margin: 8px 0 0 0;'><strong>Sua nova senha:</strong> <code style='background: #e9ecef; padding: 3px 8px; border-radius: 4px; font-size: 1.1em; font-weight: bold;'>{novaSenha.Trim()}</code></p>
+                        </div>
+                        <p>Você já pode acessar sua conta normalmente. Por segurança, sugerimos alterá-la para uma de sua preferência após o login em <em>Meu Perfil</em>.</p>
+                        <p style='margin-top: 25px;'>
+                            <a href='https://mercadobonsai.com.br/Conta/Login' style='background-color: #4A7C59; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;'>Acessar Minha Conta</a>
+                        </p>
+                        <hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;' />
+                        <p style='font-size: 12px; color: #777;'>Mensagem enviada automaticamente pela administração do Mercado Bonsai.</p>
+                    </div>";
+
+                await _emailService.EnviarEmailAsync(
+                    "suporte@mercadobonsai.com.br", 
+                    "Mercado Bonsai", 
+                    usuario.Email, 
+                    usuario.Nome, 
+                    "Sua senha foi redefinida - Mercado Bonsai", 
+                    html);
+            }
+            catch
+            {
+                // Não bloqueia o reset caso o servidor SMTP esteja indisponível
+            }
+        }
+
+        TempData["Sucesso"] = $"Senha do usuário {usuario.Nome} redefinida com sucesso!" + (enviarEmail ? " E-mail informativo enviado." : "");
+        return string.IsNullOrEmpty(returnUrl) ? RedirectToAction("Clientes") : Redirect(returnUrl);
+    }
+
+    // GET: /Admin/Notificacoes
+    [HttpGet]
+    public async Task<IActionResult> Notificacoes()
+    {
+        var notificacoes = await _notificacaoRepository.ListarTodasAdminAsync();
+        var usuarios = await _usuarioRepository.ListarTodosAsync(null, null);
+        ViewBag.Usuarios = usuarios;
+        return View(notificacoes);
+    }
+
+    // POST: /Admin/EnviarNotificacao
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnviarNotificacao(int? usuarioId, string titulo, string mensagem, string tipo = "Info", string? linkUrl = null)
+    {
+        if (string.IsNullOrWhiteSpace(titulo) || string.IsNullOrWhiteSpace(mensagem))
+        {
+            TempData["Erro"] = "Título e mensagem são campos obrigatórios para enviar a notificação.";
+            return RedirectToAction("Notificacoes");
+        }
+
+        var notificacao = new Notificacao
+        {
+            UsuarioId = (usuarioId.HasValue && usuarioId.Value > 0) ? usuarioId.Value : null,
+            Titulo = titulo.Trim(),
+            Mensagem = mensagem.Trim(),
+            Tipo = string.IsNullOrWhiteSpace(tipo) ? "Info" : tipo.Trim(),
+            LinkUrl = string.IsNullOrWhiteSpace(linkUrl) ? null : linkUrl.Trim(),
+            DataCriacao = DateTime.UtcNow
+        };
+
+        await _notificacaoRepository.InserirAsync(notificacao);
+
+        TempData["Sucesso"] = (notificacao.UsuarioId == null)
+            ? "Notificação enviada com sucesso para TODOS os usuários da plataforma!"
+            : "Notificação enviada com sucesso para o usuário selecionado!";
+
+        return RedirectToAction("Notificacoes");
+    }
+
+    // POST: /Admin/ExcluirNotificacao
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ExcluirNotificacao(int id)
+    {
+        await _notificacaoRepository.ExcluirAsync(id);
+        TempData["Sucesso"] = "Notificação excluída com sucesso!";
+        return RedirectToAction("Notificacoes");
+    }
 }
+

@@ -1,0 +1,247 @@
+@model IEnumerable<MercadoBonsai.Domain.Entities.Notificacao>
+@{
+    ViewData["Title"] = "Central de Notificações - Painel Admin";
+    var usuarios = ViewBag.Usuarios as IEnumerable<MercadoBonsai.Domain.Entities.Usuario> ?? Enumerable.Empty<MercadoBonsai.Domain.Entities.Usuario>();
+    var totalNotificacoes = Model?.Count() ?? 0;
+    var totalGerais = Model?.Count(n => n.UsuarioId == null) ?? 0;
+    var totalIndividuais = Model?.Count(n => n.UsuarioId != null) ?? 0;
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1" style="color: #4A7C59;"><i class="icon-base ri ri-notification-3-line me-2"></i>Central de Notificações</h3>
+            <p class="text-muted mb-0">Envie avisos, comunicados e comunicados operacionais para usuários específicos ou para toda a base</p>
+        </div>
+        <button type="button" class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovaNotificacao" style="background-color: #4A7C59; border-color: #4A7C59;">
+            <i class="icon-base ri ri-send-plane-line me-1"></i> Nova Notificação
+        </button>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible mb-4" role="alert">
+            <i class="icon-base ri ri-checkbox-circle-line me-2 fs-5 align-middle"></i>
+            @TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible mb-4" role="alert">
+            <i class="icon-base ri ri-error-warning-line me-2 fs-5 align-middle"></i>
+            @TempData["Erro"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Cards de Métricas -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <div class="avatar avatar-lg me-3 bg-label-success rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="icon-base ri ri-notification-3-line fs-3 text-success"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">@totalNotificacoes</h4>
+                        <small class="text-muted">Total de Envios Registrados</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <div class="avatar avatar-lg me-3 bg-label-primary rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="icon-base ri ri-broadcast-line fs-3 text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">@totalGerais</h4>
+                        <small class="text-muted">Avisos Globais (Todos os Usuários)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body d-flex align-items-center">
+                    <div class="avatar avatar-lg me-3 bg-label-info rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="icon-base ri ri-user-voice-line fs-3 text-info"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">@totalIndividuais</h4>
+                        <small class="text-muted">Notificações Direcionadas</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Histórico de Notificações -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-history-line me-2"></i>Histórico de Notificações Enviadas</h6>
+            <span class="badge bg-secondary">Últimos @totalNotificacoes registros</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Título e Mensagem</th>
+                            <th>Destinatário</th>
+                            <th>Link / Destino</th>
+                            <th>Data de Envio</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var n in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (n.Tipo == "Alerta")
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="icon-base ri ri-alert-line me-1"></i>Alerta</span>
+                                        }
+                                        else if (n.Tipo == "Sucesso")
+                                        {
+                                            <span class="badge bg-success"><i class="icon-base ri ri-checkbox-circle-line me-1"></i>Sucesso</span>
+                                        }
+                                        else if (n.Tipo == "Urgente")
+                                        {
+                                            <span class="badge bg-danger"><i class="icon-base ri ri-alarm-warning-line me-1"></i>Urgente</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info"><i class="icon-base ri ri-information-line me-1"></i>Info</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@n.Titulo</div>
+                                        <div class="small text-muted text-truncate" style="max-width: 380px;">@n.Mensagem</div>
+                                    </td>
+                                    <td>
+                                        @if (n.UsuarioId == null)
+                                        {
+                                            <span class="badge bg-label-primary px-3 py-2 fw-semibold">
+                                                <i class="icon-base ri ri-broadcast-line me-1"></i> Todos os Usuários
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-label-secondary px-3 py-2 fw-semibold">
+                                                <i class="icon-base ri ri-user-line me-1"></i> @(string.IsNullOrEmpty(n.UsuarioNome) ? $"Usuário #{n.UsuarioId}" : n.UsuarioNome)
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(n.LinkUrl))
+                                        {
+                                            <a href="@n.LinkUrl" target="_blank" class="small text-success text-decoration-none" title="@n.LinkUrl">
+                                                <i class="icon-base ri ri-external-link-line me-1"></i> Link anexado
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">@n.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small>
+                                    </td>
+                                    <td class="text-end">
+                                        <form asp-controller="Admin" asp-action="ExcluirNotificacao" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta notificação?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@n.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir Notificação">
+                                                <i class="icon-base ri ri-delete-bin-line"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="icon-base ri ri-notification-off-line fs-1 d-block mb-2"></i>
+                                    Nenhuma notificação enviada até o momento.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nova Notificação -->
+<div class="modal fade" id="modalNovaNotificacao" tabindex="-1" aria-labelledby="modalNovaNotificacaoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <form asp-controller="Admin" asp-action="EnviarNotificacao" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold text-white" id="modalNovaNotificacaoLabel">
+                        <i class="icon-base ri ri-send-plane-line me-2"></i>Enviar Notificação aos Usuários
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Destinatário:</label>
+                            <select name="usuarioId" class="form-select" id="selectDestinatario">
+                                <option value="" selected>📢 Todos os Usuários (Geral / Broadcast)</option>
+                                <optgroup label="Usuários Específicos">
+                                    @foreach (var user in usuarios.OrderBy(u => u.Nome))
+                                    {
+                                        <option value="@user.Id">@user.Nome (@user.Email) - @user.Perfil</option>
+                                    }
+                                </optgroup>
+                            </select>
+                            <small class="text-muted">Escolha "Todos os Usuários" para um anúncio geral ou selecione um cliente específico.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Tipo de Notificação:</label>
+                            <select name="tipo" class="form-select">
+                                <option value="Info" selected>ℹ️ Informativo (Azul)</option>
+                                <option value="Sucesso">✅ Sucesso / Parabenização (Verde)</option>
+                                <option value="Alerta">⚠️ Alerta / Atenção (Amarelo)</option>
+                                <option value="Urgente">🚨 Urgente / Importante (Vermelho)</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Título da Notificação:</label>
+                            <input type="text" name="titulo" class="form-control" placeholder="Ex: Manutenção Programada, Novo Recurso Disponível, Atualização de Plano..." required maxlength="200" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Mensagem Completa:</label>
+                            <textarea name="mensagem" class="form-control" rows="4" placeholder="Digite aqui o conteúdo da notificação que aparecerá no menu do usuário..." required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Link de Ação / Redirecionamento (Opcional):</label>
+                            <input type="text" name="linkUrl" class="form-control" placeholder="Ex: /Conta/Assinatura, /Pedido/MinhasCompras, /Vitrine..." maxlength="255" />
+                            <small class="text-muted">Se informado, ao clicar na notificação o usuário será direcionado para este endereço.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold px-4">
+                        <i class="icon-base ri ri-send-plane-fill me-1"></i> Enviar Notificação
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

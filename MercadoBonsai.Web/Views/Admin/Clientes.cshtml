@@ -1,7 +1,7 @@
 @model IEnumerable<MercadoBonsai.Domain.Entities.Usuario>
 @using MercadoBonsai.Domain.Enums
 @{
-    ViewData["Title"] = "Clientes e Vendedores - Painel Admin";
+    ViewData["Title"] = "Gestão de Usuários - Painel Admin";
     var busca = ViewData["Busca"] as string;
     var perfilFilter = ViewData["PerfilFilter"] as int?;
 }
@@ -10,10 +10,11 @@
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold mb-1" style="color: #4A7C59;"><i class="icon-base ri ri-user-settings-line me-2"></i>Gestão de Clientes e Cultivadores</h3>
-            <p class="text-muted mb-0">Gerencie usuários, perfis, dados fiscais, financeiros e logotipos dos viveiros</p>
+            <h3 class="fw-bold mb-1" style="color: #4A7C59;"><i class="icon-base ri ri-user-settings-line me-2"></i>Gestão de Usuários</h3>
+            <p class="text-muted mb-0">Gerencie usuários, perfis, dados fiscais, permissões e redefinição de senhas</p>
         </div>
     </div>
+
 
     <!-- Barra de Filtros e Busca -->
     <div class="card mb-4 border-0 shadow-sm">
@@ -132,9 +133,64 @@
                                         <small class="text-muted">@u.DataCadastro.ToString("dd/MM/yyyy")</small>
                                     </td>
                                     <td class="text-end">
-                                        <a asp-controller="Admin" asp-action="EditarCliente" asp-route-id="@u.Id" class="btn btn-sm btn-outline-success">
-                                            <i class="icon-base ri ri-edit-box-line me-1"></i> Editar
-                                        </a>
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <a asp-controller="Admin" asp-action="EditarCliente" asp-route-id="@u.Id" class="btn btn-sm btn-outline-success" title="Editar Usuário">
+                                                <i class="icon-base ri ri-edit-box-line me-1"></i> Editar
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalResetSenha_@u.Id" title="Resetar Senha do Usuário">
+                                                <i class="icon-base ri ri-key-2-line me-1"></i> Senha
+                                            </button>
+                                        </div>
+
+                                        <!-- Modal de Redefinição de Senha -->
+                                        <div class="modal fade" id="modalResetSenha_@u.Id" tabindex="-1" aria-labelledby="modalLabel_@u.Id" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content text-start border-0 shadow">
+                                                    <form asp-controller="Admin" asp-action="ResetarSenhaUsuario" method="post">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@u.Id" />
+                                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+
+                                                        <div class="modal-header bg-warning text-dark">
+                                                            <h5 class="modal-title fw-bold" id="modalLabel_@u.Id">
+                                                                <i class="icon-base ri ri-key-2-line me-2"></i>Resetar Senha de Usuário
+                                                            </h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body p-4">
+                                                            <div class="alert alert-light border mb-3">
+                                                                <div class="fw-bold">@u.Nome</div>
+                                                                <small class="text-muted"><i class="icon-base ri ri-mail-line me-1"></i>@u.Email</small>
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">Nova Senha:</label>
+                                                                <div class="input-group">
+                                                                    <input type="text" name="novaSenha" id="inputNovaSenha_@u.Id" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" />
+                                                                    <button type="button" class="btn btn-outline-secondary" onclick="gerarSenhaPara('inputNovaSenha_@u.Id')" title="Gerar Senha Forte Aleatória">
+                                                                        <i class="icon-base ri ri-magic-line me-1"></i> Gerar
+                                                                    </button>
+                                                                </div>
+                                                                <small class="text-muted">Você pode digitar uma senha ou clicar em Gerar para criar uma senha segura.</small>
+                                                            </div>
+
+                                                            <div class="form-check form-switch mb-2">
+                                                                <input class="form-check-input" type="checkbox" name="enviarEmail" value="true" id="checkEmail_@u.Id" checked>
+                                                                <label class="form-check-label fw-semibold" for="checkEmail_@u.Id">
+                                                                    Enviar nova senha para o e-mail do usuário
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer bg-light">
+                                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="submit" class="btn btn-warning fw-bold">
+                                                                <i class="icon-base ri ri-check-line me-1"></i> Confirmar Redefinição
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -144,7 +200,7 @@
                             <tr>
                                 <td colspan="6" class="text-center py-5 text-muted">
                                     <i class="icon-base ri ri-user-search-line mb-2" style="font-size: 3rem;"></i>
-                                    <h6>Nenhum cliente ou vendedor encontrado</h6>
+                                    <h6>Nenhum usuário encontrado</h6>
                                 </td>
                             </tr>
                         }
@@ -154,3 +210,22 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function gerarSenhaPara(inputId) {
+            var chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!#$%*";
+            var senha = "";
+
+            for (var i = 0; i < 10; i++) {
+                senha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            var el = document.getElementById(inputId);
+            if (el) {
+                el.value = senha;
+                el.focus();
+            }
+        }
+    </script>
+}
+

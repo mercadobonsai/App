@@ -223,8 +223,23 @@
             <!-- Coluna Lateral Direita (Logotipo, Status Asaas, Cartão Digital e Auditoria) -->
             <div class="col-lg-4">
                 
+                <!-- 0. Segurança e Redefinição de Senha -->
+                <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #f59e0b !important;">
+                    <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-shield-keyhole-line me-2 text-warning"></i>Segurança do Usuário</h6>
+                        <span class="badge bg-label-warning">Acesso</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted small mb-3">Redefina a senha de acesso deste usuário e envie as novas credenciais diretamente por e-mail.</p>
+                        <button type="button" class="btn btn-outline-warning w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#modalResetSenha_@Model.Id">
+                            <i class="icon-base ri ri-key-2-line me-1"></i> Redefinir Senha do Usuário
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 1. Logotipo do Viveiro -->
                 <div class="card border-0 shadow-sm mb-4 text-center">
+
                     <div class="card-header bg-light py-3">
                         <h6 class="fw-bold mb-0 text-dark"><i class="icon-base ri ri-image-edit-line me-2"></i>Logotipo do Viveiro</h6>
                     </div>
@@ -377,12 +392,78 @@
             </div>
         </div>
     </form>
+
+    <!-- Modal de Redefinição de Senha -->
+    <div class="modal fade" id="modalResetSenha_@Model.Id" tabindex="-1" aria-labelledby="modalLabel_@Model.Id" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-start border-0 shadow">
+                <form asp-controller="Admin" asp-action="ResetarSenhaUsuario" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold" id="modalLabel_@Model.Id">
+                            <i class="icon-base ri ri-key-2-line me-2"></i>Resetar Senha de Usuário
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-light border mb-3">
+                            <div class="fw-bold">@Model.Nome</div>
+                            <small class="text-muted"><i class="icon-base ri ri-mail-line me-1"></i>@Model.Email</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nova Senha:</label>
+                            <div class="input-group">
+                                <input type="text" name="novaSenha" id="inputNovaSenha_@Model.Id" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="gerarSenhaPara('inputNovaSenha_@Model.Id')" title="Gerar Senha Forte Aleatória">
+                                    <i class="icon-base ri ri-magic-line me-1"></i> Gerar
+                                </button>
+                            </div>
+                            <small class="text-muted">Você pode digitar uma senha ou clicar em Gerar para criar uma senha segura.</small>
+                        </div>
+
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" name="enviarEmail" value="true" id="checkEmail_@Model.Id" checked>
+                            <label class="form-check-label fw-semibold" for="checkEmail_@Model.Id">
+                                Enviar nova senha para o e-mail do usuário
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning fw-bold">
+                            <i class="icon-base ri ri-check-line me-1"></i> Confirmar Redefinição
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
+
 
 @section Scripts {
     <script src="~/starter-kit/assets/js/masks.js"></script>
     <script>
+        function gerarSenhaPara(inputId) {
+            var chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!#$%*";
+            var senha = "";
+
+            for (var i = 0; i < 10; i++) {
+                senha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            var el = document.getElementById(inputId);
+            if (el) {
+                el.value = senha;
+                el.focus();
+            }
+        }
+
         function copiarLink(url, secao) {
+
             if (!url) return;
             navigator.clipboard.writeText(url).then(function() {
                 Swal.fire({
