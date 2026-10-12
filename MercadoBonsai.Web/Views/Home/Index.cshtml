@@ -79,7 +79,7 @@
             @if (Model.ProdutosDestaque != null && Model.ProdutosDestaque.Any())
             {
                 <div class="row g-4">
-                    @foreach (var p in Model.ProdutosDestaque)
+                    @foreach (var p in Model.ProdutosDestaque.Take(6))
                     {
                         var isIndisponivel = p.Status == StatusProduto.Indisponivel;
                         <div class="col-sm-6 col-md-4">
