@@ -10,6 +10,7 @@ using MercadoBonsai.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using MercadoBonsai.Web.Models;
 
 namespace MercadoBonsai.Web.Controllers;
 
@@ -44,18 +45,42 @@ public class LeilaoController : Controller
         _storageService = storageService;
     }
 
-    // GET: /Leilao/Encerrados (Consulta de leilões e ações entre amigos, em andamento ou encerrados)
+    // GET: /Leilao ou /Leilao/Index
+    [HttpGet]
+    public async Task<IActionResult> Index(string aba = "ativos", int pagina = 1)
+    {
+        var leiloesAtivos = (await _leilaoRepository.ListarAtivosAsync()).ToList();
+        var leiloesEncerrados = (await _leilaoRepository.ListarEncerradosAsync()).ToList();
+
+        var viewModel = new LeilaoIndexViewModel
+        {
+            LeiloesAtivos = leiloesAtivos,
+            LeiloesEncerrados = leiloesEncerrados,
+            AbaAtiva = string.Equals(aba, "encerrados", StringComparison.OrdinalIgnoreCase) ? "encerrados" : "ativos",
+            PaginaAtual = pagina,
+            TotalPaginas = 1
+        };
+
+        return View(viewModel);
+    }
+
+    // GET: /Leilao/Encerrados (mantido para retrocompatibilidade)
     [HttpGet]
     public async Task<IActionResult> Encerrados()
     {
-        var leiloes = await _leilaoRepository.ListarEncerradosAsync();
-        Rifa? rifaAtiva = null; // Rifas descontinuadas temporariamente
-        var leilaoAtivo = await _leilaoRepository.ObterLeilaoAtivoRecenteAsync();
+        var leiloesAtivos = (await _leilaoRepository.ListarAtivosAsync()).ToList();
+        var leiloesEncerrados = (await _leilaoRepository.ListarEncerradosAsync()).ToList();
 
-        ViewData["RifaAtiva"] = rifaAtiva;
-        ViewData["LeilaoAtivo"] = leilaoAtivo;
+        var viewModel = new LeilaoIndexViewModel
+        {
+            LeiloesAtivos = leiloesAtivos,
+            LeiloesEncerrados = leiloesEncerrados,
+            AbaAtiva = "encerrados",
+            PaginaAtual = 1,
+            TotalPaginas = 1
+        };
 
-        return View(leiloes);
+        return View("Index", viewModel);
     }
 
     // POST: /Leilao/RegistrarLance (Fluxo Completo de Registro e Persistência no Banco)

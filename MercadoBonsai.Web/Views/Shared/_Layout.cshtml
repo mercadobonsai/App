@@ -260,8 +260,8 @@
                                 </li>
 
                                 <!-- Link Leilões -->
-                                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Leilao" && ViewContext.RouteData.Values["action"]?.ToString() == "Encerrados" ? "active" : "")">
-                                    <a asp-controller="Leilao" asp-action="Encerrados" class="menu-link">
+                                <li class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Leilao" && (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Encerrados") ? "active" : "")">
+                                    <a asp-controller="Leilao" asp-action="Index" class="menu-link">
                                         <i class="menu-icon icon-base ri ri-auction-line"></i>
                                         <div>Leilões</div>
                                     </a>

@@ -1,0 +1,471 @@
+@model MercadoBonsai.Web.Models.LeilaoIndexViewModel
+@using MercadoBonsai.Domain.Entities
+@using MercadoBonsai.Domain.Enums
+@{
+    ViewData["Title"] = "Leilões - Mercado Bonsai";
+    var isEncerrados = Model.AbaAtiva == "encerrados";
+}
+
+<style>
+    .ambient-card-box {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 4/3;
+        background-color: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ambient-card-bg {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        filter: blur(14px) brightness(0.85);
+        opacity: 0.45;
+        transform: scale(1.15);
+        z-index: 1;
+        pointer-events: none;
+    }
+    .ambient-card-img {
+        position: relative;
+        z-index: 2;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .modal-ambient-box {
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        background-color: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 380px;
+    }
+    .modal-ambient-bg {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        filter: blur(16px) brightness(0.8);
+        opacity: 0.4;
+        transform: scale(1.15);
+        z-index: 1;
+        pointer-events: none;
+    }
+    .modal-ambient-img {
+        position: relative;
+        z-index: 2;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .thumb-gallery {
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: border-color 0.2s;
+    }
+    .thumb-gallery.active, .thumb-gallery:hover {
+        border-color: #4A7C59;
+    }
+</style>
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Cabeçalho Principal -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1" style="color: #4A7C59;">🔨 Leilões do Mercado Bonsai</h3>
+            <p class="text-muted mb-0">Participe dos leilões ao vivo de mestres e colecionadores ou consulte o histórico completo de arremates</p>
+        </div>
+        <div class="d-flex gap-2">
+            @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Vendedor") || User.IsInRole("Administrador")))
+            {
+                <a asp-action="Criar" class="btn btn-primary">
+                    <i class="icon-base ri ri-add-line me-1"></i> Criar Leilão
+                </a>
+            }
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar à Home
+            </a>
+        </div>
+    </div>
+
+    <!-- Abas de Navegação (Ao Vivo / Encerrados) -->
+    <ul class="nav nav-pills mb-4 gap-2">
+        <li class="nav-item">
+            <a class="nav-link px-4 @(!isEncerrados ? "active bg-primary" : "text-muted border")" 
+               asp-action="Index" asp-route-aba="ativos">
+                <i class="icon-base ri ri-broadcast-line me-1"></i> Em Andamento (Ao Vivo)
+                <span class="badge bg-white text-primary ms-2 rounded-pill">@Model.TotalAtivos</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-4 @(isEncerrados ? "active bg-primary" : "text-muted border")" 
+               asp-action="Index" asp-route-aba="encerrados">
+                <i class="icon-base ri ri-history-line me-1"></i> Histórico de Encerrados
+                <span class="badge @(isEncerrados ? "bg-white text-primary" : "bg-secondary text-white") ms-2 rounded-pill">@Model.TotalEncerrados</span>
+            </a>
+        </li>
+    </ul>
+
+    @if (!isEncerrados)
+    {
+        <!-- SEÇÃO: LEILÕES EM ANDAMENTO (AO VIVO) -->
+        @if (!Model.LeiloesAtivos.Any())
+        {
+            <div class="card border-0 shadow-sm text-center py-5">
+                <div class="card-body">
+                    <div class="avatar avatar-xl bg-label-primary mx-auto mb-3" style="width: 72px; height: 72px; border-radius: 50%;">
+                        <i class="icon-base ri ri-auction-line fs-1" style="line-height: 72px;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">Nenhum leilão em andamento no momento</h5>
+                    <p class="text-muted mb-3" style="max-width: 480px; margin: 0 auto;">Novos exemplares raros são cadastrados regularmente pelos viveiros e colecionadores. Fique atento às notificações!</p>
+                    <a asp-action="Index" asp-route-aba="encerrados" class="btn btn-outline-primary">
+                        <i class="icon-base ri ri-history-line me-1"></i> Consultar Leilões Encerrados
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var leilao in Model.LeiloesAtivos)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm overflow-hidden d-flex flex-column">
+                            <!-- Card Header com Status -->
+                            <div class="card-header bg-label-primary py-2 px-3 d-flex justify-content-between align-items-center">
+                                @if (leilao.Status == StatusLeilao.Iniciado)
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="icon-base ri ri-broadcast-line me-1"></i> Ao Vivo
+                                    </span>
+                                    <span class="badge bg-success">Status: Iniciado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">
+                                        <i class="icon-base ri ri-time-line me-1"></i> Em Breve
+                                    </span>
+                                    <span class="badge bg-secondary">Aguardando Início</span>
+                                }
+                            </div>
+
+                            <!-- Foto com Proporção 4:3 e Fundo Suave -->
+                            <div class="ambient-card-box">
+                                <img src="@leilao.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-card-bg" alt="" aria-hidden="true" />
+                                <img src="@leilao.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-card-img" alt="@leilao.Titulo" />
+                            </div>
+
+                            <!-- Conteúdo do Card -->
+                            <div class="card-body p-4 d-flex flex-column justify-content-between flex-grow-1">
+                                <div>
+                                    <h5 class="fw-bold mb-1 text-heading">@leilao.Titulo</h5>
+                                    <p class="text-muted small mb-2">@leilao.Subtitulo</p>
+                                    <p class="text-muted small mb-3">
+                                        <i class="icon-base ri ri-store-2-line me-1 text-primary"></i> Organizado por: <strong>@(leilao.VendedorNome ?? "Viveiro Especializado")</strong>
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <!-- Box de Valores -->
+                                    <div class="p-3 bg-light rounded mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="text-muted small">Lance Atual:</span>
+                                            <strong class="text-primary fs-4">R$ @leilao.LanceAtual.ToString("N2")</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center small text-muted border-top pt-2">
+                                            <span>Incremento Mínimo:</span>
+                                            <strong>+ R$ @leilao.IncrementoMinimo.ToString("N2")</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center small text-muted mt-1">
+                                            <span>Término em:</span>
+                                            <strong class="text-dark">@leilao.DataFinalizacao.ToString("dd/MM/yyyy HH:mm")</strong>
+                                        </div>
+                                    </div>
+
+                                    <!-- Botão de Ação -->
+                                    @if (leilao.Status == StatusLeilao.Iniciado)
+                                    {
+                                        <button type="button" class="btn btn-primary w-100 shadow-sm" onclick="abrirModalLeilao(@leilao.Id)">
+                                            <i class="icon-base ri ri-auction-line me-1"></i> Participar & Dar Lance
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-secondary w-100 disabled" disabled tabindex="-1">
+                                            <i class="icon-base ri ri-lock-line me-1"></i> Aguardando Abertura de Lances
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <!-- SEÇÃO: HISTÓRICO DE LEILÕES ENCERRADOS -->
+        @if (!Model.LeiloesEncerrados.Any())
+        {
+            <div class="card border-0 shadow-sm text-center py-5">
+                <div class="card-body">
+                    <p class="text-muted mb-0">Nenhum leilão encerrado registrado no histórico.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var l in Model.LeiloesEncerrados)
+                {
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="card h-100 shadow-sm border-0 overflow-hidden d-flex flex-column">
+                            <div class="ambient-card-box">
+                                <img src="@l.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-card-bg" alt="" aria-hidden="true" />
+                                <img src="@l.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-card-img" alt="@l.Titulo" style="filter: grayscale(15%);" />
+                                <span class="badge bg-secondary position-absolute top-0 end-0 m-3 shadow-sm" style="z-index: 3;">Encerrado</span>
+                            </div>
+                            <div class="card-body d-flex flex-column justify-content-between p-3 flex-grow-1">
+                                <div>
+                                    <h6 class="fw-bold mb-1">@l.Titulo</h6>
+                                    <small class="text-muted d-block mb-2">Organizado por: @(l.VendedorNome ?? "Cultivador Mercado Bonsai")</small>
+                                    <p class="text-muted small mb-3">@l.Subtitulo</p>
+                                </div>
+                                <div class="p-2 bg-light rounded text-center">
+                                    <small class="text-muted d-block">Valor Final Arrematado:</small>
+                                    <strong class="text-primary fs-5">R$ @l.LanceAtual.ToString("N2")</strong>
+                                    <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Finalizado em: @l.DataFinalizacao.ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+<!-- Modal Interativo de Lance & Detalhes do Leilão -->
+<div class="modal fade" id="modalLeilaoDetalhes" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold text-heading" id="modalLeilaoTitulo">Detalhes do Leilão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="modalLeilaoCorpo">
+                <!-- Conteúdo dinâmico via JavaScript -->
+            </div>
+            <div class="modal-footer border-top py-3" id="modalLeilaoRodape">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Dados dos leilões ativos renderizados no cliente
+    const leiloesAtivosData = [
+        @foreach (var l in Model.LeiloesAtivos)
+        {
+            var proxMin = l.LanceAtual + l.IncrementoMinimo;
+            <text>
+            {
+                id: @l.Id,
+                titulo: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(l.Titulo)),
+                subtitulo: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(l.Subtitulo ?? "")),
+                descricao: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(l.Descricao ?? "")),
+                fotoPrincipal: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(l.FotoPrincipalUrl ?? "https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp")),
+                fotoDetalhe: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(l.FotoDetalheUrl ?? l.FotoPrincipalUrl ?? "https://cdn.mercadobonsai.com.br/padrao/shimpaku_detalhe.webp")),
+                lanceAtual: "R$ @l.LanceAtual.ToString("N2")",
+                lanceAtualRaw: @l.LanceAtual.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                incrementoMin: @l.IncrementoMinimo.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                proximoLanceMin: @proxMin.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                vendedor: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(l.VendedorNome ?? "Viveiro Especializado")),
+                dataFim: "@l.DataFinalizacao.ToString("dd/MM/yyyy HH:mm")",
+                historicoLances: [
+                    @if (l.Lances != null)
+                    {
+                        foreach (var lance in l.Lances)
+                        {
+                            <text>
+                            {
+                                usuario: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(lance.UsuarioNome ?? "Comprador")),
+                                valor: "R$ @lance.Valor.ToString("N2")",
+                                hora: "@lance.DataLance.ToString("dd/MM HH:mm")"
+                            },
+                            </text>
+                        }
+                    }
+                ]
+            },
+            </text>
+        }
+    ];
+
+    function abrirModalLeilao(leilaoId) {
+        const item = leiloesAtivosData.find(x => x.id === leilaoId);
+        if (!item) return;
+
+        document.getElementById('modalLeilaoTitulo').innerText = item.titulo;
+
+        const corpoEl = document.getElementById('modalLeilaoCorpo');
+        const rodapeEl = document.getElementById('modalLeilaoRodape');
+
+        corpoEl.innerHTML = `
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="modal-ambient-box mb-3">
+                        <img id="modalFotoBg" src="${item.fotoPrincipal}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="modal-ambient-bg" alt="" aria-hidden="true" />
+                        <img id="modalFotoPrincipal" src="${item.fotoPrincipal}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="modal-ambient-img" alt="${item.titulo}" />
+                    </div>
+                    <div class="d-flex gap-2">
+                        <img src="${item.fotoPrincipal}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="thumb-gallery rounded active" style="width: 70px; height: 70px; object-fit: cover;" onclick="trocarFotoModal(this.src, this)" />
+                        <img src="${item.fotoDetalhe}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_detalhe.webp';" class="thumb-gallery rounded" style="width: 70px; height: 70px; object-fit: cover;" onclick="trocarFotoModal(this.src, this)" />
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex flex-column justify-content-between">
+                    <div>
+                        <span class="badge bg-primary px-3 py-2 fs-6 mb-2">
+                            <i class="icon-base ri ri-broadcast-line me-1"></i> Leilão Ao Vivo
+                        </span>
+                        <p class="text-muted small mb-2">${item.subtitulo}</p>
+                        <p class="text-body small mb-3">${item.descricao || 'Exemplar exclusivo disponibilizado em leilão oficial.'}</p>
+
+                        <div class="card bg-light border-0 p-3 mb-3">
+                            <small class="text-muted d-block">Organizador / Vendedor:</small>
+                            <strong class="text-primary">${item.vendedor}</strong>
+                            <small class="text-muted d-block mt-1">Finalização prevista: <strong>${item.dataFim}</strong></small>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="p-3 bg-label-primary rounded mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Lance Mais Alto Atual:</span>
+                                <strong class="text-primary fs-4" id="modalLanceAtualDisplay">${item.lanceAtual}</strong>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" id="valorLanceInput" class="form-control" value="${item.proximoLanceMin}" step="${item.incrementoMin}" min="${item.proximoLanceMin}" />
+                            </div>
+                            <small class="text-muted d-block mt-1">Incremento mínimo: + R$ ${parseFloat(item.incrementoMin).toFixed(2).replace('.', ',')}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Histórico Recente de Lances -->
+            <div class="mt-4 pt-3 border-top">
+                <h6 class="fw-bold mb-3"><i class="icon-base ri ri-history-line me-1"></i>Últimos Lances Registrados</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless small mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Valor</th>
+                                <th>Momento</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalTabelaLancesBody">
+                            ${(item.historicoLances && item.historicoLances.length > 0) ? item.historicoLances.map(l => `
+                                <tr>
+                                    <td>${l.usuario}</td>
+                                    <td class="fw-bold text-primary">${l.valor}</td>
+                                    <td class="text-muted">${l.hora}</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="3" class="text-muted">Nenhum lance registrado ainda. Seja o primeiro!</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        rodapeEl.innerHTML = `
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+            <button type="button" class="btn btn-primary px-4" onclick="confirmarLanceModal(${item.id})">
+                <i class="icon-base ri ri-auction-line me-1"></i> Confirmar Lance no Banco
+            </button>
+        `;
+
+        const modalEl = document.getElementById('modalLeilaoDetalhes');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+
+    function trocarFotoModal(url, el) {
+        document.getElementById('modalFotoBg').src = url;
+        document.getElementById('modalFotoPrincipal').src = url;
+        document.querySelectorAll('.thumb-gallery').forEach(img => img.classList.remove('active'));
+        if (el) el.classList.add('active');
+    }
+
+    async function confirmarLanceModal(leilaoId) {
+        const inputVal = document.getElementById('valorLanceInput');
+        if (!inputVal) return;
+        const valorLance = parseFloat(inputVal.value);
+        if (!valorLance || isNaN(valorLance)) {
+            alert('Por favor, informe um valor de lance válido.');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('leilaoId', leilaoId);
+            formData.append('valorLance', valorLance);
+
+            const response = await fetch('/Leilao/RegistrarLance', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.status === 401) {
+                alert('Você precisa estar logado no sistema para efetuar um lance.');
+                window.location.href = '/Conta/Login';
+                return;
+            }
+
+            const data = await response.json();
+            if (data.sucesso) {
+                alert(data.mensagem);
+
+                const lanceAtualEl = document.getElementById('modalLanceAtualDisplay');
+                if (lanceAtualEl) lanceAtualEl.innerText = data.novoLanceAtual;
+
+                if (inputVal && data.novoProximoMinimo) {
+                    inputVal.value = data.novoProximoMinimo;
+                    inputVal.min = data.novoProximoMinimo;
+                }
+
+                const tabelaLancesBody = document.getElementById('modalTabelaLancesBody');
+                if (tabelaLancesBody && data.historicoLances) {
+                    tabelaLancesBody.innerHTML = data.historicoLances.map(l => `
+                        <tr>
+                            <td>${l.usuario}</td>
+                            <td class="fw-bold text-primary">${l.valor}</td>
+                            <td class="text-muted">${l.hora}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Recarrega a página para atualizar os cards após 1.5s
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                alert(data.mensagem || 'Não foi possível registrar o lance.');
+            }
+        } catch (e) {
+            console.error('Erro ao enviar lance:', e);
+            alert('Falha na comunicação com o servidor ao registrar lance.');
+        }
+    }
+</script>
+}
