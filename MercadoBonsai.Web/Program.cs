@@ -163,6 +163,24 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Configura Cultura Padrão pt-BR para que valores monetários e datas usem separador vírgula
+var defaultCulture = new System.Globalization.CultureInfo("pt-BR");
+defaultCulture.NumberFormat.CurrencySymbol = "R$";
+defaultCulture.NumberFormat.CurrencyDecimalSeparator = ",";
+defaultCulture.NumberFormat.CurrencyGroupSeparator = ".";
+defaultCulture.NumberFormat.NumberDecimalSeparator = ",";
+defaultCulture.NumberFormat.NumberGroupSeparator = ".";
+
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(defaultCulture),
+    SupportedCultures = new[] { defaultCulture },
+    SupportedUICultures = new[] { defaultCulture }
+};
+app.UseRequestLocalization(localizationOptions);
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
