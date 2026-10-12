@@ -18,14 +18,20 @@
 
     <div class="card shadow-sm overflow-hidden border-0">
         <div class="row g-0">
-            <!-- Coluna de Imagens / Capa -->
-            <div class="col-md-6 ambient-img-container d-flex align-items-center justify-content-center p-0" style="min-height: 400px; max-height: 480px;">
+            <!-- Coluna de Imagens / Capa com Vitrine Ambientada e Lupa de Zoom -->
+            <div id="containerZoomProduto" class="col-md-6 ambient-img-container zoom-interactive-container d-flex align-items-center justify-content-center p-0" 
+                 style="min-height: 400px; max-height: 480px;" 
+                 onclick="toggleZoomProduto(event)" 
+                 onmousemove="moverZoomProduto(event)" 
+                 onmouseleave="resetarZoomProduto()" 
+                 title="Clique para ampliar ou passe o mouse para explorar os detalhes da planta">
                 @if (!string.IsNullOrEmpty(Model.ImagemUrl))
                 {
                     <!-- Fundo Ambientado Desfocado -->
                     <img src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-bg" alt="" aria-hidden="true" />
-                    <!-- Imagem Principal Nítida -->
-                    <img src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-main p-3" alt="@Model.Nome" style="max-height: 460px;" />
+                    <!-- Imagem Principal Nítida com Zoom -->
+                    <img id="imgZoomProduto" src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-main zoom-target p-3" alt="@Model.Nome" style="max-height: 460px;" />
+                    <span class="zoom-badge-hint"><i class="icon-base ri ri-zoom-in-line me-1"></i>Clique p/ Ampliar</span>
                 }
                 else
                 {
@@ -348,6 +354,46 @@
                 loader.classList.add('d-none');
                 textoErro.innerText = "Ocorreu uma falha de conexão ao consultar o frete. Tente novamente.";
                 containerErro.classList.remove('d-none');
+            }
+        }
+
+        // Funções de Zoom Interativo / Lupa na Foto do Produto
+        function toggleZoomProduto(e) {
+            const container = document.getElementById('containerZoomProduto');
+            const img = document.getElementById('imgZoomProduto');
+            if (!container || !img) return;
+
+            const isZoomed = container.classList.toggle('is-zoomed');
+            if (!isZoomed) {
+                img.style.transform = 'scale(1)';
+                img.style.transformOrigin = 'center center';
+            } else {
+                aplicarPosicaoZoomProduto(e, container, img);
+            }
+        }
+
+        function moverZoomProduto(e) {
+            const container = document.getElementById('containerZoomProduto');
+            const img = document.getElementById('imgZoomProduto');
+            if (!container || !img || !container.classList.contains('is-zoomed')) return;
+            aplicarPosicaoZoomProduto(e, container, img);
+        }
+
+        function aplicarPosicaoZoomProduto(e, container, img) {
+            const rect = container.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            img.style.transformOrigin = `${x}% ${y}%`;
+            img.style.transform = 'scale(2.5)';
+        }
+
+        function resetarZoomProduto() {
+            const container = document.getElementById('containerZoomProduto');
+            const img = document.getElementById('imgZoomProduto');
+            if (container) container.classList.remove('is-zoomed');
+            if (img) {
+                img.style.transform = 'scale(1)';
+                img.style.transformOrigin = 'center center';
             }
         }
     </script>
