@@ -18,20 +18,21 @@
 
     <div class="card shadow-sm overflow-hidden border-0">
         <div class="row g-0">
-            <!-- Coluna de Imagens / Capa com Vitrine Ambientada e Lupa de Zoom -->
-            <div id="containerZoomProduto" class="col-md-6 ambient-img-container zoom-interactive-container d-flex align-items-center justify-content-center p-0" 
-                 style="min-height: 400px; max-height: 480px;" 
+            <!-- Coluna de Imagens / Capa Original com Lupa de Zoom Interativo -->
+            <div id="containerZoomProduto" class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4 position-relative overflow-hidden" 
+                 style="cursor: zoom-in;" 
                  onclick="toggleZoomProduto(event)" 
                  onmousemove="moverZoomProduto(event)" 
                  onmouseleave="resetarZoomProduto()" 
                  title="Clique para ampliar ou passe o mouse para explorar os detalhes da planta">
                 @if (!string.IsNullOrEmpty(Model.ImagemUrl))
                 {
-                    <!-- Fundo Ambientado Desfocado -->
-                    <img src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-bg" alt="" aria-hidden="true" />
-                    <!-- Imagem Principal Nítida com Zoom -->
-                    <img id="imgZoomProduto" src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-main zoom-target p-3" alt="@Model.Nome" style="max-height: 460px;" />
-                    <span class="zoom-badge-hint"><i class="icon-base ri ri-zoom-in-line me-1"></i>Clique p/ Ampliar</span>
+                    <img id="imgZoomProduto" src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" 
+                         class="img-fluid rounded shadow-sm" alt="@Model.Nome" 
+                         style="max-height: 440px; width: 100%; object-fit: contain; transition: transform 0.15s ease-out; transform-origin: center center;" />
+                    <span class="zoom-badge-hint" style="position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; pointer-events: none; backdrop-filter: blur(3px); z-index: 10;">
+                        <i class="icon-base ri ri-zoom-in-line me-1"></i>Clique p/ Ampliar
+                    </span>
                 }
                 else
                 {
