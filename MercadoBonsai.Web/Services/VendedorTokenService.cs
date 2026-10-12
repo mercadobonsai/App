@@ -7,8 +7,9 @@ namespace MercadoBonsai.Web.Services;
 
 public class VendedorTokenService
 {
-    private static readonly byte[] SecretKey = Encoding.UTF8.GetBytes("MercadoBonsaiKey_2026_CartaoVisitas_SecretToken_9988776655443322"); // 32 bytes AES-256
-    private static readonly byte[] SecretIv = Encoding.UTF8.GetBytes("MB_Cartao_IV_1234"); // 16 bytes IV
+    // AES-256 exige chave de exatamente 32 bytes (256 bits) e IV de exatamente 16 bytes (128 bits)
+    private static readonly byte[] SecretKey = SHA256.HashData(Encoding.UTF8.GetBytes("MercadoBonsaiKey_2026_CartaoVisitas_SecretToken_9988776655443322")); // 32 bytes
+    private static readonly byte[] SecretIv = MD5.HashData(Encoding.UTF8.GetBytes("MB_Cartao_IV_1234")); // 16 bytes
 
     public string GerarToken(int vendedorId, string secao)
     {
