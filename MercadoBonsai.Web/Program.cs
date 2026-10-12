@@ -15,7 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.ModelBinderProviders.Insert(0, new MercadoBonsai.Web.Infrastructure.InvariantOrPtBrDecimalModelBinderProvider());
+});
 
 // Infraestrutura de Dados e Serviços
 builder.Services.AddSingleton<PostgresConnectionFactory>();

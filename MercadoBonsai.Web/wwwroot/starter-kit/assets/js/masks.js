@@ -24,10 +24,11 @@ function initMasks() {
     document.querySelectorAll('form').forEach(function (form) {
         form.addEventListener('submit', function () {
             form.querySelectorAll('.mask-moeda').forEach(function (input) {
-                // Se o formulário espera valor decimal C#, desformata a moeda
-                let rawVal = desformatarMoeda(input.value);
-                if (input.dataset.unmaskOnSubmit === "true") {
-                    input.value = rawVal;
+                // Remove o prefixo "R$ " e pontos de milhar, mantendo apenas dígitos e vírgula decimal
+                // Ex: "R$ 69,90" -> "69,90"
+                if (input.value) {
+                    let limpo = input.value.replace(/R\$\s?/gi, '').replace(/\./g, '').trim();
+                    input.value = limpo;
                 }
             });
         });
@@ -47,7 +48,7 @@ function formatarCampoMoeda(input) {
 }
 
 function desformatarMoeda(valorFormatado) {
-    if (!valorFormatado) return '0.00';
-    let limpo = valorFormatado.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
-    return parseFloat(limpo) || 0.00;
+    if (!valorFormatado) return '0,00';
+    let limpo = valorFormatado.replace(/R\$\s?/gi, '').replace(/\./g, '').trim();
+    return limpo || '0,00';
 }

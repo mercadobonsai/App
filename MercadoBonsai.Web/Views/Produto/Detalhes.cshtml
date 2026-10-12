@@ -19,10 +19,13 @@
     <div class="card shadow-sm overflow-hidden border-0">
         <div class="row g-0">
             <!-- Coluna de Imagens / Capa -->
-            <div class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4">
+            <div class="col-md-6 ambient-img-container d-flex align-items-center justify-content-center p-0" style="min-height: 400px; max-height: 480px;">
                 @if (!string.IsNullOrEmpty(Model.ImagemUrl))
                 {
-                    <img src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="img-fluid rounded shadow-sm" alt="@Model.Nome" style="max-height: 440px; width: 100%; object-fit: contain;" />
+                    <!-- Fundo Ambientado Desfocado -->
+                    <img src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-bg" alt="" aria-hidden="true" />
+                    <!-- Imagem Principal Nítida -->
+                    <img src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-main p-3" alt="@Model.Nome" style="max-height: 460px;" />
                 }
                 else
                 {

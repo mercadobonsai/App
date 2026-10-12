@@ -89,10 +89,13 @@
                     var isIndisponivel = p.Status == StatusProduto.Indisponivel || p.Status == StatusProduto.Vendido;
                     <div class="col-sm-6 col-md-4">
                         <div class="card h-100 shadow-sm border-0 hover-top transition overflow-hidden" style="@(isIndisponivel ? "opacity: 0.65; filter: grayscale(30%);" : "")">
-                            <div class="position-relative overflow-hidden" style="aspect-ratio: 4/3;">
+                            <div class="ambient-img-container" style="aspect-ratio: 4/3; width: 100%;">
                                 @if (!string.IsNullOrEmpty(p.ImagemUrl))
                                 {
-                                    <img src="@p.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="card-img-top w-100 h-100" alt="@p.Nome" style="object-fit: cover;" />
+                                    <!-- Fundo Ambientado Desfocado -->
+                                    <img src="@p.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-bg" alt="" aria-hidden="true" />
+                                    <!-- Imagem Principal Nítida -->
+                                    <img src="@p.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-main p-2" alt="@p.Nome" />
                                 }
                                 else
                                 {
@@ -100,10 +103,10 @@
                                         <i class="icon-base ri ri-image-line text-muted" style="font-size: 3rem;"></i>
                                     </div>
                                 }
-                                <span class="badge bg-success position-absolute top-0 start-0 m-3 shadow-sm">@p.Categoria</span>
+                                <span class="badge bg-success position-absolute top-0 start-0 m-3 shadow-sm" style="z-index: 3;">@p.Categoria</span>
                                 @if (isIndisponivel)
                                 {
-                                    <span class="badge bg-secondary position-absolute top-0 end-0 m-3 shadow-sm">Indisponível</span>
+                                    <span class="badge bg-secondary position-absolute top-0 end-0 m-3 shadow-sm" style="z-index: 3;">Indisponível</span>
                                 }
                             </div>
                             <div class="card-body d-flex flex-column justify-content-between p-3">
