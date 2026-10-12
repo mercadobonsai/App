@@ -176,7 +176,7 @@ public class UsuarioRepository : IUsuarioRepository
             FROM usuarios
             WHERE (perfil IN (2, 3))
               AND (isentocobranca = true OR LOWER(statusassinatura) = 'active')
-              AND (planoid > 1 OR logotipourl IS NOT NULL OR descricaoviveiro IS NOT NULL)
+              AND (descricaoviveiro IS NOT NULL OR logotipourl IS NOT NULL)
             ORDER BY reputacao DESC, id DESC
             LIMIT 5;";
 

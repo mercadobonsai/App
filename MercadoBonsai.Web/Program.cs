@@ -167,6 +167,22 @@ using (var scope = app.Services.CreateScope())
             UPDATE produtos 
             SET peso = peso / 1000 
             WHERE peso >= 500;
+
+            -- Ajuste Viveiros em Destaque:
+            -- 1. Remove descrição/logo do admin/Shokunin para não figurar como viveiro em destaque
+            UPDATE usuarios 
+            SET descricaoviveiro = NULL, 
+                logotipourl = NULL 
+            WHERE email = 'admin@mercadobonsai.com.br' 
+               OR razaosocial ILIKE '%shokunin%' 
+               OR nome ILIKE '%shokunin%';
+
+            -- 2. Habilita o vendedor Fabio como Viveiro em Destaque ativo
+            UPDATE usuarios 
+            SET planoid = 2, 
+                isentocobranca = true,
+                descricaoviveiro = COALESCE(NULLIF(descricaoviveiro, ''), 'Viveiro especializado em bonsais, pré-bonsais e espécies selecionadas.')
+            WHERE email ILIKE '%fabio.n.s%';
         ");
 
     }
