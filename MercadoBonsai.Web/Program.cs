@@ -100,6 +100,7 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS leilaoid INT NULL;
             ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS posicao_vencedor_leilao INT NULL DEFAULT 1;
             ALTER TABLE planos ALTER COLUMN percentualcomissao TYPE NUMERIC(10,2);
+            ALTER TABLE produtos ADD COLUMN IF NOT EXISTS precocusto NUMERIC(18,2) NULL;
 
             ALTER TABLE leiloes ALTER COLUMN lanceinicial DROP NOT NULL;
             ALTER TABLE leiloes ALTER COLUMN datainicio DROP NOT NULL;

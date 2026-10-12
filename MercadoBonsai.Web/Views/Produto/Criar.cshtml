@@ -38,8 +38,8 @@
                         </div>
 
                         <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <label asp-for="Preco" class="form-label fw-semibold"></label>
+                            <div class="col-md-3">
+                                <label asp-for="Preco" class="form-label fw-semibold">Preço de Venda (R$)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">R$</span>
                                     <input asp-for="Preco" type="text" class="form-control mask-moeda" placeholder="0,00" data-unmask-on-submit="true" />
@@ -47,13 +47,23 @@
                                 <span asp-validation-for="Preco" class="text-danger small"></span>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label asp-for="PrecoCusto" class="form-label fw-semibold">Preço de Custo (R$)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input asp-for="PrecoCusto" type="text" class="form-control mask-moeda" placeholder="0,00" data-unmask-on-submit="true" />
+                                </div>
+                                <span class="text-muted small d-block" style="font-size: 0.75rem;">Visível apenas para você</span>
+                                <span asp-validation-for="PrecoCusto" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-3">
                                 <label asp-for="QuantidadeEstoque" class="form-label fw-semibold"></label>
                                 <input asp-for="QuantidadeEstoque" type="number" class="form-control" placeholder="1" />
                                 <span asp-validation-for="QuantidadeEstoque" class="text-danger small"></span>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label asp-for="Status" class="form-label fw-semibold"></label>
                                 <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<StatusProduto>()"></select>
                             </div>

@@ -24,6 +24,7 @@ public class ProdutoRepository : IProdutoRepository
         nome AS Nome, 
         descricao AS Descricao, 
         preco AS Preco, 
+        precocusto AS PrecoCusto,
         quantidadeestoque AS QuantidadeEstoque, 
         imagemurl AS ImagemUrl,
         status AS Status,
@@ -39,11 +40,11 @@ public class ProdutoRepository : IProdutoRepository
     {
         const string sql = @"
             INSERT INTO produtos (
-                vendedorid, nome, descricao, preco, quantidadeestoque, imagemurl, status, 
+                vendedorid, nome, descricao, preco, precocusto, quantidadeestoque, imagemurl, status, 
                 altura, largura, comprimento, peso, formaenvio, categoria, datacriacao
             )
             VALUES (
-                @VendedorId, @Nome, @Descricao, @Preco, @QuantidadeEstoque, @ImagemUrl, @Status, 
+                @VendedorId, @Nome, @Descricao, @Preco, @PrecoCusto, @QuantidadeEstoque, @ImagemUrl, @Status, 
                 @Altura, @Largura, @Comprimento, @Peso, @FormaEnvio, @Categoria, @DataCriacao
             )
             RETURNING id;";
@@ -147,6 +148,7 @@ public class ProdutoRepository : IProdutoRepository
                 nome = @Nome,
                 descricao = @Descricao,
                 preco = @Preco,
+                precocusto = @PrecoCusto,
                 quantidadeestoque = @QuantidadeEstoque,
                 imagemurl = @ImagemUrl,
                 status = @Status,

@@ -18,8 +18,12 @@ public class EditarProdutoViewModel
 
     [Required(ErrorMessage = "O preço é obrigatório.")]
     [Range(0.01, 999999.99, ErrorMessage = "Informe um valor válido maior que zero.")]
-    [Display(Name = "Preço (R$)")]
+    [Display(Name = "Preço de Venda (R$)")]
     public decimal Preco { get; set; }
+
+    [Range(0.00, 999999.99, ErrorMessage = "Informe um valor de custo válido.")]
+    [Display(Name = "Preço de Custo (R$)")]
+    public decimal? PrecoCusto { get; set; }
 
     [Required(ErrorMessage = "A quantidade em estoque é obrigatória.")]
     [Range(0, 9999, ErrorMessage = "Informe uma quantidade válida.")]

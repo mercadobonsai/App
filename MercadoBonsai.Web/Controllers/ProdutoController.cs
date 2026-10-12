@@ -169,6 +169,7 @@ public class ProdutoController : Controller
             Nome = model.Nome,
             Descricao = model.Descricao ?? string.Empty,
             Preco = model.Preco,
+            PrecoCusto = model.PrecoCusto,
             QuantidadeEstoque = model.QuantidadeEstoque,
             Status = model.Status,
             Altura = model.Altura,
@@ -210,6 +211,7 @@ public class ProdutoController : Controller
             Nome = produto.Nome,
             Descricao = produto.Descricao,
             Preco = produto.Preco,
+            PrecoCusto = produto.PrecoCusto,
             QuantidadeEstoque = produto.QuantidadeEstoque,
             Status = produto.Status,
             Altura = produto.Altura,
@@ -262,6 +264,7 @@ public class ProdutoController : Controller
         produto.Nome = model.Nome;
         produto.Descricao = model.Descricao ?? string.Empty;
         produto.Preco = model.Preco;
+        produto.PrecoCusto = model.PrecoCusto;
         produto.QuantidadeEstoque = model.QuantidadeEstoque;
         produto.Status = model.Status;
         produto.Altura = model.Altura;
