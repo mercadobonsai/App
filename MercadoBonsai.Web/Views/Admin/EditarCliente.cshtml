@@ -59,22 +59,48 @@
                                 <label asp-for="Perfil" class="form-label fw-semibold"></label>
                                 <select asp-for="Perfil" class="form-select" asp-items="Html.GetEnumSelectList<PerfilUsuario>()"></select>
                             </div>
+                            <div class="col-md-6">
+                                <label asp-for="PlanoId" class="form-label fw-semibold">Plano Contratado / Ativo</label>
+                                <select asp-for="PlanoId" class="form-select" id="selectPlanoId">
+                                    @if (ViewBag.Planos != null)
+                                    {
+                                        foreach (var p in (IEnumerable<MercadoBonsai.Domain.Entities.Plano>)ViewBag.Planos)
+                                        {
+                                            <option value="@p.Id" selected="@(p.Id == Model.PlanoId)">
+                                                Plano @p.Nome @(p.Preco > 0 ? $"(R$ {p.Preco:N2}/mês)" : "(Gratuito)") - Comissão: @p.PercentualComissao.ToString("N1")%
+                                            </option>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option value="1" selected="@(Model.PlanoId == 1)">Plano Bronze (Gratuito) - Comissão: 10%</option>
+                                        <option value="2" selected="@(Model.PlanoId == 2)">Plano Prata (R$ 39,90/mês) - Comissão: 7%</option>
+                                        <option value="3" selected="@(Model.PlanoId == 3)">Plano Ouro (R$ 69,90/mês) - Comissão: 4%</option>
+                                        <option value="4" selected="@(Model.PlanoId == 4)">Plano Diamante (R$ 99,90/mês) - Comissão: 4%</option>
+                                    }
+                                </select>
+                                <small class="text-muted">Define benefícios, limites de leilões e taxas de comissão.</small>
+                            </div>
 
                             <!-- Flag Isento de Cobrança / Não cobrar -->
                             <div class="col-12 mt-3 pt-3 border-top">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" asp-for="IsentoCobranca" id="switchIsentoCobranca">
-                                    <label class="form-check-label fw-bold text-success" for="switchIsentoCobranca">
-                                        <i class="icon-base ri ri-price-tag-3-line me-1"></i> Isento de Cobrança / Não cobrar (Parceiro Comercial)
-                                    </label>
-                                    <div class="form-text text-muted">
-                                        Isenta totalmente a geração de faturas e cobranças para este parceiro comercial selecionado em planos pagos.
+                                <div class="card border border-success bg-light-subtle p-3 rounded">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" asp-for="IsentoCobranca" id="switchIsentoCobranca" style="cursor: pointer;">
+                                        <label class="form-check-label fw-bold text-success fs-6" for="switchIsentoCobranca">
+                                            <i class="icon-base ri ri-price-tag-3-line me-1"></i> Isento de Cobrança / Não cobrar (Parceiro Comercial)
+                                        </label>
+                                    </div>
+                                    <div class="small text-muted">
+                                        <i class="icon-base ri ri-information-line me-1 text-success"></i>
+                                        <strong>Como funciona a isenção de parceiro:</strong> Selecione o plano desejado para o usuário (ex: <em>Plano Prata, Ouro ou Diamante</em>) e ative este switch. O usuário terá acesso completo a todos os recursos daquele plano sem cobrança de mensalidade e sem bloqueio de anúncios.
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
 
                 <!-- REQUIREMENT 3.2: Dados Fiscais (CPF/CNPJ, Inscrição Estadual e Razão Social) -->
                 <div class="card border-0 shadow-sm mb-4">

@@ -55,6 +55,8 @@ public class AdminController : Controller
     public async Task<IActionResult> Clientes(string? busca, int? perfil)
     {
         var usuarios = await _usuarioRepository.ListarTodosAsync(busca, perfil);
+        var todosPlanos = await _planoRepository.ListarTodosAsync();
+        ViewBag.Planos = todosPlanos.ToDictionary(p => p.Id, p => p.Nome);
         ViewData["Busca"] = busca;
         ViewData["PerfilFilter"] = perfil;
         return View(usuarios);
@@ -65,7 +67,6 @@ public class AdminController : Controller
     [Route("Admin/EditarUsuario/{id}")]
     [Route("Admin/EditarCliente/{id}")]
     public async Task<IActionResult> EditarCliente(int id)
-
     {
         var usuario = await _usuarioRepository.ObterPorIdAsync(id);
         if (usuario == null)
@@ -73,9 +74,13 @@ public class AdminController : Controller
             return NotFound();
         }
 
+        var planos = await _planoRepository.ListarTodosAsync();
+        ViewBag.Planos = planos;
+
         var plano = await _planoRepository.ObterPorIdAsync(usuario.PlanoId);
         var nomePlano = plano?.Nome ?? (usuario.PlanoId == 1 ? "Bronze" : usuario.PlanoId == 2 ? "Prata" : usuario.PlanoId == 3 ? "Ouro" : usuario.PlanoId == 4 ? "Diamante" : "Free");
         bool liberarCartao = usuario.PlanoId >= 2;
+
 
         var viewModel = new PerfilViewModel
         {
@@ -146,6 +151,7 @@ public class AdminController : Controller
 
         if (!ModelState.IsValid)
         {
+            ViewBag.Planos = await _planoRepository.ListarTodosAsync();
             return View(model);
         }
 
@@ -193,11 +199,13 @@ public class AdminController : Controller
         usuario.Agencia = model.Agencia;
         usuario.Conta = model.Conta;
         usuario.DescricaoViveiro = model.DescricaoViveiro;
+        usuario.PlanoId = model.PlanoId > 0 ? model.PlanoId : 1;
         usuario.IsentoCobranca = model.IsentoCobranca;
         usuario.PercentualRetencaoPersonalizado = model.PercentualRetencaoPersonalizado;
         usuario.DataUltimaAlteracao = DateTime.UtcNow;
         usuario.UsuarioAlteracaoId = adminId;
         usuario.UsuarioAlteracaoNome = User.Identity?.Name ?? "Administrador";
+
 
         await _usuarioRepository.AtualizarAsync(usuario);
 
