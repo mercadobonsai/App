@@ -174,7 +174,9 @@ public class UsuarioRepository : IUsuarioRepository
         var sql = $@"
             SELECT {SelectFields}
             FROM usuarios
-            WHERE (planoid > 1 OR logotipourl IS NOT NULL OR descricaoviveiro IS NOT NULL)
+            WHERE (perfil IN (2, 3))
+              AND (isentocobranca = true OR LOWER(statusassinatura) = 'active')
+              AND (planoid > 1 OR logotipourl IS NOT NULL OR descricaoviveiro IS NOT NULL)
             ORDER BY reputacao DESC, id DESC
             LIMIT 5;";
 

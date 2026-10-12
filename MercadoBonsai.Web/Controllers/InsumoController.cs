@@ -48,9 +48,14 @@ public class InsumoController : Controller
         if (!string.IsNullOrWhiteSpace(busca))
         {
             var termo = busca.Trim().ToLower();
+            var vendedoresCorrespondentes = (await _usuarioRepository.ListarTodosAsync(termo, null))
+                .Select(u => u.Id)
+                .ToHashSet();
+
             produtosInsumos = produtosInsumos.Where(p => 
                 p.Nome.ToLower().Contains(termo) || 
-                (p.Descricao != null && p.Descricao.ToLower().Contains(termo)));
+                (p.Descricao != null && p.Descricao.ToLower().Contains(termo)) ||
+                vendedoresCorrespondentes.Contains(p.VendedorId));
         }
 
         var viveirosDestaque = await _usuarioRepository.ListarViveirosEmDestaqueAsync();

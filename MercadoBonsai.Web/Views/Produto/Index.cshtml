@@ -4,6 +4,8 @@
     ViewData["Title"] = "Vitrine de Bonsais - Mercado Bonsai";
     var busca = ViewData["Busca"] as string;
     var ordem = ViewData["Ordem"] as string;
+    var vendedorId = ViewData["VendedorId"] as int?;
+    var vendedorFiltroNome = ViewData["VendedorFiltroNome"] as string;
 }
 
 <div class="row">
@@ -23,10 +25,27 @@
             }
         </div>
 
+        @if (vendedorId.HasValue && vendedorId.Value > 0)
+        {
+            <div class="alert alert-success d-flex justify-content-between align-items-center mb-4 py-2 px-3 shadow-sm border-0">
+                <div>
+                    <i class="icon-base ri ri-store-2-line me-2 fs-5 align-middle"></i>
+                    <span>Exibindo exclusivamente os produtos do viveiro <strong>@(vendedorFiltroNome ?? $"#{vendedorId}")</strong></span>
+                </div>
+                <a asp-action="Index" class="btn btn-sm btn-outline-success">
+                    <i class="icon-base ri ri-close-line me-1"></i> Ver Todos os Bonsais
+                </a>
+            </div>
+        }
+
         <!-- Barra de Filtros e Pesquisa -->
         <div class="card mb-4 border-0 shadow-sm">
             <div class="card-body">
                 <form method="get" asp-action="Index" class="row g-3 align-items-center">
+                    @if (vendedorId.HasValue && vendedorId.Value > 0)
+                    {
+                        <input type="hidden" name="vendedorId" value="@vendedorId" />
+                    }
                     <div class="col-md-6 col-lg-7">
                         <div class="input-group input-group-merge">
                             <span class="input-group-text"><i class="icon-base ri ri-search-line"></i></span>
@@ -43,7 +62,7 @@
                     </div>
                     <div class="col-md-2 col-lg-2 d-flex gap-2">
                         <button type="submit" class="btn btn-success w-100">Filtrar</button>
-                        @if (!string.IsNullOrEmpty(busca) || !string.IsNullOrEmpty(ordem))
+                        @if (!string.IsNullOrEmpty(busca) || !string.IsNullOrEmpty(ordem) || vendedorId.HasValue)
                         {
                             <a asp-action="Index" class="btn btn-outline-secondary" title="Limpar Filtros">
                                 <i class="icon-base ri ri-close-line"></i>

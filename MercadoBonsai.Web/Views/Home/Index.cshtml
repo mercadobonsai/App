@@ -303,119 +303,88 @@
     <!-- Coluna Lateral EXCLUSIVA para Viveiros em Destaque, Leilões, Ações e Espaço Econômico -->
     <div class="col-lg-3 col-12 mb-4">
 
-        <!-- Card 1: Carrossel Dinâmico de 'Viveiros em Destaque' -->
-        <div class="card mb-4 border-0 shadow-sm overflow-hidden">
-            <div class="card-header bg-label-success py-2 px-3 d-flex justify-content-between align-items-center">
-                <span class="badge bg-success fw-semibold" style="font-size: 0.75rem;"><i class="icon-base ri ri-award-line me-1"></i>Viveiros em Destaque</span>
-                <small class="text-muted"><i class="icon-base ri ri-shield-star-line text-success"></i>Parceiros VIP</small>
-            </div>
-            
-            <div id="carouselViveirosDestaque" class="carousel slide" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                    @if (Model.ViveirosEmDestaque != null && Model.ViveirosEmDestaque.Any())
-                    {
-                        var first = true;
-                        foreach (var v in Model.ViveirosEmDestaque)
-                        {
-                            <div class="carousel-item @(first ? "active" : "")" data-bs-interval="5000">
-                                <div class="card-body p-3 text-center">
-                                    <div class="p-3 bg-light rounded mb-3 text-center">
-                                        @if (!string.IsNullOrEmpty(v.LogotipoUrl))
-                                        {
-                                            <img src="@v.LogotipoUrl" alt="@v.Nome" class="img-fluid rounded" style="max-height: 80px; object-fit: contain;" />
-                                        }
-                                        else
-                                        {
-                                            <i class="icon-base ri ri-store-3-line text-success" style="font-size: 3rem;"></i>
-                                        }
-                                    </div>
-                                    <h6 class="fw-bold mb-1" style="color: #1E3A2B;">@(string.IsNullOrEmpty(v.RazaoSocial) ? v.Nome : v.RazaoSocial)</h6>
-                                    <div class="mb-2">
-                                        <div class="d-inline-flex align-items-center" title="Reputação do Viveiro: @v.Reputacao pts">
-                                            <div class="position-relative d-inline-block" style="font-size: 1.15rem; line-height: 1;">
-                                                <!-- Fundo: 5 Estrelas Cinzas -->
-                                                <div class="text-muted opacity-25 d-flex gap-1">
-                                                    <i class="icon-base ri ri-star-fill"></i>
-                                                    <i class="icon-base ri ri-star-fill"></i>
-                                                    <i class="icon-base ri ri-star-fill"></i>
-                                                    <i class="icon-base ri ri-star-fill"></i>
-                                                    <i class="icon-base ri ri-star-fill"></i>
-                                                </div>
-                                                <!-- Frente: 5 Estrelas Amarelas Recortadas por Percentual -->
-                                                @{
-                                                    double repPercent = v.Reputacao > 100 ? (v.Reputacao / 10.0) : (double)v.Reputacao;
-                                                    repPercent = Math.Clamp(repPercent, 0, 100);
-                                                }
-                                                <div class="position-absolute top-0 start-0 overflow-hidden text-warning" style="width: @(repPercent.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%;">
-                                                    <div class="d-flex gap-1 text-nowrap">
+        <!-- Card 1: Carrossel Dinâmico de 'Viveiros em Destaque' (Apenas Vendedores Reais Cadastrados) -->
+        @if (Model.ViveirosEmDestaque != null && Model.ViveirosEmDestaque.Any())
+        {
+            <div class="card mb-4 border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-label-success py-2 px-3 d-flex justify-content-between align-items-center">
+                    <span class="badge bg-success fw-semibold" style="font-size: 0.75rem;"><i class="icon-base ri ri-award-line me-1"></i>Viveiros em Destaque</span>
+                    <small class="text-muted"><i class="icon-base ri ri-shield-star-line text-success"></i>Parceiros VIP</small>
+                </div>
+                
+                <div id="carouselViveirosDestaque" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        @{
+                            var first = true;
+                            foreach (var v in Model.ViveirosEmDestaque)
+                            {
+                                <div class="carousel-item @(first ? "active" : "")" data-bs-interval="5000">
+                                    <div class="card-body p-3 text-center">
+                                        <div class="p-3 bg-light rounded mb-3 text-center">
+                                            @if (!string.IsNullOrEmpty(v.LogotipoUrl))
+                                            {
+                                                <img src="@v.LogotipoUrl" alt="@v.Nome" class="img-fluid rounded" style="max-height: 80px; object-fit: contain;" />
+                                            }
+                                            else
+                                            {
+                                                <i class="icon-base ri ri-store-3-line text-success" style="font-size: 3rem;"></i>
+                                            }
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="color: #1E3A2B;">@(string.IsNullOrEmpty(v.RazaoSocial) ? v.Nome : v.RazaoSocial)</h6>
+                                        <div class="mb-2">
+                                            <div class="d-inline-flex align-items-center" title="Reputação do Viveiro: @v.Reputacao pts">
+                                                <div class="position-relative d-inline-block" style="font-size: 1.15rem; line-height: 1;">
+                                                    <!-- Fundo: 5 Estrelas Cinzas -->
+                                                    <div class="text-muted opacity-25 d-flex gap-1">
                                                         <i class="icon-base ri ri-star-fill"></i>
                                                         <i class="icon-base ri ri-star-fill"></i>
                                                         <i class="icon-base ri ri-star-fill"></i>
                                                         <i class="icon-base ri ri-star-fill"></i>
                                                         <i class="icon-base ri ri-star-fill"></i>
                                                     </div>
+                                                    <!-- Frente: 5 Estrelas Amarelas Recortadas por Percentual -->
+                                                    @{
+                                                        double repPercent = v.Reputacao > 100 ? (v.Reputacao / 10.0) : (double)v.Reputacao;
+                                                        repPercent = Math.Clamp(repPercent, 0, 100);
+                                                    }
+                                                    <div class="position-absolute top-0 start-0 overflow-hidden text-warning" style="width: @(repPercent.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%;">
+                                                        <div class="d-flex gap-1 text-nowrap">
+                                                            <i class="icon-base ri ri-star-fill"></i>
+                                                            <i class="icon-base ri ri-star-fill"></i>
+                                                            <i class="icon-base ri ri-star-fill"></i>
+                                                            <i class="icon-base ri ri-star-fill"></i>
+                                                            <i class="icon-base ri ri-star-fill"></i>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                        <p class="text-muted small mb-3 text-truncate-2" style="font-size: 0.8rem;">
+                                            @(string.IsNullOrEmpty(v.DescricaoViveiro) ? "Viveiro parceiro credenciado no Mercado Bonsai com foco em plantas de alta qualidade." : v.DescricaoViveiro)
+                                        </p>
+                                        <a asp-controller="Produto" asp-action="Index" asp-route-vendedorId="@v.Id" class="btn btn-sm btn-outline-success w-100">
+                                            Ver Produtos do Viveiro
+                                        </a>
                                     </div>
-                                    <p class="text-muted small mb-3 text-truncate-2" style="font-size: 0.8rem;">
-                                        @(string.IsNullOrEmpty(v.DescricaoViveiro) ? "Viveiro parceiro credenciado no Mercado Bonsai com foco em plantas de alta qualidade." : v.DescricaoViveiro)
-                                    </p>
-                                    <a asp-controller="Produto" asp-action="Index" asp-route-busca="@(string.IsNullOrEmpty(v.RazaoSocial) ? v.Nome : v.RazaoSocial)" class="btn btn-sm btn-outline-success w-100">
-                                        Ver Produtos do Viveiro
-                                    </a>
                                 </div>
-                            </div>
-                            first = false;
+                                first = false;
+                            }
                         }
-                    }
-                    else
+                    </div>
+                    @if (Model.ViveirosEmDestaque.Count() > 1)
                     {
-                        <div class="carousel-item active">
-                            <div class="card-body p-3 text-center">
-                                <div class="p-3 bg-light rounded mb-3">
-                                    <i class="icon-base ri ri-landscape-line text-success" style="font-size: 2.5rem;"></i>
-                                </div>
-                                <h6 class="fw-bold mb-1" style="color: #1E3A2B;">Viveiro Shokunin</h6>
-                                <div class="mb-2">
-                                    <div class="d-inline-flex align-items-center" title="Reputação do Viveiro: 100 pts">
-                                        <div class="position-relative d-inline-block text-nowrap" style="font-size: 1.15rem; line-height: 1;">
-                                            <div class="text-muted opacity-25">
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                            </div>
-                                            <div class="position-absolute top-0 start-0 overflow-hidden text-warning" style="width: 100%;">
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                                <i class="icon-base ri ri-star-fill"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="text-muted small mb-3">Especialistas em pré-bonsais importados do Japão e ferramentas tradicionais.</p>
-                                <a asp-controller="Produto" asp-action="Index" class="btn btn-sm btn-outline-success w-100">Visitar Viveiro</a>
-                            </div>
-                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselViveirosDestaque" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon bg-dark bg-opacity-25 rounded-circle" aria-hidden="true"></span>
+                            <span class="visually-hidden">Anterior</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselViveirosDestaque" data-bs-slide="next">
+                            <span class="carousel-control-next-icon bg-dark bg-opacity-25 rounded-circle" aria-hidden="true"></span>
+                            <span class="visually-hidden">Próximo</span>
+                        </button>
                     }
                 </div>
-                @if (Model.ViveirosEmDestaque != null && Model.ViveirosEmDestaque.Count() > 1)
-                {
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselViveirosDestaque" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon bg-dark bg-opacity-25 rounded-circle" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carouselViveirosDestaque" data-bs-slide="next">
-                        <span class="carousel-control-next-icon bg-dark bg-opacity-25 rounded-circle" aria-hidden="true"></span>
-                        <span class="visually-hidden">Próximo</span>
-                    </button>
-                }
             </div>
-        </div>
+        }
 
         <!-- Card 2: Múltiplos Leilões Ativos com Navegação Manual Limpa (Botões Anterior/Próximo) -->
         <div id="carouselLeiloesHome" class="carousel slide mb-4" data-bs-ride="false">

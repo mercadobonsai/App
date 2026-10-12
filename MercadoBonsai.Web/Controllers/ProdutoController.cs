@@ -35,16 +35,34 @@ public class ProdutoController : Controller
 
     // GET: /Produto (Vitrine de Plantas: apenas Pré-bonsai e Bonsai)
     [HttpGet]
-    public async Task<IActionResult> Index(string? busca, string? ordem)
+    public async Task<IActionResult> Index(string? busca, string? ordem, int? vendedorId)
     {
         var produtos = await _produtoRepository.ListarPorCategoriasAsync("pré-bonsai", "bonsai");
+
+        // Filtro direto por Vendedor Id
+        if (vendedorId.HasValue && vendedorId.Value > 0)
+        {
+            produtos = produtos.Where(p => p.VendedorId == vendedorId.Value);
+            var vendedorFiltro = await _usuarioRepository.ObterPorIdAsync(vendedorId.Value);
+            if (vendedorFiltro != null)
+            {
+                ViewData["VendedorFiltroNome"] = !string.IsNullOrWhiteSpace(vendedorFiltro.RazaoSocial) ? vendedorFiltro.RazaoSocial : vendedorFiltro.Nome;
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(busca))
         {
             var termo = busca.Trim().ToLower();
+
+            // Encontra vendedores cujo nome, razão social ou e-mail correspondam ao termo
+            var vendedoresCorrespondentes = (await _usuarioRepository.ListarTodosAsync(termo, null))
+                .Select(u => u.Id)
+                .ToHashSet();
+
             produtos = produtos.Where(p => 
                 p.Nome.ToLower().Contains(termo) || 
-                (p.Descricao != null && p.Descricao.ToLower().Contains(termo)));
+                (p.Descricao != null && p.Descricao.ToLower().Contains(termo)) ||
+                vendedoresCorrespondentes.Contains(p.VendedorId));
         }
 
         produtos = ordem switch
@@ -57,6 +75,7 @@ public class ProdutoController : Controller
 
         ViewData["Busca"] = busca;
         ViewData["Ordem"] = ordem;
+        ViewData["VendedorId"] = vendedorId;
 
         return View(produtos);
     }
