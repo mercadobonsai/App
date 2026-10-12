@@ -110,7 +110,7 @@ public class ProdutoController : Controller
         if (int.TryParse(userIdClaim, out int vendedorId))
         {
             var vendedor = await _usuarioRepository.ObterPorIdAsync(vendedorId);
-            if (vendedor != null && string.IsNullOrEmpty(vendedor.AsaasAccountId))
+            if (vendedor != null && string.IsNullOrEmpty(vendedor.AsaasAccountId) && !vendedor.EhContaPrincipalMaster)
             {
                 TempData["Erro"] = "Sua conta de Vendedor ainda não possui a Subconta Asaas ativada. Por favor, preencha seus dados cadastrais e fiscais no 'Meu Perfil' para habilitar publicações de anúncios.";
                 return RedirectToAction("MeuPerfil", "Conta");
@@ -140,7 +140,7 @@ public class ProdutoController : Controller
         }
 
         var vendedorObj = await _usuarioRepository.ObterPorIdAsync(vendedorId);
-        if (vendedorObj != null && string.IsNullOrEmpty(vendedorObj.AsaasAccountId))
+        if (vendedorObj != null && string.IsNullOrEmpty(vendedorObj.AsaasAccountId) && !vendedorObj.EhContaPrincipalMaster)
         {
             TempData["Erro"] = "Sua conta de Vendedor ainda não possui a Subconta Asaas ativada. Por favor, preencha seus dados cadastrais e fiscais no 'Meu Perfil' para habilitar publicações de anúncios.";
             return RedirectToAction("MeuPerfil", "Conta");

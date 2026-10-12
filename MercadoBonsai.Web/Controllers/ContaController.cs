@@ -335,7 +335,7 @@ public class ContaController : Controller
             }
 
             // ETAPA 2: Criação de Subconta Vendedor (POST /v3/accounts)
-            if (string.IsNullOrEmpty(usuario.AsaasAccountId))
+            if (string.IsNullOrEmpty(usuario.AsaasAccountId) && !usuario.EhContaPrincipalMaster)
             {
                 var resSubconta = await _asaasService.CriarSubcontaVendedorAsync(usuario);
                 if (resSubconta.Sucesso && !string.IsNullOrEmpty(resSubconta.AsaasAccountId))

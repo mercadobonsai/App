@@ -233,7 +233,7 @@ public class AdminController : Controller
                 }
             }
 
-            if (string.IsNullOrEmpty(usuario.AsaasAccountId) || usuario.AsaasAccountId.StartsWith("acc_simulada_") || usuario.AsaasAccountId.StartsWith("sub_simulada_"))
+            if (!usuario.EhContaPrincipalMaster && (string.IsNullOrEmpty(usuario.AsaasAccountId) || usuario.AsaasAccountId.StartsWith("acc_simulada_") || usuario.AsaasAccountId.StartsWith("sub_simulada_")))
             {
                 var resSubconta = await _asaasService.CriarSubcontaVendedorAsync(usuario);
                 if (resSubconta.Sucesso && !string.IsNullOrEmpty(resSubconta.AsaasAccountId))

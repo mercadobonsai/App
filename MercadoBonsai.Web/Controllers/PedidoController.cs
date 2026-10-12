@@ -218,7 +218,7 @@ public class PedidoController : Controller
             }
         }
 
-        if (string.IsNullOrWhiteSpace(vendedor.AsaasAccountId))
+        if (string.IsNullOrWhiteSpace(vendedor.AsaasAccountId) && !vendedor.EhContaPrincipalMaster)
         {
             var subcontaResult = await _asaasService.CriarSubcontaVendedorAsync(vendedor);
             if (subcontaResult.Sucesso && !string.IsNullOrEmpty(subcontaResult.AsaasAccountId))

@@ -126,6 +126,17 @@ public class AsaasService : IAsaasService
             };
         }
 
+        // Vendedor com CPF da Conta Principal Master não utiliza subconta
+        if (vendedor.EhContaPrincipalMaster)
+        {
+            _logger.LogInformation("Vendedor #{VendedorId} possui CPF vinculado à conta principal master (12633322859). Subconta não é necessária.", vendedor.Id);
+            return new AsaasSubcontaResult
+            {
+                Sucesso = true,
+                AsaasAccountId = null
+            };
+        }
+
         try
         {
             var cpfCnpjLimpo = SomenteNumeros(vendedor.CpfCnpj);
@@ -284,7 +295,7 @@ public class AsaasService : IAsaasService
                 }
             }
 
-            if (!string.IsNullOrEmpty(vendedor.Email))
+            if (!vendedor.EhContaPrincipalMaster && !string.IsNullOrEmpty(vendedor.Email))
             {
                 var walletValida = await ObterSubcontaExistenteAsync(vendedor.Email, SomenteNumeros(vendedor.CpfCnpj));
                 if (!string.IsNullOrEmpty(walletValida) && walletValida != vendedor.AsaasAccountId)
@@ -297,10 +308,10 @@ public class AsaasService : IAsaasService
             }
 
             _logger.LogInformation("Gerando cobrança Asaas Pedido #{Numero}: Total R$ {Total}, Comissão Plataforma {Comissao}% (R$ {Retencao}), Repasse Subconta R$ {Repasse} (Wallet: {Wallet})", 
-                pedido.Numero, pedido.ValorTotal, comissaoValida, valorRetidoPlataforma, valorLiquidoVendedor, vendedor.AsaasAccountId ?? "Sem Wallet");
+                pedido.Numero, pedido.ValorTotal, comissaoValida, valorRetidoPlataforma, valorLiquidoVendedor, vendedor.EhContaPrincipalMaster ? "Conta Principal Master" : (vendedor.AsaasAccountId ?? "Sem Wallet"));
 
             object payload;
-            if (!string.IsNullOrEmpty(vendedor.AsaasAccountId))
+            if (!vendedor.EhContaPrincipalMaster && !string.IsNullOrEmpty(vendedor.AsaasAccountId))
             {
                 payload = new
                 {
