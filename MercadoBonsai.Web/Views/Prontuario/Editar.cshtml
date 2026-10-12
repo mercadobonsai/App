@@ -71,9 +71,19 @@
                         </div>
                     </div>
 
-                    <!-- Agendamento de Cuidados -->
-                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Agendamento & Calendário de Cuidados</h5>
+                    <!-- Histórico & Agendamento de Cuidados -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Histórico & Calendário de Cuidados</h5>
                     <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Última Manutenção Realizada</label>
+                            <input type="date" asp-for="DataUltimaManutencao" class="form-control" value="@(Model.DataUltimaManutencao?.ToString("yyyy-MM-dd"))" />
+                            <small class="text-muted">Data da última poda, aramação ou desfolha realizada.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Última Adubação Realizada</label>
+                            <input type="date" asp-for="DataUltimaAdubacao" class="form-control" value="@(Model.DataUltimaAdubacao?.ToString("yyyy-MM-dd"))" />
+                            <small class="text-muted">Data da última aplicação de adubo/fertilizante.</small>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Próxima Manutenção Programada</label>
                             <input type="date" asp-for="DataProximaManutencao" class="form-control" value="@(Model.DataProximaManutencao?.ToString("yyyy-MM-dd"))" />

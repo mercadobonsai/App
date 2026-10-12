@@ -44,6 +44,30 @@
                         </div>
                     </div>
 
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Histórico & Cuidados (Opcional)</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Última Manutenção Realizada</label>
+                            <input type="date" asp-for="DataUltimaManutencao" class="form-control" />
+                            <small class="text-muted">Data da última poda, aramação ou transplante já feito.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Última Adubação Realizada</label>
+                            <input type="date" asp-for="DataUltimaAdubacao" class="form-control" />
+                            <small class="text-muted">Data da última aplicação de fertilizante/adubo.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Próxima Manutenção Programada</label>
+                            <input type="date" asp-for="DataProximaManutencao" class="form-control" />
+                            <small class="text-muted">Previsão para a próxima poda, aramação ou transplante.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Próxima Adubação Programada</label>
+                            <input type="date" asp-for="DataProximaAdubacao" class="form-control" />
+                            <small class="text-muted">Previsão para o próximo ciclo de adubação.</small>
+                        </div>
+                    </div>
+
                     <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Dimensões & Peso (Padrão dos Produtos)</h5>
                     <div class="row g-3 mb-4">
                         <div class="col-md-3 col-6">

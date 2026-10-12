@@ -377,6 +377,8 @@ public class ProntuarioController : Controller
         plantaExistente.Peso = model.Peso;
         plantaExistente.DescricaoLivre = model.DescricaoLivre;
         plantaExistente.DataInicial = model.DataInicial;
+        plantaExistente.DataUltimaManutencao = model.DataUltimaManutencao;
+        plantaExistente.DataUltimaAdubacao = model.DataUltimaAdubacao;
         plantaExistente.DataProximaManutencao = model.DataProximaManutencao;
         plantaExistente.DataProximaAdubacao = model.DataProximaAdubacao;
 

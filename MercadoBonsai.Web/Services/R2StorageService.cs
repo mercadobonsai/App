@@ -66,28 +66,71 @@ public class R2StorageService : IStorageService
             using var inputStream = arquivo.OpenReadStream();
             using var image = await Image.LoadAsync(inputStream);
 
-            int maxDimensao = 1200;
-            if (image.Width > maxDimensao || image.Height > maxDimensao)
+            // 1.1 Redimensionar proporcionalmente para caber em 1200x900 (Canvas 4:3)
+            int targetWidth = 1200;
+            int targetHeight = 900;
+            double targetRatio = (double)targetWidth / targetHeight; // 1.3333...
+            double currentRatio = (double)image.Width / image.Height;
+
+            // Se a imagem já for praticamente 4:3 (+- 2% de tolerância) ou quadrada/panorâmica equilibrada
+            Image finalImage;
+            if (Math.Abs(currentRatio - targetRatio) < 0.05)
             {
                 var options = new ResizeOptions
                 {
                     Mode = ResizeMode.Max,
-                    Size = new Size(maxDimensao, maxDimensao)
+                    Size = new Size(targetWidth, targetHeight)
                 };
                 image.Mutate(x => x.Resize(options));
+                finalImage = image;
+            }
+            else
+            {
+                // Criar o fundo ambientado desfocado ocupando 100% do canvas 4:3 (1200x900)
+                var background = image.Clone(ctx =>
+                {
+                    ctx.Resize(new ResizeOptions
+                    {
+                        Mode = ResizeMode.Crop,
+                        Size = new Size(targetWidth, targetHeight),
+                        Position = AnchorPositionMode.Center
+                    });
+                    ctx.GaussianBlur(25f);
+                    ctx.Brightness(0.65f);
+                });
+
+                // Redimensionar a imagem principal para caber perfeitamente no centro sem cortes
+                var foreground = image.Clone(ctx =>
+                {
+                    ctx.Resize(new ResizeOptions
+                    {
+                        Mode = ResizeMode.Max,
+                        Size = new Size(targetWidth, targetHeight)
+                    });
+                });
+
+                // Desenhar a imagem nítida no centro do fundo ambientado
+                int posX = (targetWidth - foreground.Width) / 2;
+                int posY = (targetHeight - foreground.Height) / 2;
+                background.Mutate(ctx => ctx.DrawImage(foreground, new Point(posX, posY), 1f));
+
+                foreground.Dispose();
+                image.Dispose();
+                finalImage = background;
             }
 
             var encoder = new WebpEncoder
             {
-                Quality = 80,
+                Quality = 82,
                 FileFormat = WebpFileFormatType.Lossy
             };
 
-            await image.SaveAsWebpAsync(memoryStreamWebp, encoder);
+            await finalImage.SaveAsWebpAsync(memoryStreamWebp, encoder);
+            finalImage.Dispose();
             memoryStreamWebp.Position = 0;
 
             _logger.LogInformation(
-                "[R2StorageService] Imagem '{OriginalName}' otimizada com sucesso. Peso original: {TamanhoOriginal} KB | Peso WebP: {TamanhoWebp} KB.",
+                "[R2StorageService] Imagem '{OriginalName}' otimizada e ambientada (4:3) com sucesso. Original: {TamanhoOriginal} KB | WebP: {TamanhoWebp} KB.",
                 arquivo.FileName, arquivo.Length / 1024, memoryStreamWebp.Length / 1024);
         }
         catch (Exception ex)
