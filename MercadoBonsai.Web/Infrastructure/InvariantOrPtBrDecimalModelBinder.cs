@@ -39,18 +39,61 @@ public class InvariantOrPtBrDecimalModelBinder : IModelBinder
         // Limpa símbolos monetários e espaços
         string cleaned = rawValue.Replace("R$", "", StringComparison.OrdinalIgnoreCase).Trim();
 
-        // Tenta parsear com pt-BR (vírgula como decimal)
-        var culturePtBr = new CultureInfo("pt-BR");
-        if (decimal.TryParse(cleaned, NumberStyles.Number | NumberStyles.Currency, culturePtBr, out decimal parsedVal))
+        // 1. Se contém vírgula e NÃO contém ponto (ex: "570,00", "7,00", "2,30", "3,00", "1,100"):
+        // A vírgula é OBRIGATORIAMENTE o separador decimal!
+        if (cleaned.Contains(',') && !cleaned.Contains('.'))
         {
-            bindingContext.Result = ModelBindingResult.Success(parsedVal);
-            return Task.CompletedTask;
+            var culturePtBr = new CultureInfo("pt-BR");
+            if (decimal.TryParse(cleaned, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, culturePtBr, out decimal valVirgula))
+            {
+                bindingContext.Result = ModelBindingResult.Success(valVirgula);
+                return Task.CompletedTask;
+            }
         }
 
-        // Tenta parsear com InvariantCulture (ponto como decimal)
-        if (decimal.TryParse(cleaned, NumberStyles.Number | NumberStyles.Currency, CultureInfo.InvariantCulture, out parsedVal))
+        // 2. Se contém ponto e NÃO contém vírgula (ex: "570.00", "7.00", "2.30", "1.100"):
+        // Pode ser decimal do HTML5 type="number" ou JS ("570.00")
+        if (cleaned.Contains('.') && !cleaned.Contains(','))
         {
-            bindingContext.Result = ModelBindingResult.Success(parsedVal);
+            if (decimal.TryParse(cleaned, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out decimal valPonto))
+            {
+                bindingContext.Result = ModelBindingResult.Success(valPonto);
+                return Task.CompletedTask;
+            }
+        }
+
+        // 3. Se contém ambos (ex: "1.250,50" padrão pt-BR ou "1,250.50" padrão americano):
+        if (cleaned.Contains('.') && cleaned.Contains(','))
+        {
+            int idxPonto = cleaned.LastIndexOf('.');
+            int idxVirgula = cleaned.LastIndexOf(',');
+
+            if (idxVirgula > idxPonto)
+            {
+                // Padrão pt-BR (ex: "1.250,50") -> remove os pontos e usa vírgula como decimal
+                string norm = cleaned.Replace(".", "");
+                if (decimal.TryParse(norm, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign, new CultureInfo("pt-BR"), out decimal val))
+                {
+                    bindingContext.Result = ModelBindingResult.Success(val);
+                    return Task.CompletedTask;
+                }
+            }
+            else
+            {
+                // Padrão US (ex: "1,250.50") -> remove as vírgulas e usa ponto como decimal
+                string norm = cleaned.Replace(",", "");
+                if (decimal.TryParse(norm, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out decimal val))
+                {
+                    bindingContext.Result = ModelBindingResult.Success(val);
+                    return Task.CompletedTask;
+                }
+            }
+        }
+
+        // 4. Número inteiro simples (sem ponto e sem vírgula, ex: "570")
+        if (decimal.TryParse(cleaned, NumberStyles.Integer | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out decimal valInt))
+        {
+            bindingContext.Result = ModelBindingResult.Success(valInt);
             return Task.CompletedTask;
         }
 

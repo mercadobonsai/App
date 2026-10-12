@@ -149,6 +149,24 @@ using (var scope = app.Services.CreateScope())
                 datalida TIMESTAMP NOT NULL DEFAULT NOW(),
                 PRIMARY KEY (notificacaoid, usuarioid)
             );
+
+            -- Correção de valores decimais inflacionados (onde vírgula foi lida como milhar):
+            -- Ex: Altura 700 -> 7, Largura 2300 -> 23, Comprimento 3000 -> 30, Peso 11000 -> 11
+            UPDATE produtos 
+            SET altura = altura / 100 
+            WHERE altura >= 100 AND altura <= 2000;
+
+            UPDATE produtos 
+            SET largura = largura / 100 
+            WHERE largura >= 100 AND largura <= 3000;
+
+            UPDATE produtos 
+            SET comprimento = comprimento / 100 
+            WHERE comprimento >= 100 AND comprimento <= 4000;
+
+            UPDATE produtos 
+            SET peso = peso / 1000 
+            WHERE peso >= 500;
         ");
 
     }
