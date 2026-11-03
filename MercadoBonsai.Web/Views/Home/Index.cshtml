@@ -189,7 +189,7 @@
                         <p class="text-muted small mb-md-0">Alcance milhares de entusiastas em todo o Brasil. Cadastre-se e comece a anunciar hoje mesmo.</p>
                     </div>
                     <div class="col-md-4 text-md-end">
-                        <a asp-controller="Produto" asp-action="Criar" class="btn btn-success px-3">
+                        <a href="javascript:void(0);" onclick="abrirModalSolicitarPropaganda()" class="btn btn-success px-3">
                             <i class="icon-base ri ri-store-3-line me-1"></i> Anunciar Agora
                         </a>
                     </div>
@@ -535,7 +535,13 @@
             <div class="modal-body p-4" style="max-height: 82vh; overflow-y: auto;">
                 <div class="alert alert-success border-0 py-2 mb-4 d-flex align-items-center">
                     <i class="icon-base ri ri-information-line me-2 fs-5"></i>
-                    <span>Clique sobre a <strong>área da imagem</strong> para carregar a arte e clique no <strong>botão de preço no canto superior direito</strong> para solicitar o espaço!</span>
+                    <div>
+                        <span class="d-block mb-2">1. Clique sobre a <strong>área da imagem</strong> para carregar a arte do seu banner e depois clique no <strong>botão de preço no canto superior direito</strong> para confirmar a solicitação!</span>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white fw-semibold"><i class="icon-base ri ri-links-line text-success me-1"></i>Link de Destino (Opcional):</span>
+                            <input type="text" id="inputLinkDestinoAdHome" class="form-control" placeholder="Deixe em branco para direcionar para sua Vitrine no Mercado Bonsai, ou cole seu link (ex: https://...)" />
+                        </div>
+                    </div>
                 </div>
 
                 <!-- LINHA 1: Card Avançado em Largura Total (col-12) — Altura +50% Maior (card-ad-avancado) -->
@@ -863,6 +869,10 @@
             try {
                 const formData = new FormData();
                 formData.append('tipoEspaco', tipoEspaco);
+                const linkInput = document.getElementById('inputLinkDestinoAdHome');
+                if (linkInput && linkInput.value) {
+                    formData.append('linkDestino', linkInput.value);
+                }
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     formData.append('arteImagem', fileInput.files[0]);
                 }
@@ -882,6 +892,11 @@
                 }
 
                 const data = await response.json();
+                if (data.naoAutenticado) {
+                    alert(data.mensagem || 'Você precisa estar logado no portal para solicitar espaços publicitários.');
+                    window.location.href = '/Conta/Login?returnUrl=/Propaganda/MinhasPropagandas?novo=true';
+                    return;
+                }
                 if (data.sucesso) {
                     if (window.Swal) {
                         Swal.fire({
@@ -1184,6 +1199,11 @@
                 }
 
                 const data = await response.json();
+                if (data.naoAutenticado) {
+                    alert(data.mensagem || 'Você precisa estar logado no portal para solicitar espaços publicitários.');
+                    window.location.href = '/Conta/Login?returnUrl=/Propaganda/MinhasPropagandas?novo=true';
+                    return;
+                }
                 if (data.sucesso) {
                     alert(data.mensagem);
                     
@@ -1245,6 +1265,11 @@
                 }
 
                 const data = await response.json();
+                if (data.naoAutenticado) {
+                    alert(data.mensagem || 'Você precisa estar logado no portal para solicitar espaços publicitários.');
+                    window.location.href = '/Conta/Login?returnUrl=/Propaganda/MinhasPropagandas?novo=true';
+                    return;
+                }
                 if (data.sucesso) {
                     const modalEngajamento = bootstrap.Modal.getInstance(document.getElementById('modalDetalhesEngajamento'));
                     if (modalEngajamento) modalEngajamento.hide();

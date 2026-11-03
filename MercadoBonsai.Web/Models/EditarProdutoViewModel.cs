@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using MercadoBonsai.Domain.Enums;
 using Microsoft.AspNetCore.Http;
@@ -55,6 +56,36 @@ public class EditarProdutoViewModel
 
     public string? ImagemUrlAtual { get; set; }
 
+    public string? ImagensAdicionaisAtuais { get; set; }
+
+    public List<string> TodasImagensAtuais
+    {
+        get
+        {
+            var lista = new List<string>();
+            if (!string.IsNullOrWhiteSpace(ImagemUrlAtual))
+            {
+                lista.Add(ImagemUrlAtual.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(ImagensAdicionaisAtuais))
+            {
+                foreach (var img in ImagensAdicionaisAtuais.Split(';', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries))
+                {
+                    if (!lista.Contains(img))
+                    {
+                        lista.Add(img);
+                    }
+                }
+            }
+            return lista;
+        }
+    }
+
+    public string? ImagensManterOrdem { get; set; }
+
     [Display(Name = "Alterar Foto de Capa")]
     public IFormFile? NovaImagem { get; set; }
+
+    [Display(Name = "Adicionar Novas Fotos")]
+    public List<IFormFile>? NovasImagens { get; set; }
 }

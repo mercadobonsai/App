@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using MercadoBonsai.Domain.Enums;
 using Microsoft.AspNetCore.Http;
@@ -53,4 +54,7 @@ public class CriarProdutoViewModel
 
     [Display(Name = "Foto de Capa (Principal)")]
     public IFormFile? Imagem { get; set; }
+
+    [Display(Name = "Fotos do Produto")]
+    public List<IFormFile>? Imagens { get; set; }
 }

@@ -27,6 +27,7 @@ public class ProdutoRepository : IProdutoRepository
         precocusto AS PrecoCusto,
         quantidadeestoque AS QuantidadeEstoque, 
         imagemurl AS ImagemUrl,
+        imagensadicionais AS ImagensAdicionais,
         status AS Status,
         altura AS Altura,
         largura AS Largura,
@@ -40,11 +41,11 @@ public class ProdutoRepository : IProdutoRepository
     {
         const string sql = @"
             INSERT INTO produtos (
-                vendedorid, nome, descricao, preco, precocusto, quantidadeestoque, imagemurl, status, 
+                vendedorid, nome, descricao, preco, precocusto, quantidadeestoque, imagemurl, imagensadicionais, status, 
                 altura, largura, comprimento, peso, formaenvio, categoria, datacriacao
             )
             VALUES (
-                @VendedorId, @Nome, @Descricao, @Preco, @PrecoCusto, @QuantidadeEstoque, @ImagemUrl, @Status, 
+                @VendedorId, @Nome, @Descricao, @Preco, @PrecoCusto, @QuantidadeEstoque, @ImagemUrl, @ImagensAdicionais, @Status, 
                 @Altura, @Largura, @Comprimento, @Peso, @FormaEnvio, @Categoria, @DataCriacao
             )
             RETURNING id;";
@@ -75,6 +76,7 @@ public class ProdutoRepository : IProdutoRepository
                 p.preco AS Preco, 
                 p.quantidadeestoque AS QuantidadeEstoque, 
                 p.imagemurl AS ImagemUrl,
+                p.imagensadicionais AS ImagensAdicionais,
                 p.status AS Status,
                 p.altura AS Altura,
                 p.largura AS Largura,
@@ -119,6 +121,7 @@ public class ProdutoRepository : IProdutoRepository
                 p.preco AS Preco, 
                 p.quantidadeestoque AS QuantidadeEstoque, 
                 p.imagemurl AS ImagemUrl,
+                p.imagensadicionais AS ImagensAdicionais,
                 p.status AS Status,
                 p.altura AS Altura,
                 p.largura AS Largura,
@@ -151,6 +154,7 @@ public class ProdutoRepository : IProdutoRepository
                 precocusto = @PrecoCusto,
                 quantidadeestoque = @QuantidadeEstoque,
                 imagemurl = @ImagemUrl,
+                imagensadicionais = @ImagensAdicionais,
                 status = @Status,
                 altura = @Altura,
                 largura = @Largura,

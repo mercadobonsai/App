@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MercadoBonsai.Domain.Enums;
 
 namespace MercadoBonsai.Domain.Entities;
@@ -13,7 +14,31 @@ public class Produto
     public decimal? PrecoCusto { get; set; }
     public int QuantidadeEstoque { get; set; }
     public string ImagemUrl { get; set; } = string.Empty;
+    public string? ImagensAdicionais { get; set; }
     public StatusProduto Status { get; set; } = StatusProduto.Disponivel;
+
+    public List<string> TodasImagens
+    {
+        get
+        {
+            var lista = new List<string>();
+            if (!string.IsNullOrWhiteSpace(ImagemUrl))
+            {
+                lista.Add(ImagemUrl.Trim());
+            }
+            if (!string.IsNullOrWhiteSpace(ImagensAdicionais))
+            {
+                foreach (var img in ImagensAdicionais.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    if (!lista.Contains(img))
+                    {
+                        lista.Add(img);
+                    }
+                }
+            }
+            return lista;
+        }
+    }
 
     // Dimensões Físicas & Peso
     public decimal Altura { get; set; }

@@ -1,12 +1,26 @@
 @model IEnumerable<MercadoBonsai.Domain.Entities.Propaganda>
 @{
-    ViewData["Title"] = "Gestão de Espaços de Propaganda";
+    ViewData["Title"] = "Auditoria de Anúncios e Propagandas";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
     <div>
-        <h4 class="fw-bold mb-1" style="color: #1E3A2B;"><i class="icon-base ri ri-advertisement-line me-2 text-success"></i>Gestão de Espaços de Propaganda</h4>
-        <p class="text-muted mb-0 small">Audite solicitações de publicidade, confirme pagamentos e ative a exibição pública de anúncios.</p>
+        <h4 class="fw-bold mb-1" style="color: #1E3A2B;">
+            <i class="icon-base ri ri-advertisement-line me-2 text-success"></i>Auditoria de Anúncios & Propagandas
+        </h4>
+        <p class="text-muted mb-0 small">Aprove, reprove ou desabilite solicitações de espaços publicitários no portal Mercado Bonsai.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <span class="badge bg-label-warning px-3 py-2">
+            Pendentes: <strong>@(Model?.Count(x => x.Status == "Pendente") ?? 0)</strong>
+        </span>
+        <span class="badge bg-label-success px-3 py-2">
+            Ativos: <strong>@(Model?.Count(x => x.Status == "Ativo") ?? 0)</strong>
+        </span>
+        <span class="badge bg-label-secondary px-3 py-2">
+            Total: <strong>@(Model?.Count() ?? 0)</strong>
+        </span>
     </div>
 </div>
 
@@ -18,6 +32,14 @@
     </div>
 }
 
+@if (TempData["Erro"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="icon-base ri ri-error-warning-line me-2"></i>@TempData["Erro"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -25,12 +47,11 @@
                 <thead class="table-light">
                     <tr>
                         <th class="ps-3">ID / Anunciante</th>
-                        <th>Tipo de Espaço</th>
-                        <th>Arte Enviada</th>
-                        <th>Valor Mensal</th>
+                        <th>Espaço / Valor</th>
+                        <th>Arte & Link de Destino</th>
                         <th>Status</th>
-                        <th>Data Expiração</th>
-                        <th class="text-end pe-3">Ações de Aprovação</th>
+                        <th>Expiração</th>
+                        <th class="text-end pe-3" style="min-width: 340px;">Ações de Auditoria</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,11 +59,15 @@
                     {
                         foreach (var item in Model)
                         {
+                            var expDefault = item.DataExpiracao.HasValue && item.DataExpiracao.Value > DateTime.Now
+                                ? item.DataExpiracao.Value.ToString("yyyy-MM-dd")
+                                : DateTime.Now.AddDays(30).ToString("yyyy-MM-dd");
+
                             <tr>
                                 <td class="ps-3">
                                     <strong class="text-dark">#@item.Id</strong>
-                                    <div class="text-muted small">@item.UsuarioNome</div>
-                                    <small class="text-muted d-block">Solicitado em: @item.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small>
+                                    <div class="fw-semibold text-dark small">@item.UsuarioNome</div>
+                                    <small class="text-muted d-block">Criado: @item.DataCriacao.ToString("dd/MM/yyyy HH:mm")</small>
                                 </td>
                                 <td>
                                     <span class="badge @(item.TipoEspaco.ToLower() switch {
@@ -50,64 +75,112 @@
                                         "intermediario" => "bg-info text-dark",
                                         "basico" => "bg-success",
                                         _ => "bg-secondary"
-                                    }) px-2 py-1">
-                                        @item.TipoEspaco
+                                    }) px-2 py-1 mb-1 d-inline-block">
+                                        Espaço @item.TipoEspaco
                                     </span>
+                                    <div class="fw-bold text-success small">
+                                        R$ @item.PrecoMensal.ToString("N2", ptBr) / mês
+                                    </div>
                                 </td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(item.ImagemUrl))
                                     {
-                                        <div class="d-flex align-items-center gap-2">
-                                            <img src="@item.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/logo.webp';" alt="Arte" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;" />
-                                            <a href="@item.ImagemUrl" target="_blank" class="btn btn-xs btn-outline-secondary">Ver Arte</a>
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <a href="@item.ImagemUrl" target="_blank" title="Clique para ampliar a arte">
+                                                <img src="@item.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/logo.webp';" alt="Arte" class="rounded border shadow-xs" style="width: 72px; height: 46px; object-fit: cover;" />
+                                            </a>
+                                            <div>
+                                                <a href="@item.ImagemUrl" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2">
+                                                    <i class="icon-base ri ri-external-link-line me-1"></i>Ver Arte
+                                                </a>
+                                            </div>
                                         </div>
                                     }
                                     else
                                     {
-                                        <span class="text-muted small">Sem imagem enviada</span>
+                                        <span class="badge bg-label-warning mb-1">Sem imagem anexada</span>
                                     }
-                                </td>
-                                <td class="fw-bold text-success">
-                                    R$ @item.PrecoMensal.ToString("N2")
+
+                                    @if (!string.IsNullOrWhiteSpace(item.LinkDestino))
+                                    {
+                                        <div class="small text-truncate" style="max-width: 240px;">
+                                            <i class="icon-base ri ri-links-line text-muted me-1"></i>
+                                            <a href="@item.LinkDestino" target="_blank" class="text-decoration-none text-muted" title="@item.LinkDestino">@item.LinkDestino</a>
+                                        </div>
+                                    }
                                 </td>
                                 <td>
                                     @if (item.Status == "Ativo")
                                     {
-                                        <span class="badge bg-success">Ativo / Exibindo</span>
+                                        <span class="badge bg-success"><i class="icon-base ri ri-checkbox-circle-line me-1"></i>Ativo / Exibindo</span>
                                     }
                                     else if (item.Status == "Pendente")
                                     {
-                                        <span class="badge bg-warning text-dark">Pendente de Aprovação</span>
+                                        <span class="badge bg-warning text-dark"><i class="icon-base ri ri-time-line me-1"></i>Pendente</span>
+                                    }
+                                    else if (item.Status == "Desabilitado")
+                                    {
+                                        <span class="badge bg-secondary"><i class="icon-base ri ri-pause-circle-line me-1"></i>Desabilitado</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger">@item.Status</span>
+                                        <span class="badge bg-danger"><i class="icon-base ri ri-close-circle-line me-1"></i>@item.Status</span>
                                     }
                                 </td>
                                 <td>
-                                    @(item.DataExpiracao.HasValue ? item.DataExpiracao.Value.ToString("dd/MM/yyyy") : "Não ativado")
-                                </td>
-                                <td class="text-end pe-3">
-                                    @if (item.Status == "Pendente")
+                                    @if (item.DataExpiracao.HasValue)
                                     {
-                                        <form asp-action="AprovarPropaganda" method="post" class="d-inline-flex gap-2 align-items-center">
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <input type="date" name="dataExpiracao" class="form-control form-control-sm" value="@DateTime.UtcNow.AddDays(30).ToString("yyyy-MM-dd")" style="width: 140px;" />
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="icon-base ri ri-check-line me-1"></i> Aprovar & Ativar
-                                            </button>
-                                        </form>
-                                        <form asp-action="RejeitarPropaganda" method="post" class="d-inline ms-1">
-                                            <input type="hidden" name="id" value="@item.Id" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Deseja rejeitar este anúncio?')">
-                                                Rejeitar
-                                            </button>
-                                        </form>
+                                        <span class="small fw-semibold @(item.DataExpiracao.Value < DateTime.Now ? "text-danger" : "text-dark")">
+                                            Até @item.DataExpiracao.Value.ToString("dd/MM/yyyy")
+                                        </span>
                                     }
                                     else
                                     {
-                                        <span class="text-muted small">Processado</span>
+                                        <span class="text-muted small">Não definida</span>
                                     }
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex flex-wrap justify-content-end align-items-center gap-1">
+                                        <!-- Aprovar / Reativar / Atualizar Validade -->
+                                        <form asp-action="AprovarPropaganda" method="post" class="d-inline-flex gap-1 align-items-center">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <input type="date" name="dataExpiracao" class="form-control form-control-sm" value="@expDefault" title="Data de expiração do anúncio" style="width: 132px; font-size: 0.78rem;" />
+                                            <button type="submit" class="btn btn-sm btn-success" title="Aprovar e ativar exibição no portal">
+                                                <i class="icon-base ri ri-check-line me-1"></i>@(item.Status == "Ativo" ? "Renovar" : "Aprovar")
+                                            </button>
+                                        </form>
+
+                                        @if (item.Status != "Reprovado" && item.Status != "Rejeitado")
+                                        {
+                                            <form asp-action="RejeitarPropaganda" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Confirma reprovar este anúncio?');" title="Reprovar anúncio">
+                                                    <i class="icon-base ri ri-close-line me-1"></i>Reprovar
+                                                </button>
+                                            </form>
+                                        }
+
+                                        @if (item.Status == "Ativo" || item.Status == "Pendente")
+                                        {
+                                            <form asp-action="DesabilitarPropaganda" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary" onclick="return confirm('Deseja desabilitar a exibição deste anúncio?');" title="Desabilitar exibição do anúncio">
+                                                    <i class="icon-base ri ri-Eye-off-line me-1"></i>Desabilitar
+                                                </button>
+                                            </form>
+                                        }
+
+                                        <form asp-action="ExcluirPropaganda" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-icon btn-text-danger" onclick="return confirm('Excluir permanentemente este registro de propaganda?');" title="Excluir registro">
+                                                <i class="icon-base ri ri-delete-bin-line"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -115,7 +188,8 @@
                     else
                     {
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="icon-base ri ri-advertisement-line d-block mb-2" style="font-size: 2.5rem; opacity: 0.4;"></i>
                                 Nenhum espaço de propaganda solicitado até o momento.
                             </td>
                         </tr>

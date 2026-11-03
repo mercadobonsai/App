@@ -20,14 +20,14 @@ public class PropagandaRepository : IPropagandaRepository
         id AS Id,
         usuarioid AS UsuarioId,
         usuarionome AS UsuarioNome,
-        tipoespaco AS TipoEspaco,
-        precomensal AS PrecoMensal,
+        COALESCE(tipoespaco, tipo, 'Basico') AS TipoEspaco,
+        COALESCE(precomensal, valorpago, 0) AS PrecoMensal,
         imagemurl AS ImagemUrl,
         linkdestino AS LinkDestino,
         status AS Status,
         datainicio AS DataInicio,
         dataexpiracao AS DataExpiracao,
-        datacriacao AS DataCriacao";
+        COALESCE(datacriacao, CURRENT_TIMESTAMP) AS DataCriacao";
 
     public async Task<Propaganda?> ObterPorIdAsync(int id)
     {
@@ -45,7 +45,7 @@ public class PropagandaRepository : IPropagandaRepository
         var sql = $@"
             SELECT {SelectFields}
             FROM propagandas
-            ORDER BY datacriacao DESC;";
+            ORDER BY COALESCE(datacriacao, CURRENT_TIMESTAMP) DESC, id DESC;";
 
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<Propaganda>(sql);
@@ -57,7 +57,7 @@ public class PropagandaRepository : IPropagandaRepository
             SELECT {SelectFields}
             FROM propagandas
             WHERE usuarioid = @UsuarioId
-            ORDER BY datacriacao DESC;";
+            ORDER BY COALESCE(datacriacao, CURRENT_TIMESTAMP) DESC, id DESC;";
 
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<Propaganda>(sql, new { UsuarioId = usuarioId });
@@ -68,10 +68,10 @@ public class PropagandaRepository : IPropagandaRepository
         var sql = $@"
             SELECT {SelectFields}
             FROM propagandas
-            WHERE LOWER(tipoespaco) = LOWER(@TipoEspaco)
+            WHERE LOWER(COALESCE(tipoespaco, tipo, '')) = LOWER(@TipoEspaco)
               AND status = 'Ativo'
               AND (dataexpiracao IS NULL OR dataexpiracao >= CURRENT_TIMESTAMP)
-            ORDER BY datacriacao DESC;";
+            ORDER BY COALESCE(datacriacao, CURRENT_TIMESTAMP) DESC, id DESC;";
 
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<Propaganda>(sql, new { TipoEspaco = tipoEspaco });
@@ -81,11 +81,11 @@ public class PropagandaRepository : IPropagandaRepository
     {
         const string sql = @"
             INSERT INTO propagandas (
-                usuarioid, usuarionome, tipoespaco, precomensal, 
+                usuarioid, usuarionome, tipo, tipoespaco, valorpago, precomensal, 
                 imagemurl, linkdestino, status, datainicio, dataexpiracao, datacriacao
             )
             VALUES (
-                @UsuarioId, @UsuarioNome, @TipoEspaco, @PrecoMensal, 
+                @UsuarioId, @UsuarioNome, @TipoEspaco, @TipoEspaco, @PrecoMensal, @PrecoMensal, 
                 @ImagemUrl, @LinkDestino, @Status, @DataInicio, @DataExpiracao, @DataCriacao
             )
             RETURNING id;";
@@ -101,7 +101,9 @@ public class PropagandaRepository : IPropagandaRepository
             SET 
                 usuarioid = @UsuarioId,
                 usuarionome = @UsuarioNome,
+                tipo = @TipoEspaco,
                 tipoespaco = @TipoEspaco,
+                valorpago = @PrecoMensal,
                 precomensal = @PrecoMensal,
                 imagemurl = @ImagemUrl,
                 linkdestino = @LinkDestino,
@@ -112,5 +114,12 @@ public class PropagandaRepository : IPropagandaRepository
 
         using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(sql, propaganda);
+    }
+
+    public async Task ExcluirAsync(int id)
+    {
+        const string sql = "DELETE FROM propagandas WHERE id = @Id;";
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(sql, new { Id = id });
     }
 }

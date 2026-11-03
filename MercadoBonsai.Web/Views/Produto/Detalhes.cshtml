@@ -6,6 +6,7 @@
     bool vendedorValido = (bool)(ViewData["VendedorValido"] ?? true);
     bool especificacoesCompletas = (bool)(ViewData["EspecificacoesCompletas"] ?? true);
     bool eOpcaoRetirar = string.Equals(Model.FormaEnvio, "A retirar", StringComparison.OrdinalIgnoreCase);
+    var todasFotos = Model.TodasImagens;
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -18,27 +19,57 @@
 
     <div class="card shadow-sm overflow-hidden border-0">
         <div class="row g-0">
-            <!-- Coluna de Imagens / Capa Original com Lupa de Zoom Interativo -->
-            <div id="containerZoomProduto" class="col-md-6 bg-light d-flex align-items-center justify-content-center p-4 position-relative overflow-hidden" 
-                 style="cursor: zoom-in;" 
-                 onclick="toggleZoomProduto(event)" 
-                 onmousemove="moverZoomProduto(event)" 
-                 onmouseleave="resetarZoomProduto()" 
-                 title="Clique para ampliar ou passe o mouse para explorar os detalhes da planta">
-                @if (!string.IsNullOrEmpty(Model.ImagemUrl))
+            <!-- Coluna de Imagens / Capa Original com Lupa de Zoom Interativo + Galeria de Miniaturas -->
+            <div class="col-md-6 bg-light d-flex flex-column align-items-center justify-content-center p-4">
+                <div id="containerZoomProduto" class="w-100 d-flex align-items-center justify-content-center position-relative overflow-hidden rounded" 
+                     style="cursor: zoom-in;" 
+                     onclick="toggleZoomProduto(event)" 
+                     onmousemove="moverZoomProduto(event)" 
+                     onmouseleave="resetarZoomProduto()" 
+                     title="Clique para ampliar ou passe o mouse para explorar os detalhes da planta">
+                    @if (todasFotos.Any())
+                    {
+                        <img id="imgZoomProduto" src="@todasFotos.First()" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" 
+                             class="img-fluid rounded shadow-sm" alt="@Model.Nome" 
+                             style="max-height: 440px; width: 100%; object-fit: contain; transition: transform 0.15s ease-out; transform-origin: center center;" />
+                        <span class="zoom-badge-hint" style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; pointer-events: none; backdrop-filter: blur(3px); z-index: 10;">
+                            <i class="icon-base ri ri-zoom-in-line me-1"></i>Clique p/ Ampliar
+                        </span>
+                    }
+                    else
+                    {
+                        <div class="text-center p-5 text-muted">
+                            <i class="icon-base ri ri-image-line" style="font-size: 5rem;"></i>
+                            <p class="mt-2">Nenhuma foto de capa cadastrada</p>
+                        </div>
+                    }
+                </div>
+
+                @if (todasFotos.Count > 1)
                 {
-                    <img id="imgZoomProduto" src="@Model.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" 
-                         class="img-fluid rounded shadow-sm" alt="@Model.Nome" 
-                         style="max-height: 440px; width: 100%; object-fit: contain; transition: transform 0.15s ease-out; transform-origin: center center;" />
-                    <span class="zoom-badge-hint" style="position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; pointer-events: none; backdrop-filter: blur(3px); z-index: 10;">
-                        <i class="icon-base ri ri-zoom-in-line me-1"></i>Clique p/ Ampliar
-                    </span>
-                }
-                else
-                {
-                    <div class="text-center p-5 text-muted">
-                        <i class="icon-base ri ri-image-line" style="font-size: 5rem;"></i>
-                        <p class="mt-2">Nenhuma foto de capa cadastrada</p>
+                    <div class="w-100 mt-3 pt-2 border-top">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted fw-semibold">
+                                <i class="icon-base ri ri-gallery-line text-success me-1"></i>Fotos do item (<span id="indiceFotoAtual">1</span>/@todasFotos.Count)
+                            </small>
+                            <small class="text-muted" style="font-size: 0.75rem;">Clique na miniatura para visualizar</small>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 justify-content-start">
+                            @for (int i = 0; i < todasFotos.Count; i++)
+                            {
+                                var fotoUrl = todasFotos[i];
+                                <button type="button"
+                                        class="btn p-0 border @(i == 0 ? "border-success border-2 shadow-sm" : "border-secondary border-opacity-25") rounded overflow-hidden thumb-produto-detalhe"
+                                        style="width: 68px; height: 68px; transition: all 0.2s;"
+                                        onclick="trocarFotoDetalheProduto('@fotoUrl', @(i + 1), this)"
+                                        title="Ver foto @(i + 1)">
+                                    <img src="@fotoUrl"
+                                         onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';"
+                                         alt="@Model.Nome - Foto @(i + 1)"
+                                         style="width: 100%; height: 100%; object-fit: cover;" />
+                                </button>
+                            }
+                        </div>
                     </div>
                 }
             </div>
@@ -224,6 +255,26 @@
     <script>
         const vendedorValido = @(vendedorValido ? "true" : "false");
         const especificacoesCompletas = @(especificacoesCompletas ? "true" : "false");
+
+        function trocarFotoDetalheProduto(url, indice, btnEl) {
+            const img = document.getElementById('imgZoomProduto');
+            if (img) {
+                resetarZoomProduto();
+                img.src = url;
+            }
+            const lblIndice = document.getElementById('indiceFotoAtual');
+            if (lblIndice) {
+                lblIndice.textContent = indice;
+            }
+            document.querySelectorAll('.thumb-produto-detalhe').forEach(el => {
+                el.classList.remove('border-success', 'border-2', 'shadow-sm');
+                el.classList.add('border-secondary', 'border-opacity-25');
+            });
+            if (btnEl) {
+                btnEl.classList.remove('border-secondary', 'border-opacity-25');
+                btnEl.classList.add('border-success', 'border-2', 'shadow-sm');
+            }
+        }
 
         function abrirModalFrete() {
             // Oculta alertas anteriores

@@ -388,7 +388,7 @@ public class AdminController : Controller
     // POST: /Admin/AprovarPropaganda
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AprovarPropaganda(int id)
+    public async Task<IActionResult> AprovarPropaganda(int id, DateTime? dataExpiracao)
     {
         var prop = await _propagandaRepository.ObterPorIdAsync(id);
         if (prop == null)
@@ -398,7 +398,7 @@ public class AdminController : Controller
 
         prop.Status = "Ativo";
         prop.DataInicio = DateTime.Now;
-        prop.DataExpiracao = DateTime.Now.AddDays(30);
+        prop.DataExpiracao = dataExpiracao.HasValue ? dataExpiracao.Value.Date.AddHours(23).AddMinutes(59).AddSeconds(59) : DateTime.Now.AddDays(30);
 
         await _propagandaRepository.AtualizarAsync(prop);
 
@@ -420,7 +420,40 @@ public class AdminController : Controller
         prop.Status = "Rejeitado";
         await _propagandaRepository.AtualizarAsync(prop);
 
-        TempData["Sucesso"] = $"Solicitação de propaganda #{id} de {prop.UsuarioNome} foi rejeitada.";
+        TempData["Sucesso"] = $"Anúncio #{id} de {prop.UsuarioNome} foi reprovado.";
+        return RedirectToAction("Propagandas");
+    }
+
+    // POST: /Admin/DesabilitarPropaganda
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DesabilitarPropaganda(int id)
+    {
+        var prop = await _propagandaRepository.ObterPorIdAsync(id);
+        if (prop == null)
+        {
+            return NotFound();
+        }
+
+        prop.Status = "Desabilitado";
+        await _propagandaRepository.AtualizarAsync(prop);
+
+        TempData["Sucesso"] = $"Anúncio #{id} de {prop.UsuarioNome} foi desabilitado e removido da vitrine.";
+        return RedirectToAction("Propagandas");
+    }
+
+    // POST: /Admin/ExcluirPropaganda
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ExcluirPropaganda(int id)
+    {
+        await _propagandaRepository.ExcluirAsync(id);
+        TempData["Sucesso"] = $"Registro de propaganda #{id} excluído permanentemente.";
+        return RedirectToAction("Propagandas");
+    }
+
+    private IActionResult PlaceholderUnused()
+    {
         return RedirectToAction("Propagandas");
     }
 

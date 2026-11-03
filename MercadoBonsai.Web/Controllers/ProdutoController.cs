@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
@@ -10,6 +11,7 @@ using MercadoBonsai.Web.Models;
 using MercadoBonsai.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MercadoBonsai.Web.Controllers;
@@ -18,19 +20,35 @@ public class ProdutoController : Controller
 {
     private readonly IProdutoRepository _produtoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IPlanoRepository _planoRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
     private readonly IStorageService _storageService;
 
     public ProdutoController(
         IProdutoRepository produtoRepository, 
         IUsuarioRepository usuarioRepository,
+        IPlanoRepository planoRepository,
         IWebHostEnvironment webHostEnvironment,
         IStorageService storageService)
     {
         _produtoRepository = produtoRepository;
         _usuarioRepository = usuarioRepository;
+        _planoRepository = planoRepository;
         _webHostEnvironment = webHostEnvironment;
         _storageService = storageService;
+    }
+
+    private async Task<(int limiteFotos, string planoNome, int limiteAnuncios)> ObterLimitesPlanoVendedorAsync(int vendedorId)
+    {
+        var vendedor = await _usuarioRepository.ObterPorIdAsync(vendedorId);
+        var planoId = vendedor?.PlanoId > 0 ? vendedor.PlanoId : 1;
+        var plano = await _planoRepository.ObterPorIdAsync(planoId);
+
+        int limiteFotos = plano?.LimiteFotos > 0 ? plano.LimiteFotos : 3;
+        string planoNome = plano?.Nome ?? "Bronze";
+        int limiteAnuncios = plano?.LimiteAnuncios > 0 ? plano.LimiteAnuncios : 5;
+
+        return (limiteFotos, planoNome, limiteAnuncios);
     }
 
     // GET: /Produto (Vitrine de Plantas: apenas Pré-bonsai e Bonsai)
@@ -126,6 +144,9 @@ public class ProdutoController : Controller
     public async Task<IActionResult> Criar()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        int limiteFotos = 3;
+        string planoNome = "Bronze";
+
         if (int.TryParse(userIdClaim, out int vendedorId))
         {
             var vendedor = await _usuarioRepository.ObterPorIdAsync(vendedorId);
@@ -139,7 +160,12 @@ public class ProdutoController : Controller
                 TempData["Erro"] = "Para publicar novos anúncios é necessário ter uma assinatura ativa com plano regularizado. Por favor, regularize sua assinatura.";
                 return RedirectToAction("Assinatura", "Conta");
             }
+
+            (limiteFotos, planoNome, _) = await ObterLimitesPlanoVendedorAsync(vendedorId);
         }
+
+        ViewBag.LimiteFotos = limiteFotos;
+        ViewBag.PlanoNome = planoNome;
 
         return View(new CriarProdutoViewModel { FormaEnvio = "Frete por conta comprador" });
     }
@@ -170,16 +196,38 @@ public class ProdutoController : Controller
             return RedirectToAction("Assinatura", "Conta");
         }
 
+        var (limiteFotos, planoNome, _) = await ObterLimitesPlanoVendedorAsync(vendedorId);
+        ViewBag.LimiteFotos = limiteFotos;
+        ViewBag.PlanoNome = planoNome;
+
+        var arquivosEnviados = new List<IFormFile>();
+        if (model.Imagens != null && model.Imagens.Any())
+        {
+            arquivosEnviados.AddRange(model.Imagens.Where(f => f != null && f.Length > 0));
+        }
+        if (model.Imagem != null && model.Imagem.Length > 0 && !arquivosEnviados.Contains(model.Imagem))
+        {
+            arquivosEnviados.Insert(0, model.Imagem);
+        }
+
+        if (arquivosEnviados.Count > limiteFotos)
+        {
+            ModelState.AddModelError("Imagens", $"Seu Plano {planoNome} permite até {limiteFotos} fotos por produto (você selecionou {arquivosEnviados.Count}). Remova algumas fotos ou faça upgrade do seu plano.");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(model);
         }
 
-        string? imagemUrl = null;
-
-        if (model.Imagem != null && model.Imagem.Length > 0)
+        var urlsSalvas = new List<string>();
+        foreach (var arq in arquivosEnviados.Take(limiteFotos))
         {
-            imagemUrl = await _storageService.UploadImagemOtimizadaAsync(model.Imagem, "produtos", $"prod_{vendedorId}");
+            var url = await _storageService.UploadImagemOtimizadaAsync(arq, "produtos", $"prod_{vendedorId}");
+            if (!string.IsNullOrWhiteSpace(url))
+            {
+                urlsSalvas.Add(url);
+            }
         }
 
         var produto = new Produto
@@ -197,7 +245,8 @@ public class ProdutoController : Controller
             Peso = model.Peso,
             FormaEnvio = string.IsNullOrWhiteSpace(model.FormaEnvio) ? "Frete por conta comprador" : model.FormaEnvio,
             Categoria = model.Categoria,
-            ImagemUrl = imagemUrl ?? string.Empty,
+            ImagemUrl = urlsSalvas.FirstOrDefault() ?? string.Empty,
+            ImagensAdicionais = urlsSalvas.Count > 1 ? string.Join(";", urlsSalvas.Skip(1)) : null,
             DataCriacao = DateTime.UtcNow
         };
 
@@ -224,6 +273,10 @@ public class ProdutoController : Controller
             return Forbid();
         }
 
+        var (limiteFotos, planoNome, _) = await ObterLimitesPlanoVendedorAsync(produto.VendedorId);
+        ViewBag.LimiteFotos = limiteFotos;
+        ViewBag.PlanoNome = planoNome;
+
         var model = new EditarProdutoViewModel
         {
             Id = produto.Id,
@@ -239,7 +292,9 @@ public class ProdutoController : Controller
             Peso = produto.Peso,
             FormaEnvio = string.IsNullOrWhiteSpace(produto.FormaEnvio) ? "Frete por conta comprador" : produto.FormaEnvio,
             Categoria = produto.Categoria,
-            ImagemUrlAtual = produto.ImagemUrl
+            ImagemUrlAtual = produto.ImagemUrl,
+            ImagensAdicionaisAtuais = produto.ImagensAdicionais,
+            ImagensManterOrdem = string.Join(";", produto.TodasImagens)
         };
 
         return View(model);
@@ -270,15 +325,58 @@ public class ProdutoController : Controller
             return Forbid();
         }
 
+        var (limiteFotos, planoNome, _) = await ObterLimitesPlanoVendedorAsync(produto.VendedorId);
+        ViewBag.LimiteFotos = limiteFotos;
+        ViewBag.PlanoNome = planoNome;
+
+        // Lista de fotos existentes que o usuário manteve (e na ordem escolhida)
+        List<string> fotosFinais;
+        if (model.ImagensManterOrdem != null)
+        {
+            fotosFinais = model.ImagensManterOrdem
+                .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Distinct()
+                .ToList();
+        }
+        else
+        {
+            fotosFinais = produto.TodasImagens;
+        }
+
+        var novosArquivos = new List<IFormFile>();
+        if (model.NovasImagens != null && model.NovasImagens.Any())
+        {
+            novosArquivos.AddRange(model.NovasImagens.Where(f => f != null && f.Length > 0));
+        }
+        if (model.NovaImagem != null && model.NovaImagem.Length > 0 && !novosArquivos.Contains(model.NovaImagem))
+        {
+            novosArquivos.Add(model.NovaImagem);
+        }
+
+        if (fotosFinais.Count + novosArquivos.Count > limiteFotos)
+        {
+            ModelState.AddModelError("NovasImagens", $"Seu Plano {planoNome} permite até {limiteFotos} fotos por produto. Você possui {fotosFinais.Count} foto(s) mantida(s) e tentou adicionar {novosArquivos.Count} nova(s).");
+        }
+
         if (!ModelState.IsValid)
         {
+            model.ImagemUrlAtual = fotosFinais.FirstOrDefault() ?? string.Empty;
+            model.ImagensAdicionaisAtuais = fotosFinais.Count > 1 ? string.Join(";", fotosFinais.Skip(1)) : null;
             return View(model);
         }
 
-        if (model.NovaImagem != null && model.NovaImagem.Length > 0)
+        foreach (var arq in novosArquivos)
         {
-            produto.ImagemUrl = await _storageService.UploadImagemOtimizadaAsync(model.NovaImagem, "produtos", $"prod_{produto.VendedorId}");
+            if (fotosFinais.Count >= limiteFotos) break;
+            var url = await _storageService.UploadImagemOtimizadaAsync(arq, "produtos", $"prod_{produto.VendedorId}");
+            if (!string.IsNullOrWhiteSpace(url))
+            {
+                fotosFinais.Add(url);
+            }
         }
+
+        produto.ImagemUrl = fotosFinais.FirstOrDefault() ?? string.Empty;
+        produto.ImagensAdicionais = fotosFinais.Count > 1 ? string.Join(";", fotosFinais.Skip(1)) : null;
 
         produto.Nome = model.Nome;
         produto.Descricao = model.Descricao ?? string.Empty;

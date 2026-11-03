@@ -104,6 +104,15 @@ using (var scope = app.Services.CreateScope())
             ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS posicao_vencedor_leilao INT NULL DEFAULT 1;
             ALTER TABLE planos ALTER COLUMN percentualcomissao TYPE NUMERIC(10,2);
             ALTER TABLE produtos ADD COLUMN IF NOT EXISTS precocusto NUMERIC(18,2) NULL;
+            ALTER TABLE produtos ADD COLUMN IF NOT EXISTS imagensadicionais TEXT NULL;
+            ALTER TABLE propagandas ADD COLUMN IF NOT EXISTS tipoespaco VARCHAR(50) NULL;
+            ALTER TABLE propagandas ADD COLUMN IF NOT EXISTS precomensal NUMERIC(10,2) NOT NULL DEFAULT 0;
+            ALTER TABLE propagandas ADD COLUMN IF NOT EXISTS datacriacao TIMESTAMP NOT NULL DEFAULT NOW();
+            ALTER TABLE propagandas ALTER COLUMN tipo DROP NOT NULL;
+            ALTER TABLE propagandas ALTER COLUMN tipo SET DEFAULT 'Basico';
+            ALTER TABLE propagandas ALTER COLUMN imagemurl DROP NOT NULL;
+            ALTER TABLE propagandas ALTER COLUMN valorpago DROP NOT NULL;
+            ALTER TABLE propagandas ALTER COLUMN valorpago SET DEFAULT 0;
 
             ALTER TABLE leiloes ALTER COLUMN lanceinicial DROP NOT NULL;
             ALTER TABLE leiloes ALTER COLUMN datainicio DROP NOT NULL;

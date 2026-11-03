@@ -2,6 +2,9 @@
 @using MercadoBonsai.Domain.Enums
 @{
     ViewData["Title"] = $"Editar Anúncio - {Model.Nome}";
+    int limiteFotos = ViewBag.LimiteFotos as int? ?? 3;
+    string planoNome = ViewBag.PlanoNome as string ?? "Bronze";
+    var fotosAtuais = Model.TodasImagensAtuais;
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -9,16 +12,21 @@
         <div class="col-md-9 col-lg-8">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
-                    <h5 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-edit-box-line me-2"></i>Alterar Anúncio</h5>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark"><i class="icon-base ri ri-edit-box-line me-2"></i>Alterar Anúncio</h5>
+                        <small class="text-muted">Plano <strong>@planoNome</strong>: até <strong>@limiteFotos fotos</strong> por produto</small>
+                    </div>
                     <a asp-action="MeusProdutos" class="btn btn-sm btn-outline-secondary">
                         <i class="icon-base ri ri-arrow-left-line me-1"></i> Voltar
                     </a>
                 </div>
                 <div class="card-body p-4">
-                    <form asp-action="Editar" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                    <form asp-action="Editar" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="formEditarProduto">
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Id" />
                         <input type="hidden" asp-for="ImagemUrlAtual" />
+                        <input type="hidden" asp-for="ImagensAdicionaisAtuais" />
+                        <input type="hidden" asp-for="ImagensManterOrdem" id="inputImagensManterOrdem" />
 
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4" role="alert"></div>
 
@@ -110,24 +118,39 @@
                             <span asp-validation-for="Descricao" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Foto Atual do Anúncio</label>
-                            <div class="mb-3">
-                                @if (!string.IsNullOrEmpty(Model.ImagemUrlAtual))
-                                {
-                                    <img src="@Model.ImagemUrlAtual" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" alt="@Model.Nome" class="img-fluid rounded shadow-sm" style="max-height: 180px; object-fit: cover;" />
-                                }
-                                else
-                                {
-                                    <div class="bg-light rounded p-3 text-muted small">Sem foto cadastrada</div>
-                                }
+                        <!-- Gestão de Fotos do Produto (Existentes + Novas até o Limite do Plano) -->
+                        <div class="card border shadow-xs p-3 mb-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                                <label class="form-label fw-bold mb-0 text-dark">
+                                    <i class="icon-base ri ri-gallery-line text-success me-1"></i>Galeria de Fotos do Produto
+                                </label>
+                                <span class="badge bg-label-success" id="badgeContadorFotosEditar">
+                                    @fotosAtuais.Count / @limiteFotos fotos (Plano @planoNome)
+                                </span>
                             </div>
-                            <label asp-for="NovaImagem" class="form-label fw-semibold"></label>
-                            <input asp-for="NovaImagem" type="file" id="fotoProdutoNovaInput" class="form-control" accept="image/*" />
-                            <div class="form-text">Envie um arquivo apenas se desejar substituir a foto atual (otimizada automaticamente).</div>
-                            <div id="previewProdutoNovoContainer" class="mt-2 d-none">
-                                <small class="fw-semibold text-success d-block mb-1">Nova Foto Selecionada:</small>
-                                <img id="imgPreviewProdutoNovo" src="" class="img-fluid rounded border shadow-sm" style="max-height: 160px; object-fit: cover;" alt="Prévia da Nova Foto" />
+
+                            <!-- Fotos Atualmente Salvas -->
+                            <div class="mb-3">
+                                <small class="fw-semibold text-muted d-block mb-2">Fotos Atuais do Produto (a 1ª foto é a Capa Principal):</small>
+                                <div id="galeriaExistentesEditar" class="row g-2"></div>
+                            </div>
+
+                            <!-- Adicionar Novas Fotos -->
+                            <div class="pt-2 border-top">
+                                <label class="form-label fw-semibold small mb-1">Adicionar Novas Fotos</label>
+                                <input type="file" name="NovasImagens" id="fotoProdutoNovaInput" class="form-control" accept="image/*" multiple />
+                                <div class="form-text">
+                                    Seu <strong>Plano @planoNome</strong> permite até <strong>@limiteFotos fotos</strong> no total por produto.
+                                    @if (limiteFotos < 12)
+                                    {
+                                        <a href="/Planos" class="text-success fw-semibold ms-1">Aumentar limite de fotos →</a>
+                                    }
+                                </div>
+                                <span asp-validation-for="NovasImagens" class="text-danger small d-block mt-1"></span>
+
+                                <div id="alertaLimiteFotosEditar" class="alert alert-warning py-2 px-3 small mt-2 d-none" role="alert"></div>
+
+                                <div id="galeriaNovasEditar" class="row g-2 mt-2 d-none"></div>
                             </div>
                         </div>
 
@@ -149,71 +172,166 @@
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const input = document.getElementById('fotoProdutoNovaInput');
-            const preview = document.getElementById('imgPreviewProdutoNovo');
-            const container = document.getElementById('previewProdutoNovoContainer');
-            if (input) {
-                input.addEventListener('change', async function (e) {
-                    let file = e.target.files[0];
-                    if (!file) {
-                        if (container) container.classList.add('d-none');
+            const limiteFotos = @limiteFotos;
+            const planoNome = '@planoNome';
+            const inputNovas = document.getElementById('fotoProdutoNovaInput');
+            const inputManterOrdem = document.getElementById('inputImagensManterOrdem');
+            const galeriaExistentes = document.getElementById('galeriaExistentesEditar');
+            const galeriaNovas = document.getElementById('galeriaNovasEditar');
+            const badgeContador = document.getElementById('badgeContadorFotosEditar');
+            const alertaLimite = document.getElementById('alertaLimiteFotosEditar');
+
+            let fotosExistentes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(fotosAtuais));
+            let novosArquivos = [];
+
+            async function normalizarArquivoImagem(file) {
+                const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic';
+                if (isHeic && typeof heic2any !== 'undefined') {
+                    try {
+                        const blobResult = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+                        const singleBlob = Array.isArray(blobResult) ? blobResult[0] : blobResult;
+                        file = new File([singleBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+                    } catch (heicErr) {
+                        console.warn('HEIC ignorado:', heicErr);
+                    }
+                }
+                return file;
+            }
+
+            function atualizarGaleriaCompleta() {
+                if (inputManterOrdem) {
+                    inputManterOrdem.value = fotosExistentes.join(';');
+                }
+
+                const dt = new DataTransfer();
+                novosArquivos.forEach(f => dt.items.add(f));
+                if (inputNovas) inputNovas.files = dt.files;
+
+                const totalFotos = fotosExistentes.length + novosArquivos.length;
+                if (badgeContador) {
+                    badgeContador.textContent = `${totalFotos} / ${limiteFotos} fotos (Plano ${planoNome})`;
+                }
+
+                // Renderiza fotos existentes
+                if (galeriaExistentes) {
+                    galeriaExistentes.innerHTML = '';
+                    if (fotosExistentes.length === 0) {
+                        galeriaExistentes.innerHTML = '<div class="col-12"><div class="bg-light rounded p-3 text-muted small text-center">Nenhuma foto salva mantida. Adicione novas fotos abaixo.</div></div>';
+                    } else {
+                        fotosExistentes.forEach((url, idx) => {
+                            const col = document.createElement('div');
+                            col.className = 'col-6 col-sm-4 col-md-3';
+                            col.innerHTML = `
+                                <div class="card h-100 border ${idx === 0 ? 'border-success border-2' : ''} shadow-xs position-relative overflow-hidden">
+                                    <img src="${url}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="w-100" style="height: 120px; object-fit: cover;" alt="Foto ${idx + 1}" />
+                                    <span class="badge ${idx === 0 ? 'bg-success' : 'bg-dark bg-opacity-75'} position-absolute top-0 start-0 m-1" style="font-size: 0.65rem;">
+                                        ${idx === 0 ? '⭐ Capa Principal' : 'Foto #' + (idx + 1)}
+                                    </span>
+                                    <div class="card-footer p-1 bg-white d-flex justify-content-between align-items-center">
+                                        ${idx > 0
+                                            ? `<button type="button" class="btn btn-xs btn-outline-success py-0 px-1" style="font-size: 0.7rem;" onclick="definirCapaExistente(${idx})" title="Tornar foto de capa">Definir Capa</button>`
+                                            : `<span class="text-success fw-bold small ps-1" style="font-size: 0.7rem;">Capa</span>`}
+                                        <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 ms-auto" onclick="removerFotoExistente(${idx})" title="Remover foto">
+                                            <i class="icon-base ri ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                            galeriaExistentes.appendChild(col);
+                        });
+                    }
+                }
+
+                // Renderiza novas fotos selecionadas para upload
+                if (galeriaNovas) {
+                    galeriaNovas.innerHTML = '';
+                    if (novosArquivos.length === 0) {
+                        galeriaNovas.classList.add('d-none');
+                    } else {
+                        galeriaNovas.classList.remove('d-none');
+                        novosArquivos.forEach((file, idx) => {
+                            const url = URL.createObjectURL(file);
+                            const numeroOrdem = fotosExistentes.length + idx + 1;
+                            const ehCapa = (fotosExistentes.length === 0 && idx === 0);
+                            const col = document.createElement('div');
+                            col.className = 'col-6 col-sm-4 col-md-3';
+                            col.innerHTML = `
+                                <div class="card h-100 border border-primary shadow-xs position-relative overflow-hidden">
+                                    <img src="${url}" class="w-100" style="height: 120px; object-fit: cover;" alt="Nova Foto ${idx + 1}" />
+                                    <span class="badge ${ehCapa ? 'bg-success' : 'bg-primary'} position-absolute top-0 start-0 m-1" style="font-size: 0.65rem;">
+                                        ${ehCapa ? '⭐ Nova Capa' : 'Nova #' + numeroOrdem}
+                                    </span>
+                                    <div class="card-footer p-1 bg-white d-flex justify-content-between align-items-center">
+                                        <span class="text-primary small ps-1" style="font-size: 0.7rem;">Para enviar</span>
+                                        <button type="button" class="btn btn-xs btn-outline-danger py-0 px-1 ms-auto" onclick="removerFotoNova(${idx})" title="Remover nova foto">
+                                            <i class="icon-base ri ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                            galeriaNovas.appendChild(col);
+                        });
+                    }
+                }
+            }
+
+            window.removerFotoExistente = function (idx) {
+                fotosExistentes.splice(idx, 1);
+                if (alertaLimite) alertaLimite.classList.add('d-none');
+                atualizarGaleriaCompleta();
+            };
+
+            window.definirCapaExistente = function (idx) {
+                if (idx <= 0 || idx >= fotosExistentes.length) return;
+                const item = fotosExistentes.splice(idx, 1)[0];
+                fotosExistentes.unshift(item);
+                atualizarGaleriaCompleta();
+            };
+
+            window.removerFotoNova = function (idx) {
+                novosArquivos.splice(idx, 1);
+                if (alertaLimite) alertaLimite.classList.add('d-none');
+                atualizarGaleriaCompleta();
+            };
+
+            if (inputNovas) {
+                inputNovas.addEventListener('change', async function (e) {
+                    const selecionados = Array.from(e.target.files || []);
+                    if (selecionados.length === 0) {
+                        atualizarGaleriaCompleta();
                         return;
                     }
 
-                    const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic';
-                    if (isHeic && typeof heic2any !== 'undefined') {
-                        try {
-                            const blobResult = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
-                            const singleBlob = Array.isArray(blobResult) ? blobResult[0] : blobResult;
-                            file = new File([singleBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
-                            const dt = new DataTransfer();
-                            dt.items.add(file);
-                            input.files = dt.files;
-                        } catch (heicErr) {
-                            console.warn('HEIC ignorado:', heicErr);
+                    let excedeu = false;
+                    for (let rawFile of selecionados) {
+                        if ((fotosExistentes.length + novosArquivos.length) >= limiteFotos) {
+                            excedeu = true;
+                            break;
+                        }
+                        const file = await normalizarArquivoImagem(rawFile);
+                        novosArquivos.push(file);
+                    }
+
+                    if (alertaLimite) {
+                        if (excedeu) {
+                            alertaLimite.innerHTML = `<i class="icon-base ri ri-information-line me-1"></i>Seu <strong>Plano ${planoNome}</strong> permite no máximo <strong>${limiteFotos} fotos</strong> por produto. Remova alguma foto existente ou faça upgrade do plano para adicionar mais.`;
+                            alertaLimite.classList.remove('d-none');
+                        } else {
+                            alertaLimite.classList.add('d-none');
                         }
                     }
 
-                    if (!file.type.startsWith('image/')) return;
-                    if (preview && container) {
-                        preview.src = URL.createObjectURL(file);
-                        container.classList.remove('d-none');
-                    }
-
-                    if (file.size > 800 * 1024) {
-                        try {
-                            const img = new Image();
-                            img.src = URL.createObjectURL(file);
-                            await img.decode();
-                            const maxDim = 1600;
-                            let width = img.width, height = img.height;
-                            if (width > maxDim || height > maxDim) {
-                                if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
-                                else { width = Math.round((width * maxDim) / height); height = maxDim; }
-                            }
-                            const canvas = document.createElement('canvas');
-                            canvas.width = width; canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-                            canvas.toBlob(function (blob) {
-                                if (blob && blob.size < file.size) {
-                                    const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
-                                    const dt = new DataTransfer();
-                                    dt.items.add(newFile);
-                                    input.files = dt.files;
-                                    if (preview) preview.src = URL.createObjectURL(newFile);
-                                }
-                            }, 'image/jpeg', 0.85);
-                        } catch (err) {
-                            console.warn('Compressão ignorada:', err);
-                        }
-                    }
+                    atualizarGaleriaCompleta();
                 });
             }
 
+            atualizarGaleriaCompleta();
+
             const btn = document.getElementById('btnSubmitEditarProduto');
-            if (btn && input && input.form) {
-                input.form.addEventListener('submit', function () {
+            const form = document.getElementById('formEditarProduto');
+            if (btn && form) {
+                form.addEventListener('submit', function () {
+                    atualizarGaleriaCompleta();
                     btn.disabled = true;
                     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
                 });

@@ -12,4 +12,5 @@ public interface IPropagandaRepository
     Task<IEnumerable<Propaganda>> ListarAtivasPorTipoAsync(string tipoEspaco);
     Task<int> InserirAsync(Propaganda propaganda);
     Task AtualizarAsync(Propaganda propaganda);
+    Task ExcluirAsync(int id);
 }

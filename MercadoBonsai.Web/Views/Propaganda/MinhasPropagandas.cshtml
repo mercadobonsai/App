@@ -1,22 +1,71 @@
 @model IEnumerable<MercadoBonsai.Domain.Entities.Propaganda>
 @{
     ViewData["Title"] = "Minhas Propagandas e Anúncios";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    bool permitePropaganda = ViewBag.PermitePropaganda as bool? ?? false;
+    string planoNome = ViewBag.PlanoNome as string ?? "Bronze";
+    bool abrirModalNovo = ViewBag.AbrirModalNovo as bool? ?? false;
+    string linkPadraoVitrine = ViewBag.LinkPadraoVitrine as string ?? "https://mercadobonsai.com.br";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
     <div>
-        <h4 class="fw-bold mb-1" style="color: #1E3A2B;"><i class="icon-base ri ri-advertisement-line me-2 text-success"></i>Minhas Propagandas & Anúncios</h4>
-        <p class="text-muted mb-0 small">Acompanhe suas solicitações de espaço publicitário no portal Mercado Bonsai.</p>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <h4 class="fw-bold mb-0" style="color: #1E3A2B;">
+                <i class="icon-base ri ri-advertisement-line me-2 text-success"></i>Minhas Propagandas & Anúncios
+            </h4>
+            <span class="badge @(permitePropaganda ? "bg-label-success" : "bg-label-secondary") px-2 py-1">
+                Plano @planoNome
+            </span>
+        </div>
+        <p class="text-muted mb-0 small">Cadastre e acompanhe seus espaços publicitários e banners em destaque no portal Mercado Bonsai.</p>
     </div>
-    <a asp-controller="Home" asp-action="Index" class="btn btn-success shadow-sm">
-        <i class="icon-base ri ri-add-line me-1"></i> Solicitar Novo Anúncio
-    </a>
+    <div>
+        @if (permitePropaganda)
+        {
+            <button type="button" class="btn btn-success shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalSolicitarPropaganda">
+                <i class="icon-base ri ri-add-circle-line me-1"></i> Solicitar Novo Anúncio
+            </button>
+        }
+        else
+        {
+            <a href="/Planos" class="btn btn-warning text-dark fw-bold shadow-sm">
+                <i class="icon-base ri ri-vip-crown-line me-1"></i> Fazer Upgrade para Anunciar
+            </a>
+        }
+    </div>
 </div>
+
+@if (!permitePropaganda)
+{
+    <div class="alert alert-warning border-warning shadow-sm d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4" role="alert">
+        <div class="d-flex align-items-center gap-3">
+            <i class="icon-base ri ri-lock-2-line fs-2 text-warning"></i>
+            <div>
+                <h6 class="fw-bold mb-1 text-dark">Recurso Exclusivo para Assinantes (Planos Prata, Ouro e Diamante)</h6>
+                <p class="mb-0 small text-dark">
+                    Seu plano atual (<strong>Plano @planoNome</strong>) não possui acesso ao cadastro de Propagandas e Destaques na Home. Faça o upgrade da sua assinatura para divulgar seus banners no portal!
+                </p>
+            </div>
+        </div>
+        <a href="/Planos" class="btn btn-sm btn-warning text-dark fw-bold text-nowrap px-3">
+            Ver Planos Disponíveis
+        </a>
+    </div>
+}
 
 @if (TempData["Sucesso"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
         <i class="icon-base ri ri-checkbox-circle-line me-2"></i>@TempData["Sucesso"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Erro"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="icon-base ri ri-error-warning-line me-2"></i>@TempData["Erro"]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
@@ -29,10 +78,11 @@
                     <tr>
                         <th class="ps-3">ID / Data</th>
                         <th>Tipo de Espaço</th>
-                        <th>Arte Anexada</th>
+                        <th>Arte & Link de Destino</th>
                         <th>Valor Mensal</th>
                         <th>Status</th>
                         <th>Período de Exibição</th>
+                        <th class="text-end pe-3">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -58,18 +108,25 @@
                                 <td>
                                     @if (!string.IsNullOrEmpty(item.ImagemUrl))
                                     {
-                                        <div class="d-flex align-items-center gap-2">
-                                            <img src="@item.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/logo.webp';" alt="Arte" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;" />
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <img src="@item.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/logo.webp';" alt="Arte" class="rounded border" style="width: 64px; height: 42px; object-fit: cover;" />
                                             <a href="@item.ImagemUrl" target="_blank" class="btn btn-xs btn-outline-secondary">Visualizar</a>
                                         </div>
                                     }
                                     else
                                     {
-                                        <span class="text-muted small">Pendente de upload</span>
+                                        <span class="badge bg-label-warning mb-1">Arte pendente de envio</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.LinkDestino))
+                                    {
+                                        <div class="small text-truncate" style="max-width: 220px;">
+                                            <i class="icon-base ri ri-links-line text-muted me-1"></i>
+                                            <a href="@item.LinkDestino" target="_blank" class="text-muted text-decoration-none">@item.LinkDestino</a>
+                                        </div>
                                     }
                                 </td>
                                 <td class="fw-bold text-success">
-                                    R$ @item.PrecoMensal.ToString("N2")
+                                    R$ @item.PrecoMensal.ToString("N2", ptBr)
                                 </td>
                                 <td>
                                     @if (item.Status == "Ativo")
@@ -78,11 +135,15 @@
                                     }
                                     else if (item.Status == "Pendente")
                                     {
-                                        <span class="badge bg-warning text-dark"><i class="icon-base ri ri-time-line me-1"></i>Aguardando Pagamento/Aprovação</span>
+                                        <span class="badge bg-warning text-dark"><i class="icon-base ri ri-time-line me-1"></i>Em Auditoria (Pendente)</span>
+                                    }
+                                    else if (item.Status == "Desabilitado")
+                                    {
+                                        <span class="badge bg-secondary"><i class="icon-base ri ri-pause-circle-line me-1"></i>Desabilitado</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-danger">@item.Status</span>
+                                        <span class="badge bg-danger"><i class="icon-base ri ri-close-circle-line me-1"></i>@item.Status</span>
                                     }
                                 </td>
                                 <td>
@@ -95,14 +156,52 @@
                                         <small class="text-muted">Aguardando ativação pelo Admin</small>
                                     }
                                 </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-inline-flex gap-1 align-items-center">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary"
+                                                onclick="abrirModalEditarArte(@item.Id, '@item.TipoEspaco', '@(item.LinkDestino ?? "")')"
+                                                title="Enviar ou atualizar imagem e link do banner">
+                                            <i class="icon-base ri ri-upload-2-line me-1"></i>Arte / Link
+                                        </button>
+
+                                        @if (item.Status != "Ativo")
+                                        {
+                                            <form asp-action="Excluir" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Deseja cancelar e remover esta solicitação de propaganda?');" title="Remover solicitação">
+                                                    <i class="icon-base ri ri-delete-bin-line"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">
-                                Você ainda não possui nenhum espaço publicitário solicitado. <a asp-controller="Home" asp-action="Index">Clique aqui para anunciar na Home!</a>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="icon-base ri ri-megaphone-line d-block mb-2 text-success" style="font-size: 2.5rem; opacity: 0.6;"></i>
+                                Você ainda não possui nenhum espaço publicitário cadastrado.
+                                @if (permitePropaganda)
+                                {
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-success fw-bold" data-bs-toggle="modal" data-bs-target="#modalSolicitarPropaganda">
+                                            <i class="icon-base ri ri-add-line me-1"></i> Clique aqui para cadastrar seu anúncio agora!
+                                        </button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="mt-2">
+                                        <a href="/Planos" class="btn btn-sm btn-warning text-dark fw-bold">
+                                            Conheça os planos com acesso a Propaganda na Home
+                                        </a>
+                                    </div>
+                                }
                             </td>
                         </tr>
                     }
@@ -111,3 +210,227 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Solicitar / Cadastrar Nova Propaganda -->
+<div class="modal fade" id="modalSolicitarPropaganda" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-header text-white border-0 py-3 px-4" style="background: linear-gradient(135deg, #1E3A2B 0%, #2D5A27 100%);">
+                <div>
+                    <h5 class="modal-title fw-bold text-white mb-0">
+                        <i class="icon-base ri ri-megaphone-line me-2 text-warning"></i>Espaços de Propaganda & Publicidade - Mercado Bonsai
+                    </h5>
+                    <small class="text-white-50">Escolha o espaço desejado, envie a imagem do seu banner e informe o link de destino.</small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form asp-controller="Propaganda" asp-action="SolicitarComArte" method="post" enctype="multipart/form-data">
+                <div class="modal-body p-4" style="background-color: #F8FAFC;">
+                    <div class="row g-3 mb-4">
+                        <!-- 1. Avançado -->
+                        <div class="col-md-6">
+                            <label class="card h-100 border-2 shadow-xs cursor-pointer card-opcao-espaco border-success bg-success bg-opacity-10" id="cardEspaco_Avancado" onclick="selecionarEspacoPropaganda('Avancado', '299,90', '1200 x 400 px')" style="cursor: pointer; transition: all 0.2s;">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="tipoEspaco" id="radio_Avancado" value="Avancado" checked onchange="selecionarEspacoPropaganda('Avancado', '299,90', '1200 x 400 px')" />
+                                            <span class="fw-bold text-dark">1. Carrossel Topo (Avançado)</span>
+                                        </div>
+                                        <span class="badge bg-warning text-dark fw-bold">R$ 299,90 / mês</span>
+                                    </div>
+                                    <p class="small text-muted mb-1">Banner rotativo principal em largura total no topo da Home.</p>
+                                    <span class="badge bg-white text-secondary border"><i class="icon-base ri ri-aspect-ratio-line me-1"></i>Dimensão recomendada: 1200 x 400 px</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- 2. Intermediário -->
+                        <div class="col-md-6">
+                            <label class="card h-100 border shadow-xs cursor-pointer card-opcao-espaco" id="cardEspaco_Intermediario" onclick="selecionarEspacoPropaganda('Intermediario', '149,90', '600 x 250 px')" style="cursor: pointer; transition: all 0.2s;">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="tipoEspaco" id="radio_Intermediario" value="Intermediario" onchange="selecionarEspacoPropaganda('Intermediario', '149,90', '600 x 250 px')" />
+                                            <span class="fw-bold text-dark">2. Banner Intermediário</span>
+                                        </div>
+                                        <span class="badge bg-success text-white fw-bold">R$ 149,90 / mês</span>
+                                    </div>
+                                    <p class="small text-muted mb-1">2 posições de destaque na faixa central da página inicial.</p>
+                                    <span class="badge bg-white text-secondary border"><i class="icon-base ri ri-aspect-ratio-line me-1"></i>Dimensão recomendada: 600 x 250 px</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- 3. Básico -->
+                        <div class="col-md-6">
+                            <label class="card h-100 border shadow-xs cursor-pointer card-opcao-espaco" id="cardEspaco_Basico" onclick="selecionarEspacoPropaganda('Basico', '79,90', '400 x 200 px')" style="cursor: pointer; transition: all 0.2s;">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="tipoEspaco" id="radio_Basico" value="Basico" onchange="selecionarEspacoPropaganda('Basico', '79,90', '400 x 200 px')" />
+                                            <span class="fw-bold text-dark">3. Banner Básico</span>
+                                        </div>
+                                        <span class="badge bg-success text-white fw-bold">R$ 79,90 / mês</span>
+                                    </div>
+                                    <p class="small text-muted mb-1">3 posições de vitrine no bloco de destaques da Home.</p>
+                                    <span class="badge bg-white text-secondary border"><i class="icon-base ri ri-aspect-ratio-line me-1"></i>Dimensão recomendada: 400 x 200 px</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- 4. Econômico -->
+                        <div class="col-md-6">
+                            <label class="card h-100 border shadow-xs cursor-pointer card-opcao-espaco" id="cardEspaco_Economico" onclick="selecionarEspacoPropaganda('Economico', '49,90', '250 x 250 px')" style="cursor: pointer; transition: all 0.2s;">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="tipoEspaco" id="radio_Economico" value="Economico" onchange="selecionarEspacoPropaganda('Economico', '49,90', '250 x 250 px')" />
+                                            <span class="fw-bold text-dark">4. Banner Econômico (Lateral)</span>
+                                        </div>
+                                        <span class="badge bg-success text-white fw-bold">R$ 49,90 / mês</span>
+                                    </div>
+                                    <p class="small text-muted mb-1">Coluna lateral direita da Home e das páginas de Vitrine.</p>
+                                    <span class="badge bg-white text-secondary border"><i class="icon-base ri ri-aspect-ratio-line me-1"></i>Dimensão recomendada: 250 x 250 px</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Dados da Arte e Link -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-7">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-dark">
+                                            <i class="icon-base ri ri-image-add-line text-success me-1"></i>Arte / Imagem do Banner <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="file" name="arteImagem" id="inputArtePropaganda" class="form-control" accept="image/*" required onchange="previsualizarArteModal(this)" />
+                                        <small class="text-muted d-block mt-1">
+                                            Dimensão ideal para o espaço selecionado: <strong id="lblDimensaoIdeal">1200 x 400 px</strong> (JPG, PNG ou WEBP).
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <label class="form-label fw-bold text-dark">
+                                            <i class="icon-base ri ri-links-line text-success me-1"></i>Link de Destino ao Clicar no Anúncio
+                                        </label>
+                                        <input type="text" name="linkDestino" class="form-control" value="@linkPadraoVitrine" placeholder="Ex: https://mercadobonsai.com.br/Produto?vendedorId=... ou seu WhatsApp/Site" />
+                                        <small class="text-muted">Deixe o link padrão acima para levar os clientes diretamente para a sua Vitrine no Mercado Bonsai.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-5 text-center">
+                                    <div class="border rounded-3 p-3 bg-light d-flex flex-column align-items-center justify-content-center" style="min-height: 165px;">
+                                        <img id="imgPreviewArteModal" src="#" alt="Preview" class="img-fluid rounded shadow-xs d-none" style="max-height: 140px; object-fit: contain;" />
+                                        <div id="placeholderPreviewArteModal" class="text-muted small">
+                                            <i class="icon-base ri ri-image-2-line d-block mb-1" style="font-size: 2rem;"></i>
+                                            Pré-visualização do seu banner aparecerá aqui
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white d-flex justify-content-between align-items-center px-4 py-3">
+                    <div>
+                        <span class="text-muted small">Espaço selecionado:</span>
+                        <strong class="text-dark ms-1" id="lblResumoEspaco">Avançado</strong>
+                        <span class="badge bg-success ms-2" id="lblResumoValor">R$ 299,90 / mês</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success fw-bold px-4">
+                            <i class="icon-base ri ri-check-double-line me-1"></i> Confirmar e Enviar para Auditoria
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Atualizar Arte / Link de Propaganda Existente -->
+<div class="modal fade" id="modalEditarArtePropaganda" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold text-white">
+                    <i class="icon-base ri ri-upload-2-line me-1"></i> Atualizar Arte ou Link (<span id="lblEditarArteTipo"></span>)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form asp-controller="Propaganda" asp-action="AtualizarArte" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="inputEditarArteId" />
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nova Imagem do Banner (Opcional)</label>
+                        <input type="file" name="arteImagem" class="form-control" accept="image/*" />
+                        <small class="text-muted">Selecione um arquivo apenas se desejar substituir a imagem atual.</small>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">Link de Destino</label>
+                        <input type="text" name="linkDestino" id="inputEditarArteLink" class="form-control" placeholder="https://..." />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function selecionarEspacoPropaganda(tipo, valor, dimensao) {
+            document.querySelectorAll('.card-opcao-espaco').forEach(c => {
+                c.classList.remove('border-success', 'border-2', 'bg-success', 'bg-opacity-10');
+            });
+            const card = document.getElementById('cardEspaco_' + tipo);
+            if (card) {
+                card.classList.add('border-success', 'border-2', 'bg-success', 'bg-opacity-10');
+            }
+            const radio = document.getElementById('radio_' + tipo);
+            if (radio) radio.checked = true;
+
+            document.getElementById('lblDimensaoIdeal').textContent = dimensao;
+            document.getElementById('lblResumoEspaco').textContent = tipo;
+            document.getElementById('lblResumoValor').textContent = 'R$ ' + valor + ' / mês';
+        }
+
+        function previsualizarArteModal(input) {
+            const img = document.getElementById('imgPreviewArteModal');
+            const placeholder = document.getElementById('placeholderPreviewArteModal');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    img.src = e.target.result;
+                    img.classList.remove('d-none');
+                    placeholder.classList.add('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function abrirModalEditarArte(id, tipo, link) {
+            document.getElementById('inputEditarArteId').value = id;
+            document.getElementById('lblEditarArteTipo').textContent = '#' + id + ' - ' + tipo;
+            document.getElementById('inputEditarArteLink').value = link;
+            new bootstrap.Modal(document.getElementById('modalEditarArtePropaganda')).show();
+        }
+
+        @if (abrirModalNovo && permitePropaganda)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function () {
+                var modalEl = document.getElementById('modalSolicitarPropaganda');
+                if (modalEl) {
+                    new bootstrap.Modal(modalEl).show();
+                }
+            });
+            </text>
+        }
+    </script>
+}
