@@ -21,6 +21,7 @@ public class ProdutoController : Controller
     private readonly IProdutoRepository _produtoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPlanoRepository _planoRepository;
+    private readonly IPropagandaRepository _propagandaRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
     private readonly IStorageService _storageService;
 
@@ -28,12 +29,14 @@ public class ProdutoController : Controller
         IProdutoRepository produtoRepository, 
         IUsuarioRepository usuarioRepository,
         IPlanoRepository planoRepository,
+        IPropagandaRepository propagandaRepository,
         IWebHostEnvironment webHostEnvironment,
         IStorageService storageService)
     {
         _produtoRepository = produtoRepository;
         _usuarioRepository = usuarioRepository;
         _planoRepository = planoRepository;
+        _propagandaRepository = propagandaRepository;
         _webHostEnvironment = webHostEnvironment;
         _storageService = storageService;
     }
@@ -94,6 +97,7 @@ public class ProdutoController : Controller
         ViewData["Busca"] = busca;
         ViewData["Ordem"] = ordem;
         ViewData["VendedorId"] = vendedorId;
+        ViewBag.PropagandasEconomico = await _propagandaRepository.ListarAtivasPorTipoAsync("Economico");
 
         return View(produtos);
     }

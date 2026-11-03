@@ -19,6 +19,7 @@ public class InsumoController : Controller
     private readonly IRifaRepository _rifaRepository;
     private readonly IPatrocinioRepository _patrocinioRepository;
     private readonly IDicaCultivoRepository _dicaCultivoRepository;
+    private readonly IPropagandaRepository _propagandaRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
     public InsumoController(
@@ -28,6 +29,7 @@ public class InsumoController : Controller
         IRifaRepository rifaRepository,
         IPatrocinioRepository patrocinioRepository,
         IDicaCultivoRepository dicaCultivoRepository,
+        IPropagandaRepository propagandaRepository,
         IWebHostEnvironment webHostEnvironment)
     {
         _produtoRepository = produtoRepository;
@@ -36,6 +38,7 @@ public class InsumoController : Controller
         _rifaRepository = rifaRepository;
         _patrocinioRepository = patrocinioRepository;
         _dicaCultivoRepository = dicaCultivoRepository;
+        _propagandaRepository = propagandaRepository;
         _webHostEnvironment = webHostEnvironment;
     }
 
@@ -88,6 +91,7 @@ public class InsumoController : Controller
             LeilaoAtivo = leilaoAtivo,
             RifaAtiva = rifaAtiva,
             PatrocinioDestaque = patrocinioDestaque,
+            PropagandasEconomico = await _propagandaRepository.ListarAtivasPorTipoAsync("Economico"),
             DicaCultivoSemana = dicaJson ?? await _dicaCultivoRepository.ObterDicaRecenteAsync()
         };
 

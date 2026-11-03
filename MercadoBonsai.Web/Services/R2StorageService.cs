@@ -74,7 +74,18 @@ public class R2StorageService : IStorageService
 
             // Se a imagem já for praticamente 4:3 (+- 2% de tolerância) ou quadrada/panorâmica equilibrada
             Image finalImage;
-            if (Math.Abs(currentRatio - targetRatio) < 0.05)
+            bool preservarProporcao = string.Equals(pastaDestino, "propagandas", StringComparison.OrdinalIgnoreCase) || string.Equals(pastaDestino, "logotipos", StringComparison.OrdinalIgnoreCase);
+            if (preservarProporcao)
+            {
+                var options = new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(1600, 1600)
+                };
+                image.Mutate(x => x.Resize(options));
+                finalImage = image;
+            }
+            else if (Math.Abs(currentRatio - targetRatio) < 0.05)
             {
                 var options = new ResizeOptions
                 {
