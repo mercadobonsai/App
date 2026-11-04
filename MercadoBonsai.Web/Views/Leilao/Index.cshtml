@@ -11,56 +11,42 @@
         position: relative;
         overflow: hidden;
         aspect-ratio: 4/3;
-        background-color: #f1f5f9;
+        background-color: #f8f9fa;
         display: flex;
         align-items: center;
         justify-content: center;
     }
     .ambient-card-bg {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        width: 100%; height: 100%;
-        object-fit: cover;
-        filter: blur(14px) brightness(0.85);
-        opacity: 0.45;
-        transform: scale(1.15);
-        z-index: 1;
-        pointer-events: none;
+        display: none !important;
     }
     .ambient-card-img {
         position: relative;
         z-index: 2;
-        max-width: 100%;
-        max-height: 100%;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
+        object-position: center;
     }
     .modal-ambient-box {
         position: relative;
         overflow: hidden;
         border-radius: 12px;
-        background-color: #f8fafc;
+        background-color: #f8f9fa;
         display: flex;
         align-items: center;
         justify-content: center;
         height: 380px;
     }
     .modal-ambient-bg {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        width: 100%; height: 100%;
-        object-fit: cover;
-        filter: blur(16px) brightness(0.8);
-        opacity: 0.4;
-        transform: scale(1.15);
-        z-index: 1;
-        pointer-events: none;
+        display: none !important;
     }
     .modal-ambient-img {
         position: relative;
         z-index: 2;
-        max-width: 100%;
-        max-height: 100%;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
+        object-position: center;
     }
     .thumb-gallery {
         cursor: pointer;
@@ -153,9 +139,8 @@
                                 }
                             </div>
 
-                            <!-- Foto com Proporção 4:3 e Fundo Suave -->
+                            <!-- Foto Ocupando Todo o Espaço 4:3 -->
                             <div class="ambient-card-box">
-                                <img src="@leilao.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-card-bg" alt="" aria-hidden="true" />
                                 <img src="@leilao.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-card-img" alt="@leilao.Titulo" />
                             </div>
 
@@ -226,7 +211,6 @@
                     <div class="col-sm-6 col-md-4 col-lg-3">
                         <div class="card h-100 shadow-sm border-0 overflow-hidden d-flex flex-column">
                             <div class="ambient-card-box">
-                                <img src="@l.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-card-bg" alt="" aria-hidden="true" />
                                 <img src="@l.FotoPrincipalUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-card-img" alt="@l.Titulo" style="filter: grayscale(15%);" />
                                 <span class="badge bg-secondary position-absolute top-0 end-0 m-3 shadow-sm" style="z-index: 3;">Encerrado</span>
                             </div>
@@ -322,7 +306,6 @@
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="modal-ambient-box mb-3">
-                        <img id="modalFotoBg" src="${item.fotoPrincipal}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="modal-ambient-bg" alt="" aria-hidden="true" />
                         <img id="modalFotoPrincipal" src="${item.fotoPrincipal}" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="modal-ambient-img" alt="${item.titulo}" />
                     </div>
                     <div class="d-flex gap-2">
@@ -400,7 +383,8 @@
     }
 
     function trocarFotoModal(url, el) {
-        document.getElementById('modalFotoBg').src = url;
+        const bgEl = document.getElementById('modalFotoBg');
+        if (bgEl) bgEl.src = url;
         document.getElementById('modalFotoPrincipal').src = url;
         document.querySelectorAll('.thumb-gallery').forEach(img => img.classList.remove('active'));
         if (el) el.classList.add('active');

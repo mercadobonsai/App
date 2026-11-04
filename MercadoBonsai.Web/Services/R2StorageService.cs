@@ -66,69 +66,21 @@ public class R2StorageService : IStorageService
             using var inputStream = arquivo.OpenReadStream();
             using var image = await Image.LoadAsync(inputStream);
 
-            // 1.1 Redimensionar proporcionalmente para caber em 1200x900 (Canvas 4:3)
-            int targetWidth = 1200;
-            int targetHeight = 900;
-            double targetRatio = (double)targetWidth / targetHeight; // 1.3333...
-            double currentRatio = (double)image.Width / image.Height;
+            // 1.1 Redimensionar proporcionalmente preservando o aspecto original (sem fundo desfocado)
+            bool isBannerOuLogo = string.Equals(pastaDestino, "propagandas", StringComparison.OrdinalIgnoreCase) || string.Equals(pastaDestino, "logotipos", StringComparison.OrdinalIgnoreCase);
+            int maxDim = isBannerOuLogo ? 1600 : 1200;
 
-            // Se a imagem já for praticamente 4:3 (+- 2% de tolerância) ou quadrada/panorâmica equilibrada
-            Image finalImage;
-            bool preservarProporcao = string.Equals(pastaDestino, "propagandas", StringComparison.OrdinalIgnoreCase) || string.Equals(pastaDestino, "logotipos", StringComparison.OrdinalIgnoreCase);
-            if (preservarProporcao)
+            if (image.Width > maxDim || image.Height > maxDim)
             {
                 var options = new ResizeOptions
                 {
                     Mode = ResizeMode.Max,
-                    Size = new Size(1600, 1600)
+                    Size = new Size(maxDim, maxDim)
                 };
                 image.Mutate(x => x.Resize(options));
-                finalImage = image;
             }
-            else if (Math.Abs(currentRatio - targetRatio) < 0.05)
-            {
-                var options = new ResizeOptions
-                {
-                    Mode = ResizeMode.Max,
-                    Size = new Size(targetWidth, targetHeight)
-                };
-                image.Mutate(x => x.Resize(options));
-                finalImage = image;
-            }
-            else
-            {
-                // Criar o fundo ambientado desfocado ocupando 100% do canvas 4:3 (1200x900)
-                var background = image.Clone(ctx =>
-                {
-                    ctx.Resize(new ResizeOptions
-                    {
-                        Mode = ResizeMode.Crop,
-                        Size = new Size(targetWidth, targetHeight),
-                        Position = AnchorPositionMode.Center
-                    });
-                    ctx.GaussianBlur(25f);
-                    ctx.Brightness(0.65f);
-                });
 
-                // Redimensionar a imagem principal para caber perfeitamente no centro sem cortes
-                var foreground = image.Clone(ctx =>
-                {
-                    ctx.Resize(new ResizeOptions
-                    {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(targetWidth, targetHeight)
-                    });
-                });
-
-                // Desenhar a imagem nítida no centro do fundo ambientado
-                int posX = (targetWidth - foreground.Width) / 2;
-                int posY = (targetHeight - foreground.Height) / 2;
-                background.Mutate(ctx => ctx.DrawImage(foreground, new Point(posX, posY), 1f));
-
-                foreground.Dispose();
-                image.Dispose();
-                finalImage = background;
-            }
+            Image finalImage = image;
 
             var encoder = new WebpEncoder
             {

@@ -111,10 +111,8 @@
                             <div class="ambient-img-container" style="aspect-ratio: 4/3; width: 100%;">
                                 @if (!string.IsNullOrEmpty(p.ImagemUrl))
                                 {
-                                    <!-- Fundo Ambientado Desfocado -->
-                                    <img src="@p.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-bg" alt="" aria-hidden="true" />
-                                    <!-- Imagem Principal Nítida -->
-                                    <img src="@p.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-main p-2" alt="@p.Nome" />
+                                    <!-- Imagem Principal Ocupando Todo o Espaço Disponível -->
+                                    <img src="@p.ImagemUrl" onerror="this.onerror=null;this.src='https://cdn.mercadobonsai.com.br/padrao/shimpaku_leilao.webp';" class="ambient-img-main" alt="@p.Nome" />
                                 }
                                 else
                                 {
